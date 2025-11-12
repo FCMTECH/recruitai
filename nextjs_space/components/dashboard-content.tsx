@@ -16,6 +16,18 @@ interface DashboardStats {
   pendingApplications: number;
 }
 
+interface Subscription {
+  id: string;
+  status: string;
+  jobsCreatedThisMonth: number;
+  trialEndsAt?: string;
+  plan: {
+    displayName: string;
+    name: string;
+    jobLimit: number;
+  };
+}
+
 export default function DashboardContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -25,6 +37,7 @@ export default function DashboardContent() {
     totalApplications: 0,
     pendingApplications: 0,
   });
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
 
@@ -42,6 +55,7 @@ export default function DashboardContent() {
   useEffect(() => {
     if (session) {
       fetchStats();
+      fetchSubscription();
     }
   }, [session]);
 
@@ -56,6 +70,18 @@ export default function DashboardContent() {
       console.error("Error fetching stats:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchSubscription = async () => {
+    try {
+      const response = await fetch("/api/subscriptions/current");
+      if (response.ok) {
+        const data = await response.json();
+        setSubscription(data.subscription);
+      }
+    } catch (error) {
+      console.error("Error fetching subscription:", error);
     }
   };
 
@@ -107,6 +133,92 @@ export default function DashboardContent() {
             Gerencie suas vagas e encontre os melhores candidatos com análise de IA.
           </p>
         </div>
+
+        {/* Plan Information */}
+        {subscription ? (
+          <Card className="mb-8 border-0 shadow-lg bg-gradient-to-r from-blue-50 to-purple-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Plano {subscription.plan.displayName}
+                    </h3>
+                    {subscription.status === 'trial' && (
+                      <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                        Período de Teste
+                      </span>
+                    )}
+                    {subscription.status === 'active' && (
+                      <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                        Ativo
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-6 text-sm text-gray-600">
+                    <div>
+                      <span className="font-medium text-gray-900">
+                        {subscription.jobsCreatedThisMonth}
+                      </span>
+                      {' / '}
+                      <span>{subscription.plan.jobLimit}</span>
+                      <span className="ml-1">vagas usadas este mês</span>
+                    </div>
+                    {subscription.status === 'trial' && subscription.trialEndsAt && (
+                      <div>
+                        <span className="text-yellow-700 font-medium">
+                          Teste expira em {new Date(subscription.trialEndsAt).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Progress Bar */}
+                  <div className="mt-3 bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className={`h-full transition-all ${
+                        subscription.jobsCreatedThisMonth >= subscription.plan.jobLimit
+                          ? 'bg-red-500'
+                          : subscription.jobsCreatedThisMonth / subscription.plan.jobLimit > 0.8
+                          ? 'bg-yellow-500'
+                          : 'bg-green-500'
+                      }`}
+                      style={{
+                        width: `${Math.min((subscription.jobsCreatedThisMonth / subscription.plan.jobLimit) * 100, 100)}%`
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="ml-6">
+                  <Button asChild variant="outline">
+                    <Link href="/pricing">
+                      {subscription.plan.name === 'free' ? 'Escolher Plano' : 'Fazer Upgrade'}
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="mb-8 border-0 shadow-lg bg-gradient-to-r from-yellow-50 to-orange-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    Nenhum plano ativo
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Escolha um plano para começar a criar vagas e receber candidatos
+                  </p>
+                </div>
+                <Button asChild className="bg-blue-600 hover:bg-blue-700">
+                  <Link href="/pricing">
+                    Ver Planos
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

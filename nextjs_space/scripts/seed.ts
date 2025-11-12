@@ -58,6 +58,114 @@ async function main() {
 
   console.log('👤 Created additional test company user:', testCompany.email);
 
+  // Create plans
+  const plans = [
+    {
+      name: 'free',
+      displayName: 'Teste Grátis',
+      price: 0,
+      jobLimit: 5,
+      features: [
+        '5 vagas durante 1 semana',
+        'Análise básica de currículos com IA',
+        'Dashboard de candidatos',
+        'Suporte por email'
+      ]
+    },
+    {
+      name: 'bronze',
+      displayName: 'Bronze',
+      price: 300,
+      jobLimit: 25,
+      features: [
+        'Até 25 vagas por mês',
+        'Análise completa de currículos com IA',
+        'Dashboard avançado de candidatos',
+        'Filtros e busca avançada',
+        'Suporte prioritário'
+      ]
+    },
+    {
+      name: 'prata',
+      displayName: 'Prata',
+      price: 500,
+      jobLimit: 50,
+      features: [
+        'Até 50 vagas por mês',
+        'Análise completa de currículos com IA',
+        'Dashboard avançado de candidatos',
+        'Filtros e busca avançada',
+        'Publicação automática em job boards',
+        'Relatórios e estatísticas',
+        'Suporte prioritário'
+      ]
+    },
+    {
+      name: 'ouro',
+      displayName: 'Ouro',
+      price: 800,
+      jobLimit: 100,
+      features: [
+        'Até 100 vagas por mês',
+        'Análise completa de currículos com IA',
+        'Dashboard avançado de candidatos',
+        'Filtros e busca avançada',
+        'Publicação automática em job boards',
+        'Relatórios e estatísticas avançadas',
+        'API de integração',
+        'Suporte dedicado 24/7'
+      ]
+    },
+    {
+      name: 'personalizado',
+      displayName: 'Personalizado',
+      price: 0, // Preço personalizado
+      jobLimit: 999,
+      features: [
+        'Vagas ilimitadas',
+        'Todos os recursos dos planos anteriores',
+        'Personalização completa',
+        'Integrações customizadas',
+        'Gerente de conta dedicado',
+        'SLA garantido'
+      ]
+    }
+  ];
+
+  console.log('📋 Creating plans...');
+  
+  const createdPlans = [];
+  for (const planData of plans) {
+    const plan = await prisma.plan.upsert({
+      where: { name: planData.name },
+      update: planData,
+      create: planData
+    });
+    createdPlans.push(plan);
+    console.log(`📦 Created plan: ${plan.displayName}`);
+  }
+
+  // Create trial subscription for test user
+  const freePlan = createdPlans.find(p => p.name === 'free');
+  if (freePlan) {
+    const trialEndsAt = new Date();
+    trialEndsAt.setDate(trialEndsAt.getDate() + 7); // 1 semana de teste
+
+    const subscription = await prisma.subscription.create({
+      data: {
+        userId: testUser.id,
+        planId: freePlan.id,
+        status: 'trial',
+        trialEndsAt: trialEndsAt,
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: trialEndsAt,
+        jobsCreatedThisMonth: 0
+      }
+    });
+
+    console.log(`🎟️ Created trial subscription for ${testUser.email}`);
+  }
+
   // Create sample jobs
   const sampleJobs = [
     {

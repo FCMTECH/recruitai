@@ -47,6 +47,12 @@ export default function HomeContent() {
           <div className="flex items-center space-x-4">
             <Button
               variant="ghost"
+              onClick={() => router.push("/pricing")}
+            >
+              Planos
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => router.push("/auth/signin")}
             >
               Entrar

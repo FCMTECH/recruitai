@@ -61,6 +61,73 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Verificar assinatura e limites do plano
+    const subscription = await db.subscription.findFirst({
+      where: {
+        userId: session.user.id,
+        status: {
+          in: ['trial', 'active']
+        }
+      },
+      include: {
+        plan: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    if (!subscription) {
+      return NextResponse.json(
+        { error: "Você precisa de um plano ativo para criar vagas. Visite a página de planos para começar." },
+        { status: 403 }
+      );
+    }
+
+    // Verificar se o período de teste expirou
+    if (subscription.status === 'trial' && subscription.trialEndsAt) {
+      if (new Date() > subscription.trialEndsAt) {
+        await db.subscription.update({
+          where: { id: subscription.id },
+          data: { status: 'expired' }
+        });
+        return NextResponse.json(
+          { error: "Seu período de teste expirou. Assine um plano para continuar criando vagas." },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Resetar contador se mudou o mês
+    const now = new Date();
+    const lastReset = subscription.jobsCreatedAt;
+    let jobsThisMonth = subscription.jobsCreatedThisMonth;
+
+    if (!lastReset || now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()) {
+      jobsThisMonth = 0;
+      await db.subscription.update({
+        where: { id: subscription.id },
+        data: {
+          jobsCreatedThisMonth: 0,
+          jobsCreatedAt: now
+        }
+      });
+    }
+
+    // Verificar limite de vagas do plano
+    if (jobsThisMonth >= subscription.plan.jobLimit) {
+      return NextResponse.json(
+        { 
+          error: `Você atingiu o limite de ${subscription.plan.jobLimit} vagas por mês do seu plano ${subscription.plan.displayName}. Faça upgrade para criar mais vagas.`,
+          limitReached: true,
+          currentPlan: subscription.plan.name,
+          jobsCreated: jobsThisMonth,
+          jobLimit: subscription.plan.jobLimit
+        },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { title, description, requirements, location, type, criteria } = jobSchema.parse(body);
 
@@ -89,6 +156,14 @@ export async function POST(request: NextRequest) {
       },
       include: {
         criteria: true
+      }
+    });
+
+    // Incrementar contador de vagas criadas
+    await db.subscription.update({
+      where: { id: subscription.id },
+      data: {
+        jobsCreatedThisMonth: jobsThisMonth + 1
       }
     });
 
