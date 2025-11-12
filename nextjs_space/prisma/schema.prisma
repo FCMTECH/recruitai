@@ -83,6 +83,7 @@ model Job {
   user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   criteria     JobCriteria[]
   applications Application[]
+  stages       JobStage[]
 }
 
 model JobCriteria {
@@ -116,17 +117,26 @@ model Application {
   
   // Application Status
   status            String   @default("pending") // pending, approved, rejected
+  currentStageId    String?
   notes             String?  @db.Text
   reviewedAt        DateTime?
+  
+  // Candidate Profile
+  candidateProfileId String?
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  currentStage JobStage? @relation(fields: [currentStageId], references: [id])
+  candidateProfile CandidateProfile? @relation(fields: [candidateProfileId], references: [id])
 
   @@index([jobId])
   @@index([status])
   @@index([compatibilityScore])
+  @@index([currentStageId])
+  @@index([candidateProfileId])
+  @@index([candidateEmail])
 }
 
 model Plan {
@@ -174,4 +184,151 @@ model Subscription {
   @@index([status])
   @@index([stripeCustomerId])
   @@index([stripeSubscriptionId])
+}
+
+// Fases personalizadas das vagas
+model JobStage {
+  id           String        @id @default(cuid())
+  jobId        String
+  name         String
+  description  String?       @db.Text
+  order        Int
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  job          Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@index([jobId])
+  @@index([order])
+}
+
+// Perfil completo do candidato
+model CandidateProfile {
+  id                String          @id @default(cuid())
+  email             String          @unique
+  fullName          String
+  phone             String?
+  dateOfBirth       DateTime?
+  gender            String?
+  address           String?
+  city              String?
+  state             String?
+  zipCode           String?
+  country           String?          @default("Brasil")
+  linkedinUrl       String?
+  portfolioUrl      String?
+  githubUrl         String?
+  summary           String?          @db.Text
+  resumeUrl         String?
+  photoUrl          String?
+  
+  // Relacionamentos
+  education         Education[]
+  experiences       Experience[]
+  skills            Skill[]
+  courses           Course[]
+  certifications    Certification[]
+  applications      Application[]
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([email])
+  @@index([fullName])
+  @@index([city])
+  @@index([state])
+}
+
+// Escolaridade
+model Education {
+  id              String           @id @default(cuid())
+  candidateId     String
+  institution     String
+  degree          String           // "Ensino Médio", "Tecnólogo", "Bacharelado", "Licenciatura", "Pós-graduação", "Mestrado", "Doutorado"
+  fieldOfStudy    String
+  startDate       DateTime
+  endDate         DateTime?
+  isCurrent       Boolean          @default(false)
+  description     String?          @db.Text
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  candidate       CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+// Experiência Profissional
+model Experience {
+  id              String           @id @default(cuid())
+  candidateId     String
+  company         String
+  position        String
+  location        String?
+  startDate       DateTime
+  endDate         DateTime?
+  isCurrent       Boolean          @default(false)
+  description     String?          @db.Text
+  achievements    Json?            // Lista de conquistas
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  candidate       CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+// Competências/Habilidades
+model Skill {
+  id                String           @id @default(cuid())
+  candidateId       String
+  name              String
+  level             String           // "iniciante", "intermediário", "avançado", "expert"
+  yearsOfExperience Int?
+  category          String?          // "técnica", "comportamental", "idioma"
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  
+  candidate         CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([category])
+}
+
+// Cursos
+model Course {
+  id              String           @id @default(cuid())
+  candidateId     String
+  name            String
+  institution     String
+  completionDate  DateTime?
+  workload        Int?             // Carga horária em horas
+  description     String?          @db.Text
+  certificateUrl  String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  candidate       CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+// Certificações
+model Certification {
+  id              String           @id @default(cuid())
+  candidateId     String
+  name            String
+  issuingOrg      String           // Organização emissora
+  issueDate       DateTime
+  expiryDate      DateTime?
+  credentialId    String?
+  credentialUrl   String?
+  description     String?          @db.Text
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  candidate       CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
 }

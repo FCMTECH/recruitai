@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useSession } from "next-auth/react";
@@ -9,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, Plus, Trash2, ArrowLeft, Loader2 } from "lucide-react";
+import { Brain, Plus, Trash2, ArrowLeft, Loader2, MoveUp, MoveDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface JobCriteria {
@@ -19,6 +18,13 @@ interface JobCriteria {
   weight: number;
   required: boolean;
   category: string;
+}
+
+interface JobStage {
+  id?: string;
+  name: string;
+  description: string;
+  order: number;
 }
 
 const defaultCriteria: JobCriteria[] = [
@@ -66,6 +72,13 @@ const defaultCriteria: JobCriteria[] = [
   }
 ];
 
+const defaultStages: JobStage[] = [
+  { name: "Triagem de Currículo", description: "Análise inicial do currículo pela IA", order: 0 },
+  { name: "Entrevista com RH", description: "Entrevista inicial com o time de Recursos Humanos", order: 1 },
+  { name: "Entrevista Técnica", description: "Avaliação técnica com o time da área", order: 2 },
+  { name: "Entrevista Final", description: "Entrevista com gestores e tomada de decisão", order: 3 },
+];
+
 export default function CreateJobContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -82,6 +95,7 @@ export default function CreateJobContent() {
   });
 
   const [criteria, setCriteria] = useState<JobCriteria[]>(defaultCriteria);
+  const [stages, setStages] = useState<JobStage[]>(defaultStages);
 
   useEffect(() => {
     setMounted(true);
@@ -119,6 +133,43 @@ export default function CreateJobContent() {
 
   const removeCriteria = (index: number) => {
     setCriteria(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Funções para gerenciar fases
+  const handleStageChange = (index: number, field: keyof JobStage, value: string | number) => {
+    setStages(prev => prev.map((item, i) => 
+      i === index ? { ...item, [field]: value } : item
+    ));
+  };
+
+  const addStage = () => {
+    setStages(prev => [...prev, {
+      name: "",
+      description: "",
+      order: prev.length
+    }]);
+  };
+
+  const removeStage = (index: number) => {
+    setStages(prev => prev.filter((_, i) => i !== index).map((stage, i) => ({ ...stage, order: i })));
+  };
+
+  const moveStageUp = (index: number) => {
+    if (index === 0) return;
+    setStages(prev => {
+      const newStages = [...prev];
+      [newStages[index], newStages[index - 1]] = [newStages[index - 1], newStages[index]];
+      return newStages.map((stage, i) => ({ ...stage, order: i }));
+    });
+  };
+
+  const moveStageDown = (index: number) => {
+    if (index === stages.length - 1) return;
+    setStages(prev => {
+      const newStages = [...prev];
+      [newStages[index], newStages[index + 1]] = [newStages[index + 1], newStages[index]];
+      return newStages.map((stage, i) => ({ ...stage, order: i }));
+    });
   };
 
   const validateForm = () => {
@@ -160,6 +211,16 @@ export default function CreateJobContent() {
       return false;
     }
 
+    const emptyStage = stages.find(s => !s.name.trim());
+    if (emptyStage) {
+      toast({
+        title: "Erro de validação",
+        description: "Todas as fases devem ter um nome",
+        variant: "destructive"
+      });
+      return false;
+    }
+
     return true;
   };
 
@@ -171,7 +232,8 @@ export default function CreateJobContent() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/jobs", {
+      // Criar vaga
+      const jobResponse = await fetch("/api/jobs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -182,15 +244,26 @@ export default function CreateJobContent() {
         }),
       });
 
-      const data = await response.json();
+      const jobData = await jobResponse.json();
 
-      if (!response.ok) {
+      if (!jobResponse.ok) {
         toast({
           title: "Erro ao criar vaga",
-          description: data.error,
+          description: jobData.error,
           variant: "destructive",
         });
         return;
+      }
+
+      // Criar fases
+      for (const stage of stages) {
+        await fetch(`/api/jobs/${jobData.id}/stages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(stage),
+        });
       }
 
       toast({
@@ -198,7 +271,7 @@ export default function CreateJobContent() {
         description: "Redirecionando para visualização...",
       });
 
-      router.push(`/dashboard/jobs/${data.id}`);
+      router.push(`/dashboard/jobs/${jobData.id}`);
 
     } catch (error) {
       toast({
@@ -215,16 +288,16 @@ export default function CreateJobContent() {
 
   if (!mounted || status === "loading" || status === "unauthenticated") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
         <div className="animate-pulse text-lg text-muted-foreground">Carregando...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between max-w-6xl">
           <div className="flex items-center space-x-2">
             <Button
@@ -235,8 +308,10 @@ export default function CreateJobContent() {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar
             </Button>
-            <Brain className="h-8 w-8 text-blue-600" />
-            <span className="text-xl font-bold">Criar Nova Vaga</span>
+            <Brain className="h-8 w-8 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent" />
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Criar Nova Vaga
+            </span>
           </div>
         </div>
       </header>
@@ -302,11 +377,11 @@ export default function CreateJobContent() {
                 </div>
 
                 <div>
-                  <Label htmlFor="type">Tipo de Contrato</Label>
+                  <Label htmlFor="type">Tipo de Contratação</Label>
                   <select
                     id="type"
                     name="type"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     value={formData.type}
                     onChange={handleInputChange}
                   >
@@ -319,102 +394,76 @@ export default function CreateJobContent() {
             </CardContent>
           </Card>
 
-          {/* Criteria Configuration */}
+          {/* Stages Management */}
           <Card className="border-0 shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Critérios de Análise da IA</span>
-                <span className={`text-sm px-2 py-1 rounded ${
-                  totalWeight === 100 
-                    ? "bg-green-100 text-green-800" 
-                    : "bg-red-100 text-red-800"
-                }`}>
-                  Total: {totalWeight}%
-                </span>
+              <CardTitle className="flex items-center gap-2">
+                📋 Fases do Processo Seletivo
               </CardTitle>
               <CardDescription>
-                Configure os critérios que a IA usará para analisar os currículos.
-                A soma dos pesos deve ser exatamente 100%.
+                Defina as etapas que os candidatos passarão durante o processo seletivo
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {criteria.map((criterium, index) => (
-                <div key={index} className="border rounded-lg p-4 bg-gray-50">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium">Critério {index + 1}</h4>
-                    {criteria.length > 1 && (
+            <CardContent className="space-y-4">
+              {stages.map((stage, index) => (
+                <div key={index} className="p-4 border rounded-lg space-y-3 bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Fase {index + 1}
+                    </span>
+                    <div className="flex gap-2">
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeCriteria(index)}
-                        className="text-red-600 hover:text-red-800"
+                        onClick={() => moveStageUp(index)}
+                        disabled={index === 0}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <MoveUp className="h-4 w-4" />
                       </Button>
-                    )}
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <Label>Nome do Critério</Label>
-                      <Input
-                        value={criterium.name}
-                        onChange={(e) => handleCriteriaChange(index, "name", e.target.value)}
-                        placeholder="Ex: Experiência Profissional"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Categoria</Label>
-                      <select
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        value={criterium.category}
-                        onChange={(e) => handleCriteriaChange(index, "category", e.target.value)}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => moveStageDown(index)}
+                        disabled={index === stages.length - 1}
                       >
-                        <option value="experience">Experiência</option>
-                        <option value="skills">Habilidades Técnicas</option>
-                        <option value="education">Formação</option>
-                        <option value="location">Localização</option>
-                        <option value="languages">Idiomas</option>
-                        <option value="other">Outros</option>
-                      </select>
+                        <MoveDown className="h-4 w-4" />
+                      </Button>
+                      {stages.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeStage(index)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
                     </div>
                   </div>
 
-                  <div className="mb-4">
-                    <Label>Descrição</Label>
-                    <Textarea
-                      value={criterium.description}
-                      onChange={(e) => handleCriteriaChange(index, "description", e.target.value)}
-                      placeholder="Descreva como este critério será avaliado..."
-                      rows={2}
-                    />
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-3">
                     <div>
-                      <Label>Peso (%)</Label>
+                      <Label htmlFor={`stage-name-${index}`}>Nome da Fase *</Label>
                       <Input
-                        type="number"
-                        min="1"
-                        max="100"
-                        value={criterium.weight}
-                        onChange={(e) => handleCriteriaChange(index, "weight", parseInt(e.target.value) || 0)}
+                        id={`stage-name-${index}`}
+                        placeholder="Ex: Entrevista com RH"
+                        value={stage.name}
+                        onChange={(e) => handleStageChange(index, "name", e.target.value)}
+                        required
                       />
                     </div>
 
-                    <div className="flex items-center space-x-2 pt-8">
-                      <input
-                        type="checkbox"
-                        id={`required-${index}`}
-                        checked={criterium.required}
-                        onChange={(e) => handleCriteriaChange(index, "required", e.target.checked)}
-                        className="rounded border-gray-300"
+                    <div>
+                      <Label htmlFor={`stage-description-${index}`}>Descrição (opcional)</Label>
+                      <Textarea
+                        id={`stage-description-${index}`}
+                        placeholder="Descreva o que acontece nesta fase..."
+                        rows={2}
+                        value={stage.description || ""}
+                        onChange={(e) => handleStageChange(index, "description", e.target.value)}
                       />
-                      <Label htmlFor={`required-${index}`} className="text-sm">
-                        Critério obrigatório
-                      </Label>
                     </div>
                   </div>
                 </div>
@@ -423,28 +472,149 @@ export default function CreateJobContent() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={addCriteria}
+                onClick={addStage}
                 className="w-full"
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar Critério
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Fase
               </Button>
             </CardContent>
           </Card>
 
-          {/* Submit */}
-          <div className="flex items-center justify-end space-x-4">
+          {/* AI Criteria */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                Critérios de Avaliação por IA
+              </CardTitle>
+              <CardDescription>
+                Configure os critérios que a IA usará para avaliar candidatos automaticamente.
+                A soma dos pesos deve totalizar 100%.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {criteria.map((criterion, index) => (
+                <div key={index} className="p-4 border rounded-lg space-y-3 bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Critério {index + 1}
+                    </span>
+                    {criteria.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeCriteria(index)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor={`criterion-name-${index}`}>Nome do Critério *</Label>
+                      <Input
+                        id={`criterion-name-${index}`}
+                        placeholder="Ex: Experiência Profissional"
+                        value={criterion.name}
+                        onChange={(e) => handleCriteriaChange(index, "name", e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`criterion-category-${index}`}>Categoria</Label>
+                      <select
+                        id={`criterion-category-${index}`}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        value={criterion.category}
+                        onChange={(e) => handleCriteriaChange(index, "category", e.target.value)}
+                      >
+                        <option value="experience">Experiência</option>
+                        <option value="skills">Habilidades</option>
+                        <option value="education">Formação</option>
+                        <option value="location">Localização</option>
+                        <option value="languages">Idiomas</option>
+                        <option value="other">Outros</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor={`criterion-description-${index}`}>Descrição *</Label>
+                    <Textarea
+                      id={`criterion-description-${index}`}
+                      placeholder="Descreva o que será avaliado neste critério..."
+                      rows={2}
+                      value={criterion.description}
+                      onChange={(e) => handleCriteriaChange(index, "description", e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor={`criterion-weight-${index}`}>Peso (%)</Label>
+                      <Input
+                        id={`criterion-weight-${index}`}
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={criterion.weight}
+                        onChange={(e) => handleCriteriaChange(index, "weight", parseInt(e.target.value) || 0)}
+                        required
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-2 pt-8">
+                      <input
+                        type="checkbox"
+                        id={`criterion-required-${index}`}
+                        checked={criterion.required}
+                        onChange={(e) => handleCriteriaChange(index, "required", e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300"
+                      />
+                      <Label htmlFor={`criterion-required-${index}`} className="cursor-pointer">
+                        Obrigatório
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="flex items-center justify-between pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addCriteria}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Critério
+                </Button>
+
+                <div className={`text-sm font-medium ${totalWeight === 100 ? 'text-green-600' : 'text-orange-600'}`}>
+                  Total: {totalWeight}%
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Submit Button */}
+          <div className="flex justify-end gap-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => router.back()}
+              disabled={isLoading}
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={isLoading || totalWeight !== 100}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-gradient-to-r from-primary to-accent"
             >
               {isLoading ? (
                 <>
@@ -452,7 +622,10 @@ export default function CreateJobContent() {
                   Criando...
                 </>
               ) : (
-                "Criar Vaga"
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Criar Vaga
+                </>
               )}
             </Button>
           </div>

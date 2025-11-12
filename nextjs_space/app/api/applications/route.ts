@@ -46,7 +46,11 @@ export async function POST(request: NextRequest) {
         status: "active"
       },
       include: {
-        criteria: true
+        criteria: true,
+        stages: {
+          orderBy: { order: 'asc' },
+          take: 1
+        }
       }
     });
 
@@ -57,9 +61,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Buscar ou criar perfil do candidato
+    let candidateProfile = await db.candidateProfile.findUnique({
+      where: { email: validatedData.candidateEmail }
+    });
+
+    if (!candidateProfile) {
+      // Criar perfil básico se não existir
+      candidateProfile = await db.candidateProfile.create({
+        data: {
+          email: validatedData.candidateEmail,
+          fullName: validatedData.candidateName,
+          phone: validatedData.candidatePhone,
+        }
+      });
+    }
+
     // Upload file to S3
     const buffer = Buffer.from(await file.arrayBuffer());
     const resumeUrl = await uploadFile(buffer, file.name);
+
+    // Atualizar resumeUrl no perfil se não existir
+    if (!candidateProfile.resumeUrl) {
+      await db.candidateProfile.update({
+        where: { id: candidateProfile.id },
+        data: { resumeUrl }
+      });
+    }
+
+    // Determinar a primeira fase se existir
+    const firstStage = job.stages && job.stages.length > 0 ? job.stages[0] : null;
 
     // Create application record
     const application = await db.application.create({
@@ -70,7 +101,9 @@ export async function POST(request: NextRequest) {
         candidatePhone: validatedData.candidatePhone,
         resumeUrl,
         resumeFilename: file.name,
-        status: "pending"
+        status: "pending",
+        candidateProfileId: candidateProfile.id,
+        currentStageId: firstStage?.id || null,
       }
     });
 
