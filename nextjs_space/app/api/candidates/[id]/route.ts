@@ -6,26 +6,22 @@ import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// GET: Buscar perfil completo de um candidato específico
+// GET: Buscar perfil completo do candidato por ID
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    if (!session?.user || session.user.role !== 'company') {
+      return NextResponse.json(
+        { error: 'Apenas empresas podem acessar perfis de candidatos' },
+        { status: 403 }
+      );
     }
-
-    // Permitir que empresas e superadmin acessem
-    if (session.user.role !== 'company' && session.user.role !== 'superadmin') {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
-    }
-
-    const candidateId = params.id;
 
     const profile = await db.candidateProfile.findUnique({
-      where: { id: candidateId },
+      where: { id: params.id },
       include: {
         education: {
           orderBy: { startDate: 'desc' },
@@ -34,7 +30,10 @@ export async function GET(
           orderBy: { startDate: 'desc' },
         },
         skills: {
-          orderBy: [{ category: 'asc' }, { name: 'asc' }],
+          orderBy: [
+            { level: 'desc' },
+            { name: 'asc' },
+          ],
         },
         courses: {
           orderBy: { completionDate: 'desc' },
@@ -42,17 +41,10 @@ export async function GET(
         certifications: {
           orderBy: { issueDate: 'desc' },
         },
-        applications: {
-          include: {
-            job: {
-              select: {
-                id: true,
-                title: true,
-                createdAt: true,
-              },
-            },
+        _count: {
+          select: {
+            applications: true,
           },
-          orderBy: { createdAt: 'desc' },
         },
       },
     });
