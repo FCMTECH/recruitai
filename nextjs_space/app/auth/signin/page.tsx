@@ -4,21 +4,25 @@
 
 import { useState } from "react";
 import { signIn, getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, Eye, EyeOff, Loader2, Sparkles, Mail } from "lucide-react";
+import { Brain, Eye, EyeOff, Loader2, Sparkles, Mail, Building2, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
 export default function SignInPage() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOAuthLoading] = useState(false);
+  const [userType, setUserType] = useState<"candidate" | "company">(
+    (searchParams?.get("type") as "candidate" | "company") || "candidate"
+  );
   const router = useRouter();
   const { toast } = useToast();
 
@@ -40,15 +44,31 @@ export default function SignInPage() {
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Login realizado com sucesso",
-          description: "Redirecionando para o dashboard...",
-        });
-        
         // Wait for session to be set
         const session = await getSession();
         if (session) {
-          router.push("/dashboard");
+          // Check user role and redirect accordingly
+          const userRole = (session.user as any)?.role;
+          
+          if (userRole === "candidate") {
+            toast({
+              title: "Login realizado com sucesso",
+              description: "Redirecionando para suas candidaturas...",
+            });
+            router.push("/candidate/dashboard");
+          } else if (userRole === "company") {
+            toast({
+              title: "Login realizado com sucesso",
+              description: "Redirecionando para o dashboard...",
+            });
+            router.push("/dashboard");
+          } else if (userRole === "superadmin") {
+            toast({
+              title: "Login realizado com sucesso",
+              description: "Redirecionando para o admin...",
+            });
+            router.push("/admin");
+          }
         }
       }
     } catch (error) {
@@ -98,10 +118,32 @@ export default function SignInPage() {
           <CardHeader className="text-center space-y-3">
             <CardTitle className="text-3xl font-bold text-slate-900">Bem-vindo de volta</CardTitle>
             <CardDescription className="text-base text-slate-600">
-              Acesse sua conta para gerenciar vagas e candidatos
+              Acesse sua conta para {userType === "company" ? "gerenciar vagas e candidatos" : "buscar vagas e acompanhar candidaturas"}
             </CardDescription>
           </CardHeader>
           <CardContent className="px-8 pb-8">
+            {/* User Type Selection */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <Button
+                type="button"
+                variant={userType === "candidate" ? "default" : "outline"}
+                className={userType === "candidate" ? "bg-gradient-to-r from-primary to-accent" : ""}
+                onClick={() => setUserType("candidate")}
+              >
+                <User className="h-4 w-4 mr-2" />
+                Candidato
+              </Button>
+              <Button
+                type="button"
+                variant={userType === "company" ? "default" : "outline"}
+                className={userType === "company" ? "bg-gradient-to-r from-primary to-accent" : ""}
+                onClick={() => setUserType("company")}
+              >
+                <Building2 className="h-4 w-4 mr-2" />
+                Empresa
+              </Button>
+            </div>
+            
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-slate-700 font-medium">Email</Label>
@@ -163,18 +205,21 @@ export default function SignInPage() {
               </Button>
             </form>
 
-            {/* Separator */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-300" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-500">Ou continue com</span>
-              </div>
-            </div>
+            {/* OAuth - Only for candidates */}
+            {userType === "candidate" && (
+              <>
+                {/* Separator */}
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-slate-300" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-slate-500">Ou continue com</span>
+                  </div>
+                </div>
 
-            {/* OAuth Buttons */}
-            <div className="space-y-3">
+                {/* OAuth Buttons */}
+                <div className="space-y-3">
               <Button
                 type="button"
                 variant="outline"
@@ -224,20 +269,24 @@ export default function SignInPage() {
                 Continuar com LinkedIn
               </Button>
             </div>
+              </>
+            )}
 
             <div className="mt-6 text-center">
               <p className="text-sm text-slate-600">
                 Não tem uma conta?{" "}
                 <Link
-                  href="/auth/signup"
+                  href={`/auth/signup?type=${userType}`}
                   className="font-semibold text-primary hover:text-accent transition-colors"
                 >
-                  Cadastre sua empresa
+                  {userType === "company" ? "Cadastre sua empresa" : "Criar conta"}
                 </Link>
               </p>
-              <p className="text-xs text-slate-500 mt-2">
-                OAuth disponível apenas para candidatos
-              </p>
+              {userType === "candidate" && (
+                <p className="text-xs text-slate-500 mt-2">
+                  OAuth disponível apenas para candidatos
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
