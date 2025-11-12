@@ -11,28 +11,40 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         title: true,
+        description: true,
+        location: true,
+        type: true,
+        createdAt: true,
         user: {
           select: {
-            companyName: true
-          }
-        }
+            companyName: true,
+          },
+        },
+        _count: {
+          select: {
+            applications: true,
+          },
+        },
       },
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
     });
 
     const formattedJobs = jobs.map((job: any) => ({
       id: job.id,
       title: job.title,
-      companyName: job.user.companyName || "Empresa"
+      description: job.description,
+      location: job.location,
+      type: job.type,
+      companyName: job.user.companyName || "Empresa",
+      createdAt: job.createdAt,
+      _count: {
+        applications: job._count.applications,
+      },
     }));
 
     return NextResponse.json(formattedJobs);
-
   } catch (error) {
     console.error("Public jobs GET error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
