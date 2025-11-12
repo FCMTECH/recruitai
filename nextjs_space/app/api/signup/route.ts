@@ -8,13 +8,22 @@ const signupSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   name: z.string().min(1, "Nome é obrigatório"),
-  companyName: z.string().min(1, "Nome da empresa é obrigatório"),
+  companyName: z.string().optional(),
+  role: z.enum(["candidate", "company"]).default("candidate"),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, name, companyName } = signupSchema.parse(body);
+    const { email, password, name, companyName, role } = signupSchema.parse(body);
+
+    // Validate company name for companies
+    if (role === "company" && !companyName) {
+      return NextResponse.json(
+        { error: "Nome da empresa é obrigatório para empresas" },
+        { status: 400 }
+      );
+    }
 
     // Check if user already exists
     const existingUser = await db.user.findUnique({
@@ -31,16 +40,26 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
+    // Create user with appropriate role
     const user = await db.user.create({
       data: {
         email,
         password: hashedPassword,
         name,
-        companyName,
-        role: "admin"
+        companyName: role === "company" ? companyName : "",
+        role: role
       }
     });
+
+    // If candidate, create profile
+    if (role === "candidate") {
+      await db.candidateProfile.create({
+        data: {
+          email: user.email,
+          fullName: user.name || "",
+        }
+      });
+    }
 
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;

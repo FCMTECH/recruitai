@@ -97,6 +97,63 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
   },
   callbacks: {
+    async signIn({ user, account, profile }) {
+      // OAuth sign in (Google/LinkedIn)
+      if (account && (account.provider === "google" || account.provider === "linkedin")) {
+        if (!user.email) return false;
+        
+        // Check if user exists
+        const existingUser = await db.user.findUnique({
+          where: { email: user.email }
+        });
+
+        if (!existingUser) {
+          // Create new user with candidate role
+          const newUser = await db.user.create({
+            data: {
+              email: user.email,
+              name: user.name || "",
+              companyName: "",
+              role: "candidate",
+              image: user.image,
+            }
+          });
+
+          // Create candidate profile with OAuth data
+          await db.candidateProfile.upsert({
+            where: { email: user.email },
+            update: {
+              fullName: user.name || "",
+              photoUrl: user.image || undefined,
+              linkedinUrl: account.provider === "linkedin" && profile ? (profile as any).publicProfileUrl : undefined,
+            },
+            create: {
+              email: user.email,
+              fullName: user.name || "",
+              photoUrl: user.image || undefined,
+              linkedinUrl: account.provider === "linkedin" && profile ? (profile as any).publicProfileUrl : undefined,
+            }
+          });
+        } else {
+          // Update candidate profile with latest OAuth data
+          if (existingUser.role === "candidate") {
+            await db.candidateProfile.upsert({
+              where: { email: user.email },
+              update: {
+                fullName: user.name || existingUser.name || "",
+                photoUrl: user.image || undefined,
+              },
+              create: {
+                email: user.email,
+                fullName: user.name || existingUser.name || "",
+                photoUrl: user.image || undefined,
+              }
+            });
+          }
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
