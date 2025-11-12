@@ -77,6 +77,13 @@ export default function DashboardContent() {
             <span className="text-xl font-bold">ATS Platform</span>
           </div>
           <div className="flex items-center space-x-4">
+            {session?.user?.role === "superadmin" && (
+              <Link href="/admin">
+                <Button variant="default" className="bg-gradient-to-r from-purple-600 to-blue-600">
+                  🔧 Painel Admin
+                </Button>
+              </Link>
+            )}
             <span className="text-sm text-muted-foreground">
               {session?.user?.companyName}
             </span>

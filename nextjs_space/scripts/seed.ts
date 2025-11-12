@@ -7,6 +7,23 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
+  // Create superadmin user (Platform Administrator)
+  const hashedPasswordAdmin = await bcrypt.hash('admin123', 12);
+  
+  const superAdmin = await prisma.user.upsert({
+    where: { email: 'admin@atsplatform.com' },
+    update: {},
+    create: {
+      email: 'admin@atsplatform.com',
+      password: hashedPasswordAdmin,
+      name: 'Administrador da Plataforma',
+      companyName: 'ATS Platform',
+      role: 'superadmin'
+    }
+  });
+
+  console.log('🔑 Created superadmin user:', superAdmin.email);
+
   // Create test company user
   const hashedPassword = await bcrypt.hash('johndoe123', 12);
   
@@ -18,11 +35,11 @@ async function main() {
       password: hashedPassword,
       name: 'João Silva',
       companyName: 'TechCorp Solutions',
-      role: 'admin'
+      role: 'company'
     }
   });
 
-  console.log('👤 Created test user:', testUser.email);
+  console.log('👤 Created test company user:', testUser.email);
 
   // Create additional test company user
   const hashedPassword2 = await bcrypt.hash('empresa123', 12);
@@ -35,11 +52,11 @@ async function main() {
       password: hashedPassword2,
       name: 'Maria Oliveira',
       companyName: 'Startup Inovadora',
-      role: 'admin'
+      role: 'company'
     }
   });
 
-  console.log('👤 Created additional test user:', testCompany.email);
+  console.log('👤 Created additional test company user:', testCompany.email);
 
   // Create sample jobs
   const sampleJobs = [

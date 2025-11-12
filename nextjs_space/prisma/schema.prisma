@@ -48,7 +48,7 @@ model User {
   emailVerified DateTime?
   image         String?
   companyName   String?
-  role          String    @default("admin")
+  role          String    @default("company") // "company" or "superadmin"
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
