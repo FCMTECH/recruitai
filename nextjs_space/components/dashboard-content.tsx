@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -115,7 +115,7 @@ export default function DashboardContent() {
             </span>
             <Button
               variant="outline"
-              onClick={() => router.push("/")}
+              onClick={() => signOut({ callbackUrl: "/" })}
             >
               Sair
             </Button>
