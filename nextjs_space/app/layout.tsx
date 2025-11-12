@@ -1,4 +1,5 @@
 
+
 export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
@@ -9,19 +10,19 @@ import { SessionProvider } from "@/components/session-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], display: 'swap' });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
-  title: "ATS Platform - Recrutamento Inteligente com IA",
-  description: "Plataforma de recrutamento e seleção com análise automática de currículos usando inteligência artificial",
+  title: "RecruitAI - Recrutamento Inteligente com IA",
+  description: "Plataforma de recrutamento com análise automática de currículos usando inteligência artificial avançada",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
   },
   openGraph: {
-    title: "ATS Platform - Recrutamento Inteligente com IA",
-    description: "Plataforma de recrutamento e seleção com análise automática de currículos usando inteligência artificial",
+    title: "RecruitAI - Recrutamento Inteligente com IA",
+    description: "Plataforma de recrutamento com análise automática de currículos usando inteligência artificial avançada",
     images: ["/og-image.png"],
   },
 };

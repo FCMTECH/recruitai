@@ -252,7 +252,7 @@ export default function ApplyPage() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between max-w-6xl">
           <div className="flex items-center space-x-2">
             <Brain className="h-8 w-8 text-blue-600" />
-            <span className="text-xl font-bold">ATS Platform</span>
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">RecruitAI</span>
           </div>
           <Button
             variant="outline"

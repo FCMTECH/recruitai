@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,8 +8,9 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, Loader2 } from 'lucide-react';
+import { Check, Sparkles, Loader2, Zap, Brain, Crown } from 'lucide-react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 interface Plan {
   id: string;
@@ -84,7 +86,6 @@ export default function PricingPage() {
     }
 
     if (planName === 'free') {
-      // Para plano free, criar assinatura diretamente
       try {
         setCheckoutLoading(planId);
         const response = await fetch('/api/subscriptions/create-trial', {
@@ -109,7 +110,6 @@ export default function PricingPage() {
       return;
     }
 
-    // Para planos pagos, redirecionar para checkout do Stripe
     try {
       setCheckoutLoading(planId);
       const response = await fetch('/api/checkout/create-session', {
@@ -138,68 +138,93 @@ export default function PricingPage() {
            ['trial', 'active'].includes(currentSubscription?.status || '');
   };
 
-  const getPlanBadge = (planName: string) => {
-    if (planName === 'ouro') {
-      return <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white">Mais Popular</Badge>;
-    }
-    if (planName === 'free') {
-      return <Badge variant="outline">Teste Grátis</Badge>;
-    }
-    return null;
-  };
-
-  const getPlanGradient = (planName: string) => {
+  const getPlanIcon = (planName: string) => {
     switch (planName) {
       case 'free':
-        return 'border-gray-300 hover:border-gray-400';
+        return <Zap className="h-6 w-6 text-primary" />;
       case 'bronze':
-        return 'border-amber-700 hover:border-amber-800 hover:shadow-amber-200/50';
+        return <Sparkles className="h-6 w-6 text-amber-700" />;
       case 'prata':
-        return 'border-gray-400 hover:border-gray-500 hover:shadow-gray-200/50';
+        return <Brain className="h-6 w-6 text-slate-500" />;
       case 'ouro':
-        return 'border-yellow-500 hover:border-yellow-600 hover:shadow-yellow-200/50 shadow-lg';
+        return <Crown className="h-6 w-6 text-yellow-500" />;
       case 'personalizado':
-        return 'border-purple-500 hover:border-purple-600 hover:shadow-purple-200/50';
+        return <Sparkles className="h-6 w-6 text-purple-600" />;
       default:
-        return '';
+        return null;
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-50">
+        <div className="flex items-center gap-2 animate-pulse">
+          <Brain className="h-8 w-8 text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 py-12 px-4">
+      {/* Header */}
+      <header className="container mx-auto mb-12 max-w-7xl">
+        <div className="flex items-center justify-between mb-8">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="relative">
+              <Brain className="h-8 w-8 text-primary transition-transform group-hover:scale-110" />
+              <Sparkles className="h-4 w-4 text-accent absolute -top-1 -right-1" />
+            </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              RecruitAI
+            </span>
+          </Link>
+          {sessionStatus === 'authenticated' && (
+            <Button asChild variant="outline">
+              <Link href="/dashboard">Voltar ao Dashboard</Link>
+            </Button>
+          )}
+        </div>
+      </header>
+
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Escolha o Plano Ideal para Sua Empresa
+        {/* Hero Section */}
+        <div className="text-center mb-16 animate-slide-up">
+          <div className="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 mb-6">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">Preços Transparentes</span>
+          </div>
+          <h1 className="text-5xl font-bold text-slate-900 mb-6">
+            Escolha o Plano Ideal
+            <br />
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Para Sua Empresa
+            </span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-slate-600 max-w-3xl mx-auto">
             Simplifique seu processo de recrutamento com IA avançada. 
-            Comece com 1 semana grátis e cancele quando quiser.
+            Comece com 7 dias grátis e cancele quando quiser.
           </p>
         </div>
 
         {/* Current Plan Info */}
         {currentSubscription && (
-          <div className="mb-8 max-w-2xl mx-auto">
-            <Card className="bg-blue-50 border-blue-200">
+          <div className="mb-12 max-w-2xl mx-auto">
+            <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 shadow-lg">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Plano Atual</p>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-sm text-slate-600 font-medium">Plano Atual</p>
+                    <p className="text-2xl font-bold text-slate-900">
                       {currentSubscription.plan.displayName}
                     </p>
                   </div>
-                  <Badge variant={currentSubscription.status === 'active' ? 'default' : 'secondary'}>
+                  <Badge className={
+                    currentSubscription.status === 'active' 
+                      ? 'bg-gradient-to-r from-green-400 to-emerald-400' 
+                      : 'bg-gradient-to-r from-yellow-400 to-orange-400'
+                  }>
                     {currentSubscription.status === 'trial' && 'Período de Teste'}
                     {currentSubscription.status === 'active' && 'Ativo'}
                     {currentSubscription.status === 'past_due' && 'Pagamento Pendente'}
@@ -216,17 +241,34 @@ export default function PricingPage() {
           {plans.filter(p => p.isActive).map((plan) => (
             <Card
               key={plan.id}
-              className={`relative transition-all duration-300 hover:shadow-xl ${getPlanGradient(plan.name)} ${
-                plan.name === 'ouro' ? 'ring-2 ring-yellow-400' : ''
-              }`}
+              className={`relative transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 border-2 ${
+                plan.name === 'ouro' 
+                  ? 'border-yellow-400 shadow-xl shadow-yellow-100' 
+                  : 'border-slate-200 hover:border-primary/50'
+              } bg-white/80 backdrop-blur`}
             >
-              <CardHeader>
-                <div className="flex items-center justify-between mb-2">
-                  <CardTitle className="text-2xl">{plan.displayName}</CardTitle>
-                  {getPlanBadge(plan.name)}
+              {plan.name === 'ouro' && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-lg">
+                    Mais Popular
+                  </Badge>
                 </div>
-                <CardDescription>
-                  {plan.name === 'free' && 'Teste por 1 semana'}
+              )}
+              {plan.name === 'free' && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-gradient-to-r from-primary to-accent text-white shadow-lg">
+                    Teste Grátis
+                  </Badge>
+                </div>
+              )}
+
+              <CardHeader className="space-y-4">
+                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-slate-50">
+                  {getPlanIcon(plan.name)}
+                </div>
+                <CardTitle className="text-2xl font-bold text-slate-900">{plan.displayName}</CardTitle>
+                <CardDescription className="text-sm">
+                  {plan.name === 'free' && 'Teste por 7 dias'}
                   {plan.name === 'bronze' && 'Ideal para pequenas empresas'}
                   {plan.name === 'prata' && 'Para empresas em crescimento'}
                   {plan.name === 'ouro' && 'Para grandes volumes'}
@@ -237,33 +279,35 @@ export default function PricingPage() {
               <CardContent>
                 <div className="mb-6">
                   {plan.price > 0 ? (
-                    <>
-                      <span className="text-4xl font-bold text-gray-900">
+                    <div>
+                      <span className="text-4xl font-bold text-slate-900">
                         R$ {plan.price.toLocaleString('pt-BR')}
                       </span>
-                      <span className="text-gray-600 ml-2">/mês</span>
-                    </>
+                      <span className="text-slate-600 ml-2">/mês</span>
+                    </div>
                   ) : plan.name === 'free' ? (
-                    <span className="text-4xl font-bold text-green-600">Grátis</span>
+                    <span className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Grátis</span>
                   ) : (
-                    <span className="text-2xl font-bold text-gray-900">Sob consulta</span>
+                    <span className="text-2xl font-bold text-slate-900">Sob consulta</span>
                   )}
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 mb-6">
                   {plan.features.map((feature, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-gray-700">{feature}</span>
+                    <div key={index} className="flex items-start gap-3">
+                      <div className="mt-0.5 p-1 rounded-full bg-green-50">
+                        <Check className="h-4 w-4 text-green-600" />
+                      </div>
+                      <span className="text-sm text-slate-700">{feature}</span>
                     </div>
                   ))}
                 </div>
 
-                {plan.name !== 'free' && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Sparkles className="h-4 w-4" />
-                      <span>Até {plan.jobLimit} vagas/mês</span>
+                {plan.name !== 'free' && plan.name !== 'personalizado' && (
+                  <div className="pt-4 border-t border-slate-200">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <Sparkles className="h-4 w-4 text-accent" />
+                      <span className="font-medium">Até {plan.jobLimit} vagas/mês</span>
                     </div>
                   </div>
                 )}
@@ -271,8 +315,14 @@ export default function PricingPage() {
 
               <CardFooter>
                 <Button
-                  className="w-full"
-                  variant={plan.name === 'ouro' ? 'default' : 'outline'}
+                  className={`w-full ${
+                    plan.name === 'ouro' 
+                      ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-white shadow-lg' 
+                      : plan.name === 'free'
+                      ? 'bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg'
+                      : ''
+                  }`}
+                  variant={plan.name === 'ouro' || plan.name === 'free' ? 'default' : 'outline'}
                   disabled={isCurrentPlan(plan.id) || checkoutLoading === plan.id}
                   onClick={() => handleSelectPlan(plan.id, plan.name)}
                 >
@@ -286,9 +336,12 @@ export default function PricingPage() {
                   ) : plan.name === 'personalizado' ? (
                     'Entrar em Contato'
                   ) : plan.name === 'free' ? (
-                    'Iniciar Teste Grátis'
+                    <>
+                      <Zap className="mr-2 h-4 w-4" />
+                      Iniciar Teste Grátis
+                    </>
                   ) : (
-                    'Assinar Plano'
+                    'Assinar Agora'
                   )}
                 </Button>
               </CardFooter>
@@ -296,15 +349,35 @@ export default function PricingPage() {
           ))}
         </div>
 
-        {/* FAQ ou Garantias */}
-        <div className="max-w-4xl mx-auto mt-16 text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">
-            Garantia de Satisfação
-          </h3>
-          <p className="text-gray-600 mb-8">
-            Teste gratuitamente por 1 semana. Cancele a qualquer momento, sem taxas ou multas. 
-            Aceitamos cartão de crédito, débito, PIX e boleto bancário.
-          </p>
+        {/* Guarantee Section */}
+        <div className="max-w-4xl mx-auto mt-20">
+          <Card className="border-0 shadow-2xl bg-gradient-to-br from-white to-slate-50 p-8 text-center">
+            <CardContent>
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-primary to-accent mb-6">
+                <Check className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-3xl font-bold text-slate-900 mb-4">
+                Garantia de Satisfação
+              </h3>
+              <p className="text-lg text-slate-600 mb-6">
+                Teste gratuitamente por 7 dias. Cancele a qualquer momento, sem taxas ou multas.
+              </p>
+              <div className="flex items-center justify-center gap-8 text-sm text-slate-600">
+                <div className="flex items-center gap-2">
+                  <Check className="h-5 w-5 text-green-600" />
+                  <span>Cartão de Crédito</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-5 w-5 text-green-600" />
+                  <span>PIX</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-5 w-5 text-green-600" />
+                  <span>Boleto</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

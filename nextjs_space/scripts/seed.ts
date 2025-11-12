@@ -17,7 +17,7 @@ async function main() {
       email: 'admin@atsplatform.com',
       password: hashedPasswordAdmin,
       name: 'Administrador da Plataforma',
-      companyName: 'ATS Platform',
+      companyName: 'RecruitAI',
       role: 'superadmin'
     }
   });
