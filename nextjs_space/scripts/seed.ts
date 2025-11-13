@@ -64,12 +64,17 @@ async function main() {
       name: 'free',
       displayName: 'Teste Grátis',
       price: 0,
-      jobLimit: 5,
+      jobLimit: 100, // MESMO LIMITE DO OURO
       features: [
-        '5 vagas durante 1 semana',
-        'Análise básica de currículos com IA',
-        'Dashboard de candidatos',
-        'Suporte por email'
+        'Até 100 vagas durante 1 semana',
+        'Análise completa de currículos com IA',
+        'Dashboard avançado de candidatos',
+        'Filtros e busca avançada',
+        'Publicação automática em job boards',
+        'Relatórios e estatísticas avançadas',
+        'API de integração',
+        'Suporte dedicado 24/7',
+        '⭐ TODOS os recursos do Plano Ouro por 7 dias!'
       ]
     },
     {
