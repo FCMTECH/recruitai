@@ -85,41 +85,8 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       return;
     }
 
-    setIsApplying(true);
-    
-    // Verificar se tem perfil completo e currículo
-    try {
-      const profileResponse = await fetch("/api/candidates/profile");
-      if (!profileResponse.ok) {
-        toast.error("Complete seu perfil antes de se candidatar", {
-          action: {
-            label: "Ir para Perfil",
-            onClick: () => router.push("/candidate/profile"),
-          },
-        });
-        setIsApplying(false);
-        return;
-      }
-
-      const profileData = await profileResponse.json();
-      if (!profileData.profile.resumeUrl) {
-        toast.error("Você precisa enviar seu currículo antes de se candidatar", {
-          action: {
-            label: "Enviar Currículo",
-            onClick: () => router.push("/candidate/profile"),
-          },
-        });
-        setIsApplying(false);
-        return;
-      }
-
-      // Se tudo ok, redirecionar para candidatura
-      router.push(`/apply?jobId=${params.id}`);
-    } catch (error) {
-      console.error("Error checking profile:", error);
-      toast.error("Erro ao verificar perfil");
-      setIsApplying(false);
-    }
+    // Redirecionar direto para candidatura sem validações
+    router.push(`/apply?jobId=${params.id}`);
   };
 
   const formatDate = (dateString: string) => {
