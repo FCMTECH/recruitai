@@ -9,7 +9,13 @@ const signupSchema = z.object({
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   name: z.string().min(1, "Nome é obrigatório"),
   companyName: z.string().optional(),
-  role: z.enum(["candidate", "company"]).default("candidate"),
+  role: z.any().transform((val) => {
+    // If role is not provided or invalid, default to 'candidate'
+    if (val === "candidate" || val === "company") {
+      return val;
+    }
+    return "candidate";
+  }),
 });
 
 export async function POST(request: NextRequest) {
