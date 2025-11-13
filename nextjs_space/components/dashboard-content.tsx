@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
@@ -7,384 +5,582 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, Plus, Users, Briefcase, TrendingUp, FileText, Sparkles, LogOut, Settings } from "lucide-react";
-import Link from "next/link";
+import {
+  Briefcase,
+  Users,
+  Clock,
+  CheckCircle,
+  XCircle,
+  TrendingUp,
+  MapPin,
+  BarChart3,
+  PieChart,
+  Activity,
+  Target,
+  Award,
+  Calendar,
+  LogOut
+} from "lucide-react";
+import { Bar, Line, Pie, Doughnut } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
 
-interface DashboardStats {
-  totalJobs: number;
-  activeJobs: number;
-  totalApplications: number;
-  pendingApplications: number;
-}
+// Registrar componentes do Chart.js
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
-interface Subscription {
-  id: string;
-  status: string;
-  jobsCreatedThisMonth: number;
-  trialEndsAt?: string;
-  plan: {
-    displayName: string;
-    name: string;
-    jobLimit: number;
+interface AdvancedStats {
+  overview: {
+    totalJobs: number;
+    activeJobs: number;
+    totalApplications: number;
+    pendingApplications: number;
+    approvedApplications: number;
+    rejectedApplications: number;
+    approvalRate: number;
+    conversionRate: number;
+    avgCompatibilityScore: number;
+    avgApprovalTime: number;
   };
+  classification: {
+    strong: number;
+    potential: number;
+    review: number;
+    incompatible: number;
+  };
+  stateDistribution: Record<string, number>;
+  dailyApplications: Record<string, number>;
+  typeDistribution: Record<string, number>;
+  topJobs: Array<{ id: string; title: string; applications: number }>;
 }
 
 export default function DashboardContent() {
-  const { data: session, status } = useSession();
+  const { data: session, status } = useSession() || {};
   const router = useRouter();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalJobs: 0,
-    activeJobs: 0,
-    totalApplications: 0,
-    pendingApplications: 0,
-  });
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
+  const [stats, setStats] = useState<AdvancedStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted && status === "unauthenticated") {
+    if (status === "unauthenticated") {
       router.push("/auth/signin");
       return;
     }
-  }, [mounted, status, router]);
 
-  useEffect(() => {
-    if (session) {
+    if (status === "authenticated") {
       fetchStats();
-      fetchSubscription();
     }
-  }, [session]);
+  }, [status, router]);
 
   const fetchStats = async () => {
     try {
-      const response = await fetch("/api/dashboard/stats");
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
+      const res = await fetch("/api/dashboard/advanced-stats");
+      const data = await res.json();
+      setStats(data);
     } catch (error) {
       console.error("Error fetching stats:", error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const fetchSubscription = async () => {
-    try {
-      const response = await fetch("/api/subscriptions/current");
-      if (response.ok) {
-        const data = await response.json();
-        setSubscription(data.subscription);
-      }
-    } catch (error) {
-      console.error("Error fetching subscription:", error);
-    }
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push("/");
   };
 
-  if (!mounted || status === "loading" || status === "unauthenticated") {
+  if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-center justify-center">
-        <div className="flex items-center gap-2 animate-pulse">
-          <Brain className="h-8 w-8 text-primary" />
-          <span className="text-lg font-medium text-muted-foreground">Carregando...</span>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
+        <div className="animate-pulse text-lg text-muted-foreground">Carregando...</div>
       </div>
     );
   }
 
+  if (!stats) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
+        <div className="text-lg text-muted-foreground">Erro ao carregar estatísticas</div>
+      </div>
+    );
+  }
+
+  // Dados para gráficos
+  const classificationData = {
+    labels: ['Forte', 'Potencial', 'Revisar', 'Incompatível'],
+    datasets: [{
+      label: 'Candidatos por Classificação',
+      data: [
+        stats.classification.strong,
+        stats.classification.potential,
+        stats.classification.review,
+        stats.classification.incompatible
+      ],
+      backgroundColor: [
+        'rgba(34, 197, 94, 0.8)',
+        'rgba(59, 130, 246, 0.8)',
+        'rgba(251, 191, 36, 0.8)',
+        'rgba(239, 68, 68, 0.8)'
+      ],
+      borderColor: [
+        'rgb(34, 197, 94)',
+        'rgb(59, 130, 246)',
+        'rgb(251, 191, 36)',
+        'rgb(239, 68, 68)'
+      ],
+      borderWidth: 2
+    }]
+  };
+
+  const statusData = {
+    labels: ['Pendentes', 'Aprovados', 'Rejeitados'],
+    datasets: [{
+      label: 'Status das Candidaturas',
+      data: [
+        stats.overview.pendingApplications,
+        stats.overview.approvedApplications,
+        stats.overview.rejectedApplications
+      ],
+      backgroundColor: [
+        'rgba(251, 191, 36, 0.8)',
+        'rgba(34, 197, 94, 0.8)',
+        'rgba(239, 68, 68, 0.8)'
+      ],
+      borderColor: [
+        'rgb(251, 191, 36)',
+        'rgb(34, 197, 94)',
+        'rgb(239, 68, 68)'
+      ],
+      borderWidth: 2
+    }]
+  };
+
+  const stateLabels = Object.keys(stats.stateDistribution);
+  const stateValues = Object.values(stats.stateDistribution);
+  
+  const stateData = {
+    labels: stateLabels,
+    datasets: [{
+      label: 'Candidaturas por Estado',
+      data: stateValues,
+      backgroundColor: 'rgba(59, 130, 246, 0.7)',
+      borderColor: 'rgb(59, 130, 246)',
+      borderWidth: 2
+    }]
+  };
+
+  const dailyLabels = Object.keys(stats.dailyApplications).sort();
+  const dailyValues = dailyLabels.map(date => stats.dailyApplications[date]);
+
+  const dailyData = {
+    labels: dailyLabels.map(date => {
+      const d = new Date(date);
+      return `${d.getDate()}/${d.getMonth() + 1}`;
+    }),
+    datasets: [{
+      label: 'Candidaturas por Dia',
+      data: dailyValues,
+      fill: true,
+      backgroundColor: 'rgba(59, 130, 246, 0.2)',
+      borderColor: 'rgb(59, 130, 246)',
+      borderWidth: 2,
+      tension: 0.4
+    }]
+  };
+
+  const typeLabels = Object.keys(stats.typeDistribution);
+  const typeValues = Object.values(stats.typeDistribution);
+
+  const typeData = {
+    labels: typeLabels,
+    datasets: [{
+      label: 'Vagas por Tipo',
+      data: typeValues,
+      backgroundColor: [
+        'rgba(168, 85, 247, 0.8)',
+        'rgba(236, 72, 153, 0.8)',
+        'rgba(251, 146, 60, 0.8)'
+      ],
+      borderColor: [
+        'rgb(168, 85, 247)',
+        'rgb(236, 72, 153)',
+        'rgb(251, 146, 60)'
+      ],
+      borderWidth: 2
+    }]
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-slate-200/50">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between max-w-7xl">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Brain className="h-8 w-8 text-primary" />
-              <Sparkles className="h-4 w-4 text-accent absolute -top-1 -right-1" />
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              RecruitAI
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            {session?.user?.role === "superadmin" && (
-              <Link href="/admin">
-                <Button variant="default" className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Painel Admin
-                </Button>
-              </Link>
-            )}
-            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100">
-              <span className="text-sm font-medium text-slate-700">
-                {session?.user?.companyName}
-              </span>
+      <header className="sticky top-0 z-50 backdrop-blur-lg bg-background/80 border-b border-border shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-purple-600 to-accent bg-clip-text text-transparent">
+                RecruitAI
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Bem-vindo, {session?.user?.name || session?.user?.companyName}
+              </p>
             </div>
             <Button
               variant="outline"
-              onClick={() => signOut({ callbackUrl: "/" })}
-              className="border-slate-300"
+              onClick={handleLogout}
+              className="gap-2"
             >
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className="h-4 w-4" />
               Sair
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-6 pt-24 pb-12 max-w-7xl">
-        {/* Welcome */}
-        <div className="mb-8 animate-slide-up">
-          <h1 className="text-4xl font-bold text-slate-900 mb-3">
-            Bem-vindo, {session?.user?.name}! 👋
-          </h1>
-          <p className="text-lg text-slate-600">
-            Gerencie suas vagas e encontre os melhores talentos com o poder da IA.
-          </p>
+      <div className="container mx-auto px-4 py-8">
+        {/* KPIs Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total de Vagas</CardTitle>
+              <Briefcase className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.overview.totalJobs}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.overview.activeJobs} ativas
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Candidaturas</CardTitle>
+              <Users className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.overview.totalApplications}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.overview.pendingApplications} pendentes
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Taxa de Aprovação</CardTitle>
+              <Target className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stats.overview.approvalRate}%</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.overview.approvedApplications} aprovados
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Score Médio IA</CardTitle>
+              <Award className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">
+                {stats.overview.avgCompatibilityScore.toFixed(1)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Compatibilidade média
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Plan Information */}
-        {subscription ? (
-          <Card className="mb-8 border-0 shadow-xl bg-gradient-to-br from-white to-slate-50 overflow-hidden">
-            <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <h3 className="text-xl font-bold text-slate-900">
-                      Plano {subscription.plan.displayName}
-                    </h3>
-                    {subscription.status === 'trial' && (
-                      <span className="px-3 py-1 text-xs font-semibold bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-full shadow-sm">
-                        Período de Teste
-                      </span>
-                    )}
-                    {subscription.status === 'active' && (
-                      <span className="px-3 py-1 text-xs font-semibold bg-gradient-to-r from-green-400 to-emerald-400 text-white rounded-full shadow-sm">
-                        Ativo
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex flex-col md:flex-row md:items-center gap-4 text-sm text-slate-600 mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-slate-900">
-                        {subscription.jobsCreatedThisMonth}
-                      </span>
-                      <span className="text-slate-500">/</span>
-                      <span className="font-medium">{subscription.plan.jobLimit}</span>
-                      <span className="text-slate-500">vagas usadas este mês</span>
-                    </div>
-                    {subscription.status === 'trial' && subscription.trialEndsAt && (
-                      <div className="flex items-center gap-2 px-3 py-1 bg-yellow-50 rounded-lg border border-yellow-200">
-                        <span className="text-yellow-700 font-medium text-xs">
-                          Teste expira em {new Date(subscription.trialEndsAt).toLocaleDateString('pt-BR')}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  {/* Progress Bar */}
-                  <div className="relative bg-slate-200 rounded-full h-3 overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-500 ${
-                        subscription.jobsCreatedThisMonth >= subscription.plan.jobLimit
-                          ? 'bg-gradient-to-r from-red-500 to-red-600'
-                          : subscription.jobsCreatedThisMonth / subscription.plan.jobLimit > 0.8
-                          ? 'bg-gradient-to-r from-yellow-400 to-orange-400'
-                          : 'bg-gradient-to-r from-primary to-accent'
-                      }`}
-                      style={{
-                        width: `${Math.min((subscription.jobsCreatedThisMonth / subscription.plan.jobLimit) * 100, 100)}%`
-                      }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Button asChild className="bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg">
-                    <Link href="/pricing">
-                      {subscription.plan.name === 'free' ? 'Escolher Plano' : 'Fazer Upgrade'}
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="mb-8 border-0 shadow-xl bg-gradient-to-br from-yellow-50 to-orange-50">
-            <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">
-                    Nenhum plano ativo
-                  </h3>
-                  <p className="text-sm text-slate-600">
-                    Escolha um plano para começar a criar vagas e receber candidatos
-                  </p>
-                </div>
-                <Button asChild className="bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg">
-                  <Link href="/pricing">
-                    Ver Planos
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">
-                Total de Vagas
+        {/* Secondary KPIs */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-blue-600" />
+                Taxa de Conversão
               </CardTitle>
-              <div className="p-2 rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
-                <Briefcase className="h-5 w-5 text-primary" />
-              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-slate-900">{isLoading ? "..." : stats.totalJobs}</div>
-              <p className="text-xs text-slate-500 mt-1">
-                {stats.activeJobs} ativas no momento
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.overview.conversionRate}%
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Candidatos aprovados + fortes
               </p>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">
-                Total de Candidatos
-              </CardTitle>
-              <div className="p-2 rounded-lg bg-green-50 group-hover:bg-green-100 transition-colors">
-                <Users className="h-5 w-5 text-accent" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-slate-900">{isLoading ? "..." : stats.totalApplications}</div>
-              <p className="text-xs text-slate-500 mt-1">
-                {stats.pendingApplications} aguardando análise
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">
-                Taxa de Análise
-              </CardTitle>
-              <div className="p-2 rounded-lg bg-violet-50 group-hover:bg-violet-100 transition-colors">
-                <TrendingUp className="h-5 w-5 text-violet-600" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-slate-900">98%</div>
-              <p className="text-xs text-slate-500 mt-1">
-                Automática com IA
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Clock className="h-4 w-4 text-orange-600" />
                 Tempo Médio
               </CardTitle>
-              <div className="p-2 rounded-lg bg-orange-50 group-hover:bg-orange-100 transition-colors">
-                <FileText className="h-5 w-5 text-orange-600" />
-              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-slate-900">30s</div>
-              <p className="text-xs text-slate-500 mt-1">
-                Por análise completa
+              <div className="text-2xl font-bold text-orange-600">
+                {stats.overview.avgApprovalTime} dias
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Para aprovação
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Activity className="h-4 w-4 text-green-600" />
+                Candidatos Fortes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.classification.strong}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Classificação alta pela IA
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-white to-slate-50 group">
+        {/* Charts Row 1 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <Card className="border-0 shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                  <Plus className="h-6 w-6 text-primary" />
-                </div>
-                <span>Criar Nova Vaga</span>
+              <CardTitle className="flex items-center gap-2">
+                <PieChart className="h-5 w-5 text-primary" />
+                Classificação de Candidatos
               </CardTitle>
-              <CardDescription className="text-base">
-                Configure critérios personalizados e comece a receber candidatos qualificados
-              </CardDescription>
+              <CardDescription>Distribuição por análise de IA</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button asChild className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg py-6 text-base">
-                <Link href="/dashboard/jobs/create">
-                  <Plus className="mr-2 h-5 w-5" />
-                  Criar Vaga
-                </Link>
-              </Button>
+              <div className="h-64">
+                <Doughnut 
+                  data={classificationData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'bottom'
+                      }
+                    }
+                  }}
+                />
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gradient-to-br from-white to-slate-50 group">
+          <Card className="border-0 shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
-                  <Briefcase className="h-6 w-6 text-accent" />
-                </div>
-                <span>Gerenciar Vagas</span>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                Status das Candidaturas
               </CardTitle>
-              <CardDescription className="text-base">
-                Visualize candidatos, analise resultados da IA e tome decisões informadas
-              </CardDescription>
+              <CardDescription>Visão geral do processo seletivo</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button asChild variant="outline" className="w-full border-2 hover:border-primary hover:text-primary py-6 text-base">
-                <Link href="/dashboard/jobs">
-                  <Briefcase className="mr-2 h-5 w-5" />
-                  Ver Todas as Vagas
-                </Link>
-              </Button>
+              <div className="h-64">
+                <Pie 
+                  data={statusData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'bottom'
+                      }
+                    }
+                  }}
+                />
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Info Card */}
-        <Card className="border-0 shadow-2xl bg-gradient-to-r from-primary via-accent to-primary text-white overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24" />
-          <CardHeader className="relative z-10">
-            <CardTitle className="flex items-center gap-3 text-2xl">
-              <div className="p-3 rounded-xl bg-white/20 backdrop-blur">
-                <Brain className="h-8 w-8" />
+        {/* Charts Row 2 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" />
+                Candidaturas por Estado
+              </CardTitle>
+              <CardDescription>Distribuição geográfica</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64">
+                <Bar 
+                  data={stateData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: false
+                      }
+                    },
+                    scales: {
+                      y: {
+                        beginAtZero: true
+                      }
+                    }
+                  }}
+                />
               </div>
-              <span>Análise Inteligente de Currículos</span>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-primary" />
+                Vagas por Tipo de Contratação
+              </CardTitle>
+              <CardDescription>Distribuição por modalidade</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64">
+                <Doughnut 
+                  data={typeData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'bottom'
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts Row 3 */}
+        <Card className="border-0 shadow-lg mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              Candidaturas nos Últimos 30 Dias
             </CardTitle>
-            <CardDescription className="text-white/90 text-base">
-              Nossa IA analisa automaticamente cada currículo com base nos critérios
-              específicos da sua vaga, fornecendo scores detalhados e explicações transparentes.
-            </CardDescription>
+            <CardDescription>Tendência temporal de aplicações</CardDescription>
           </CardHeader>
-          <CardContent className="relative z-10">
-            <div className="grid md:grid-cols-3 gap-6 text-center">
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="text-3xl font-bold mb-2">🟢 90-100%</div>
-                <div className="text-sm text-white/90 font-medium">Forte Candidato</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="text-3xl font-bold mb-2">🔵 70-89%</div>
-                <div className="text-sm text-white/90 font-medium">Potencial</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                <div className="text-3xl font-bold mb-2">🟡 50-69%</div>
-                <div className="text-sm text-white/90 font-medium">Revisar</div>
-              </div>
+          <CardContent>
+            <div className="h-80">
+              <Line 
+                data={dailyData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      display: false
+                    }
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true
+                    }
+                  }
+                }}
+              />
             </div>
           </CardContent>
         </Card>
+
+        {/* Top Jobs */}
+        <Card className="border-0 shadow-lg mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-primary" />
+              Top 5 Vagas Mais Populares
+            </CardTitle>
+            <CardDescription>Vagas com maior número de candidaturas</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {stats.topJobs.map((job, index) => (
+                <div key={job.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-600 text-white font-bold">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="font-medium">{job.title}</p>
+                      <p className="text-sm text-muted-foreground">{job.applications} candidaturas</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push(`/dashboard/jobs/${job.id}`)}
+                  >
+                    Ver Detalhes
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Button
+            size="lg"
+            className="w-full bg-gradient-to-r from-primary to-purple-600 hover:opacity-90"
+            onClick={() => router.push("/dashboard/jobs/create")}
+          >
+            <Briefcase className="mr-2 h-5 w-5" />
+            Criar Nova Vaga
+          </Button>
+
+          <Button
+            size="lg"
+            variant="outline"
+            className="w-full"
+            onClick={() => router.push("/dashboard/jobs")}
+          >
+            <BarChart3 className="mr-2 h-5 w-5" />
+            Ver Todas as Vagas
+          </Button>
+
+          <Button
+            size="lg"
+            variant="outline"
+            className="w-full"
+            onClick={() => router.push("/dashboard/talents")}
+          >
+            <Users className="mr-2 h-5 w-5" />
+            Banco de Talentos
+          </Button>
+        </div>
       </div>
     </div>
   );

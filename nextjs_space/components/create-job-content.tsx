@@ -90,12 +90,80 @@ export default function CreateJobContent() {
     title: "",
     description: "",
     requirements: "",
-    location: "",
+    country: "Brasil",
+    state: "",
+    city: "",
     type: "full-time"
   });
 
   const [criteria, setCriteria] = useState<JobCriteria[]>(defaultCriteria);
   const [stages, setStages] = useState<JobStage[]>(defaultStages);
+
+  // Location data
+  const [countries, setCountries] = useState<any[]>([]);
+  const [states, setStates] = useState<any[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+
+  // Load countries on mount
+  useEffect(() => {
+    const loadCountries = async () => {
+      try {
+        const res = await fetch('/api/locations/countries');
+        const data = await res.json();
+        setCountries(data);
+      } catch (error) {
+        console.error('Error loading countries:', error);
+      }
+    };
+    loadCountries();
+  }, []);
+
+  // Load states when country changes
+  useEffect(() => {
+    const loadStates = async () => {
+      if (!formData.country) {
+        setStates([]);
+        return;
+      }
+      try {
+        const countryCode = countries.find(c => c.name === formData.country)?.code;
+        if (countryCode) {
+          const res = await fetch(`/api/locations/states?country=${countryCode}`);
+          const data = await res.json();
+          setStates(data);
+        }
+      } catch (error) {
+        console.error('Error loading states:', error);
+      }
+    };
+    if (countries.length > 0) {
+      loadStates();
+    }
+  }, [formData.country, countries]);
+
+  // Load cities when state changes
+  useEffect(() => {
+    const loadCities = async () => {
+      if (!formData.country || !formData.state) {
+        setCities([]);
+        return;
+      }
+      try {
+        const countryCode = countries.find(c => c.name === formData.country)?.code;
+        const stateCode = states.find(s => s.name === formData.state)?.code;
+        if (countryCode && stateCode) {
+          const res = await fetch(`/api/locations/cities?country=${countryCode}&state=${stateCode}`);
+          const data = await res.json();
+          setCities(data);
+        }
+      } catch (error) {
+        console.error('Error loading cities:', error);
+      }
+    };
+    if (countries.length > 0 && states.length > 0) {
+      loadCities();
+    }
+  }, [formData.state, formData.country, countries, states]);
 
   useEffect(() => {
     setMounted(true);
@@ -364,32 +432,86 @@ export default function CreateJobContent() {
                 />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              {/* Localização Hierárquica */}
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="location">Localização</Label>
-                  <Input
-                    id="location"
-                    name="location"
-                    placeholder="São Paulo, SP ou Remoto"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="type">Tipo de Contratação</Label>
+                  <Label htmlFor="country">País</Label>
                   <select
-                    id="type"
-                    name="type"
+                    id="country"
+                    name="country"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={formData.type}
-                    onChange={handleInputChange}
+                    value={formData.country}
+                    onChange={(e) => {
+                      handleInputChange(e);
+                      setFormData(prev => ({ ...prev, state: "", city: "" }));
+                    }}
                   >
-                    <option value="full-time">Tempo Integral</option>
-                    <option value="part-time">Meio Período</option>
-                    <option value="contract">Contrato</option>
+                    <option value="">Selecione um país</option>
+                    {countries.map((country) => (
+                      <option key={country.code} value={country.name}>
+                        {country.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="state">Estado / Região</Label>
+                    <select
+                      id="state"
+                      name="state"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={formData.state}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        setFormData(prev => ({ ...prev, city: "" }));
+                      }}
+                      disabled={!formData.country || states.length === 0}
+                    >
+                      <option value="">Selecione um estado</option>
+                      {states.map((state) => (
+                        <option key={state.code} value={state.name}>
+                          {state.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="city">Cidade</Label>
+                    <select
+                      id="city"
+                      name="city"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      disabled={!formData.state || cities.length === 0}
+                    >
+                      <option value="">Selecione uma cidade</option>
+                      {cities.map((city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="type">Tipo de Contratação</Label>
+                <select
+                  id="type"
+                  name="type"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={formData.type}
+                  onChange={handleInputChange}
+                >
+                  <option value="full-time">Tempo Integral</option>
+                  <option value="part-time">Meio Período</option>
+                  <option value="contract">Contrato</option>
+                </select>
               </div>
             </CardContent>
           </Card>

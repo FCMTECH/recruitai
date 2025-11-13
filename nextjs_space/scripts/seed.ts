@@ -64,9 +64,9 @@ async function main() {
       name: 'free',
       displayName: 'Teste Grátis',
       price: 0,
-      jobLimit: 100, // MESMO LIMITE DO OURO
+      jobLimit: 5, // 5 vagas durante 1 semana
       features: [
-        'Até 100 vagas durante 1 semana',
+        'Até 5 vagas durante 1 semana',
         'Análise completa de currículos com IA',
         'Dashboard avançado de candidatos',
         'Filtros e busca avançada',

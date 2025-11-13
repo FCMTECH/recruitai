@@ -73,7 +73,10 @@ model Job {
   title       String
   description String   @db.Text
   requirements String  @db.Text
-  location    String?
+  location    String?  // Deprecated - use country, state, city instead
+  country     String?  @default("Brasil") // País da vaga
+  state       String?  // Estado/UF da vaga
+  city        String?  // Cidade da vaga
   type        String   @default("full-time") // full-time, part-time, contract
   status      String   @default("active") // active, paused, closed
   createdAt   DateTime @default(now())
