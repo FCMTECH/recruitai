@@ -485,8 +485,8 @@ export default function CandidateProfilePage() {
                     </div>
                     <div className="grid md:grid-cols-3 gap-4">
                       <div>
-                        <Label>Data de Início *</Label>
-                        <Input type="month" value={edu.startDate} onChange={(e) => { const newEdu = [...education]; newEdu[index].startDate = e.target.value; setEducation(newEdu); }} required />
+                        <Label>Data de Início</Label>
+                        <Input type="month" value={edu.startDate} onChange={(e) => { const newEdu = [...education]; newEdu[index].startDate = e.target.value; setEducation(newEdu); }} />
                       </div>
                       <div>
                         <Label>Data de Conclusão</Label>
@@ -547,8 +547,8 @@ export default function CandidateProfilePage() {
                     </div>
                     <div className="grid md:grid-cols-3 gap-4">
                       <div>
-                        <Label>Data de Início *</Label>
-                        <Input type="month" value={exp.startDate} onChange={(e) => { const newExp = [...experiences]; newExp[index].startDate = e.target.value; setExperiences(newExp); }} required />
+                        <Label>Data de Início</Label>
+                        <Input type="month" value={exp.startDate} onChange={(e) => { const newExp = [...experiences]; newExp[index].startDate = e.target.value; setExperiences(newExp); }} />
                       </div>
                       <div>
                         <Label>Data de Saída</Label>
@@ -719,8 +719,8 @@ export default function CandidateProfilePage() {
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <Label>Data de Emissão *</Label>
-                        <Input type="month" value={cert.issueDate} onChange={(e) => { const newCerts = [...certifications]; newCerts[index].issueDate = e.target.value; setCertifications(newCerts); }} required />
+                        <Label>Data de Emissão</Label>
+                        <Input type="month" value={cert.issueDate} onChange={(e) => { const newCerts = [...certifications]; newCerts[index].issueDate = e.target.value; setCertifications(newCerts); }} />
                       </div>
                       <div>
                         <Label>Data de Expiração</Label>

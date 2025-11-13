@@ -47,12 +47,22 @@ export async function POST(request: NextRequest) {
       description,
     } = body;
 
-    if (!candidateId || !institution || !degree || !fieldOfStudy || !startDate) {
+    if (!candidateId || !institution || !degree || !fieldOfStudy) {
       return NextResponse.json(
         { error: 'Campos obrigatórios faltando' },
         { status: 400 }
       );
     }
+
+    // Helper function to convert YYYY-MM format to Date
+    const convertToDate = (dateStr: string | undefined | null) => {
+      if (!dateStr) return null;
+      // If format is YYYY-MM, add -01 to make it a valid date
+      if (dateStr.match(/^\d{4}-\d{2}$/)) {
+        return new Date(dateStr + '-01');
+      }
+      return new Date(dateStr);
+    };
 
     const education = await db.education.create({
       data: {
@@ -60,8 +70,8 @@ export async function POST(request: NextRequest) {
         institution,
         degree,
         fieldOfStudy,
-        startDate: new Date(startDate),
-        endDate: endDate ? new Date(endDate) : null,
+        startDate: startDate ? convertToDate(startDate)! : new Date(),
+        endDate: endDate ? convertToDate(endDate) : null,
         isCurrent: isCurrent || false,
         description,
       },
@@ -90,9 +100,19 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Helper function to convert YYYY-MM format to Date
+    const convertToDate = (dateStr: string | undefined | null) => {
+      if (!dateStr) return null;
+      // If format is YYYY-MM, add -01 to make it a valid date
+      if (dateStr.match(/^\d{4}-\d{2}$/)) {
+        return new Date(dateStr + '-01');
+      }
+      return new Date(dateStr);
+    };
+
     // Converter datas se existirem
-    if (data.startDate) data.startDate = new Date(data.startDate);
-    if (data.endDate) data.endDate = new Date(data.endDate);
+    if (data.startDate) data.startDate = convertToDate(data.startDate);
+    if (data.endDate) data.endDate = convertToDate(data.endDate);
 
     const education = await db.education.update({
       where: { id },

@@ -47,20 +47,30 @@ export async function POST(request: NextRequest) {
       description,
     } = body;
 
-    if (!candidateId || !name || !issuingOrg || !issueDate) {
+    if (!candidateId || !name || !issuingOrg) {
       return NextResponse.json(
         { error: 'Campos obrigatórios faltando' },
         { status: 400 }
       );
     }
 
+    // Helper function to convert YYYY-MM format to Date
+    const convertToDate = (dateStr: string | undefined | null) => {
+      if (!dateStr) return null;
+      // If format is YYYY-MM, add -01 to make it a valid date
+      if (dateStr.match(/^\d{4}-\d{2}$/)) {
+        return new Date(dateStr + '-01');
+      }
+      return new Date(dateStr);
+    };
+
     const certification = await db.certification.create({
       data: {
         candidateId,
         name,
         issuingOrg,
-        issueDate: new Date(issueDate),
-        expiryDate: expiryDate ? new Date(expiryDate) : null,
+        issueDate: issueDate ? convertToDate(issueDate)! : new Date(),
+        expiryDate: expiryDate ? convertToDate(expiryDate) : null,
         credentialId,
         credentialUrl,
         description,
@@ -90,9 +100,19 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Helper function to convert YYYY-MM format to Date
+    const convertToDate = (dateStr: string | undefined | null) => {
+      if (!dateStr) return null;
+      // If format is YYYY-MM, add -01 to make it a valid date
+      if (dateStr.match(/^\d{4}-\d{2}$/)) {
+        return new Date(dateStr + '-01');
+      }
+      return new Date(dateStr);
+    };
+
     // Converter datas se existirem
-    if (data.issueDate) data.issueDate = new Date(data.issueDate);
-    if (data.expiryDate) data.expiryDate = new Date(data.expiryDate);
+    if (data.issueDate) data.issueDate = convertToDate(data.issueDate);
+    if (data.expiryDate) data.expiryDate = convertToDate(data.expiryDate);
 
     const certification = await db.certification.update({
       where: { id },

@@ -53,12 +53,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Helper function to convert YYYY-MM format to Date
+    const convertToDate = (dateStr: string | undefined | null) => {
+      if (!dateStr) return null;
+      // If format is YYYY-MM, add -01 to make it a valid date
+      if (dateStr.match(/^\d{4}-\d{2}$/)) {
+        return new Date(dateStr + '-01');
+      }
+      return new Date(dateStr);
+    };
+
     const course = await db.course.create({
       data: {
         candidateId,
         name,
         institution,
-        completionDate: completionDate ? new Date(completionDate) : null,
+        completionDate: convertToDate(completionDate),
         workload,
         description,
         certificateUrl,
@@ -88,8 +98,18 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Helper function to convert YYYY-MM format to Date
+    const convertToDate = (dateStr: string | undefined | null) => {
+      if (!dateStr) return null;
+      // If format is YYYY-MM, add -01 to make it a valid date
+      if (dateStr.match(/^\d{4}-\d{2}$/)) {
+        return new Date(dateStr + '-01');
+      }
+      return new Date(dateStr);
+    };
+
     // Converter data se existir
-    if (data.completionDate) data.completionDate = new Date(data.completionDate);
+    if (data.completionDate) data.completionDate = convertToDate(data.completionDate);
 
     const course = await db.course.update({
       where: { id },
