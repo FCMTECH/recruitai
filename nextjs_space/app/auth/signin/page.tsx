@@ -85,8 +85,9 @@ export default function SignInPage() {
   const handleOAuthSignIn = async (provider: "google" | "linkedin") => {
     setOAuthLoading(true);
     try {
+      // For OAuth, candidates are redirected to their dashboard
       await signIn(provider, {
-        callbackUrl: "/dashboard",
+        callbackUrl: "/candidate/dashboard",
       });
     } catch (error) {
       toast({

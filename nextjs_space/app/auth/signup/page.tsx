@@ -104,7 +104,7 @@ export default function SignUpPage() {
     setOAuthLoading(true);
     try {
       await signIn(provider, {
-        callbackUrl: "/candidate/profile",
+        callbackUrl: "/candidate/dashboard",
       });
     } catch (error) {
       toast({

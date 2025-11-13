@@ -192,11 +192,13 @@ export default function JobsPage() {
                       {job._count.applications}
                     </span>
                   </div>
-                  <Link href={`/dashboard/jobs/${job.id}`}>
-                    <Button variant="outline" size="sm">
-                      Ver Detalhes
-                    </Button>
-                  </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.open(`/dashboard/jobs/${job.id}`, '_blank')}
+                  >
+                    Ver Detalhes
+                  </Button>
                 </div>
               </CardContent>
             </Card>

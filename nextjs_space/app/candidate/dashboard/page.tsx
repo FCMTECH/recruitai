@@ -36,6 +36,7 @@ interface Job {
   location?: string;
   type?: string;
   createdAt: string;
+  matchPercentage?: number;
 }
 
 interface Application {
@@ -122,13 +123,30 @@ export default function CandidateDashboard() {
   const fetchJobs = async () => {
     setIsLoadingJobs(true);
     try {
-      const response = await fetch("/api/jobs/public");
-      if (response.ok) {
-        const data = await response.json();
-        setJobs(data);
-        setFilteredJobs(data);
+      // Try to fetch jobs with match percentages
+      const matchResponse = await fetch("/api/candidates/job-match");
+      if (matchResponse.ok) {
+        const data = await matchResponse.json();
+        setJobs(data.jobs);
+        setFilteredJobs(data.jobs);
+        
+        // Check profile completeness and show prompt if needed
+        if (!data.profileCompleteness.hasResume) {
+          toast.info("Complete seu perfil para ver a compatibilidade com as vagas", {
+            action: {
+              label: "Completar Perfil",
+              onClick: () => router.push("/candidate/profile"),
+            },
+          });
+        }
       } else {
-        toast.error("Erro ao carregar vagas");
+        // Fallback to public jobs
+        const publicResponse = await fetch("/api/jobs/public");
+        if (publicResponse.ok) {
+          const data = await publicResponse.json();
+          setJobs(data);
+          setFilteredJobs(data);
+        }
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -464,6 +482,21 @@ export default function CandidateDashboard() {
                                 {job.type}
                               </Badge>
                             )}
+                            {job.matchPercentage !== undefined && (
+                              <Badge 
+                                variant="outline" 
+                                className={
+                                  job.matchPercentage >= 70 
+                                    ? "bg-green-500/10 text-green-700 border-green-300" 
+                                    : job.matchPercentage >= 50
+                                    ? "bg-yellow-500/10 text-yellow-700 border-yellow-300"
+                                    : "bg-orange-500/10 text-orange-700 border-orange-300"
+                                }
+                              >
+                                <TrendingUp className="h-3 w-3 mr-1" />
+                                {job.matchPercentage}% compatível
+                              </Badge>
+                            )}
                           </div>
                           {job.description && (
                             <CardDescription className="line-clamp-2 text-base mb-4">
@@ -475,15 +508,15 @@ export default function CandidateDashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="flex gap-2">
-                        <Link href={`/apply?jobId=${job.id}`} className="flex-1">
-                          <Button className="w-full bg-gradient-to-r from-primary to-accent">
-                            Candidatar-se
+                        <Link href={`/vagas/${job.id}`} className="flex-1">
+                          <Button variant="outline" className="w-full">
+                            <Eye className="h-4 w-4 mr-2" />
+                            Ver Detalhes
                           </Button>
                         </Link>
-                        <Link href={`/vagas`}>
-                          <Button variant="outline">
-                            <Eye className="h-4 w-4 mr-2" />
-                            Ver Mais
+                        <Link href={`/vagas/${job.id}`}>
+                          <Button className="bg-gradient-to-r from-primary to-accent">
+                            Candidatar-se
                           </Button>
                         </Link>
                       </div>
