@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, Plus, Users, MapPin, Calendar, Eye } from "lucide-react";
+import { Brain, Plus, Users, MapPin, Calendar, Eye, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 interface Job {
@@ -112,11 +112,14 @@ export default function JobsContent() {
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between max-w-6xl">
-          <div className="flex items-center space-x-2">
-            <Link href="/dashboard">
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard')}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex items-center space-x-2">
               <Brain className="h-8 w-8 text-blue-600" />
-            </Link>
-            <span className="text-xl font-bold">Gerenciar Vagas</span>
+              <span className="text-xl font-bold">Gerenciar Vagas</span>
+            </div>
           </div>
           <div className="flex items-center space-x-4">
             <Button asChild className="bg-blue-600 hover:bg-blue-700">

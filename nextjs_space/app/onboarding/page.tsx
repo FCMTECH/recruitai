@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Brain, Check, Loader2, Sparkles } from "lucide-react";
+import { Brain, Check, Loader2, Sparkles, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 interface Plan {
@@ -127,11 +127,17 @@ export default function OnboardingPage() {
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 max-w-7xl">
-          <div className="flex items-center justify-center gap-2">
-            <Brain className="h-8 w-8 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent" />
-            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              RecruitAI
-            </h1>
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" size="icon" onClick={() => router.push('/')}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <Brain className="h-8 w-8 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent" />
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                RecruitAI
+              </h1>
+            </div>
+            <div className="w-10" />
           </div>
         </div>
       </header>

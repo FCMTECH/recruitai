@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, Loader2, Zap, Brain, Crown } from 'lucide-react';
+import { Check, Sparkles, Loader2, Zap, Brain, Crown, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -171,15 +171,20 @@ export default function PricingPage() {
       {/* Header */}
       <header className="container mx-auto mb-12 max-w-7xl">
         <div className="flex items-center justify-between mb-8">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative">
-              <Brain className="h-8 w-8 text-primary transition-transform group-hover:scale-110" />
-              <Sparkles className="h-4 w-4 text-accent absolute -top-1 -right-1" />
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              RecruitAI
-            </span>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => router.push(sessionStatus === 'authenticated' ? '/dashboard' : '/')}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="relative">
+                <Brain className="h-8 w-8 text-primary transition-transform group-hover:scale-110" />
+                <Sparkles className="h-4 w-4 text-accent absolute -top-1 -right-1" />
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                RecruitAI
+              </span>
+            </Link>
+          </div>
           {sessionStatus === 'authenticated' && (
             <Button asChild variant="outline">
               <Link href="/dashboard">Voltar ao Dashboard</Link>
