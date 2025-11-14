@@ -332,7 +332,7 @@ export default async function AdminDashboard() {
                   >
                     <div>
                       <p className="font-medium">{job.title}</p>
-                      <p className="text-sm text-gray-500">{job.user.companyName}</p>
+                      <p className="text-sm text-gray-500">{job.user?.companyName || 'Empresa não encontrada'}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium text-purple-600">
