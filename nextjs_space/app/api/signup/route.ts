@@ -9,6 +9,7 @@ const signupSchema = z.object({
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   name: z.string().min(1, "Nome é obrigatório"),
   companyName: z.string().optional(),
+  planId: z.string().optional(),
   role: z.any().transform((val) => {
     // If role is not provided or invalid, default to 'candidate'
     if (val === "candidate" || val === "company") {
@@ -21,12 +22,20 @@ const signupSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, name, companyName, role } = signupSchema.parse(body);
+    const { email, password, name, companyName, role, planId } = signupSchema.parse(body);
 
     // Validate company name for companies
     if (role === "company" && !companyName) {
       return NextResponse.json(
         { error: "Nome da empresa é obrigatório para empresas" },
+        { status: 400 }
+      );
+    }
+
+    // Validate plan selection for companies
+    if (role === "company" && !planId) {
+      return NextResponse.json(
+        { error: "Por favor, selecione um plano para continuar" },
         { status: 400 }
       );
     }
@@ -63,6 +72,37 @@ export async function POST(request: NextRequest) {
         data: {
           email: user.email,
           fullName: user.name || "",
+        }
+      });
+    }
+
+    // If company, create subscription with selected plan
+    if (role === "company" && planId) {
+      const plan = await db.plan.findUnique({
+        where: { id: planId }
+      });
+
+      if (!plan) {
+        return NextResponse.json(
+          { error: "Plano selecionado não encontrado" },
+          { status: 400 }
+        );
+      }
+
+      const now = new Date();
+      const trialEndDate = new Date(now);
+      trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 days trial
+
+      await db.subscription.create({
+        data: {
+          userId: user.id,
+          planId: plan.id,
+          status: "trial",
+          startDate: now,
+          endDate: trialEndDate,
+          trialEndDate: trialEndDate,
+          jobsCreatedThisMonth: 0,
+          lastResetDate: now,
         }
       });
     }

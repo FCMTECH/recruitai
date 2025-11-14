@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
         issueDate: issueDate ? convertToDate(issueDate) : null,
         expiryDate: expiryDate ? convertToDate(expiryDate) : null,
         credentialId,
-        description,
       },
     });
 

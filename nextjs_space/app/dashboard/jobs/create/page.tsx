@@ -1,5 +1,7 @@
+"use client";
 
 import dynamic from "next/dynamic";
+import { SubscriptionGuard } from "@/components/ui/subscription-guard";
 
 const CreateJobContent = dynamic(() => import("@/components/create-job-content"), {
   ssr: false,
@@ -11,5 +13,9 @@ const CreateJobContent = dynamic(() => import("@/components/create-job-content")
 });
 
 export default function CreateJobPage() {
-  return <CreateJobContent />;
+  return (
+    <SubscriptionGuard requireActive={true}>
+      <CreateJobContent />
+    </SubscriptionGuard>
+  );
 }

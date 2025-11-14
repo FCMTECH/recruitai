@@ -1,5 +1,7 @@
+"use client";
 
 import dynamic from "next/dynamic";
+import { SubscriptionGuard } from "@/components/ui/subscription-guard";
 
 const DashboardContent = dynamic(() => import("@/components/dashboard-content"), {
   ssr: false,
@@ -11,5 +13,9 @@ const DashboardContent = dynamic(() => import("@/components/dashboard-content"),
 });
 
 export default function DashboardPage() {
-  return <DashboardContent />;
+  return (
+    <SubscriptionGuard>
+      <DashboardContent />
+    </SubscriptionGuard>
+  );
 }

@@ -87,6 +87,8 @@ export default function CandidateProfilePage() {
     phone: "",
     dateOfBirth: "",
     address: "",
+    street: "",
+    neighborhood: "",
     city: "",
     state: "",
     zipCode: "",

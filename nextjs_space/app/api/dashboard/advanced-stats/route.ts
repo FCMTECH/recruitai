@@ -186,7 +186,8 @@ export async function GET() {
         'part-time': 'Meio Período',
         'contract': 'Contrato'
       };
-      const label = typeLabels[job.type] || job.type;
+      const jobType = job.type || 'Outros';
+      const label = typeLabels[jobType] || jobType;
       typeDistribution[label] = job._count;
     });
 

@@ -16,7 +16,7 @@ async function main() {
     create: {
       email: 'admin@atsplatform.com',
       password: hashedPasswordAdmin,
-      name: 'Administrador da Plataforma',
+      criterion: 'Administrador da Plataforma',
       companyName: 'RecruitAI',
       role: 'superadmin'
     }
@@ -33,7 +33,7 @@ async function main() {
     create: {
       email: 'john@doe.com',
       password: hashedPassword,
-      name: 'João Silva',
+      criterion: 'João Silva',
       companyName: 'TechCorp Solutions',
       role: 'company'
     }
@@ -50,7 +50,7 @@ async function main() {
     create: {
       email: 'empresa@teste.com',
       password: hashedPassword2,
-      name: 'Maria Oliveira',
+      criterion: 'Maria Oliveira',
       companyName: 'Startup Inovadora',
       role: 'company'
     }
@@ -61,7 +61,7 @@ async function main() {
   // Create plans
   const plans = [
     {
-      name: 'free',
+      criterion: 'free',
       displayName: 'Teste Grátis',
       price: 0,
       jobLimit: 5, // 5 vagas durante 1 semana
@@ -78,7 +78,7 @@ async function main() {
       ]
     },
     {
-      name: 'bronze',
+      criterion: 'bronze',
       displayName: 'Bronze',
       price: 300,
       jobLimit: 25,
@@ -91,7 +91,7 @@ async function main() {
       ]
     },
     {
-      name: 'prata',
+      criterion: 'prata',
       displayName: 'Prata',
       price: 500,
       jobLimit: 50,
@@ -106,7 +106,7 @@ async function main() {
       ]
     },
     {
-      name: 'ouro',
+      criterion: 'ouro',
       displayName: 'Ouro',
       price: 800,
       jobLimit: 100,
@@ -122,7 +122,7 @@ async function main() {
       ]
     },
     {
-      name: 'personalizado',
+      criterion: 'personalizado',
       displayName: 'Personalizado',
       price: 0, // Preço personalizado
       jobLimit: 999,
@@ -182,35 +182,35 @@ async function main() {
       status: 'active',
       criteria: [
         {
-          name: 'Experiência em Desenvolvimento',
+          criterion: 'Experiência em Desenvolvimento',
           description: 'Anos de experiência em desenvolvimento de software e complexidade dos projetos realizados',
           weight: 35,
           required: true,
           category: 'experience'
         },
         {
-          name: 'Tecnologias Frontend',
+          criterion: 'Tecnologias Frontend',
           description: 'Conhecimento em React, JavaScript/TypeScript, HTML5, CSS3 e ferramentas modernas de desenvolvimento',
           weight: 25,
           required: true,
           category: 'skills'
         },
         {
-          name: 'Tecnologias Backend',
+          criterion: 'Tecnologias Backend',
           description: 'Experiência com Node.js, APIs REST, bancos de dados e arquitetura de sistemas',
           weight: 20,
           required: true,
           category: 'skills'
         },
         {
-          name: 'Formação Acadêmica',
+          criterion: 'Formação Acadêmica',
           description: 'Graduação em área relacionada à tecnologia (Ciência da Computação, Engenharia, etc.)',
           weight: 10,
           required: false,
           category: 'education'
         },
         {
-          name: 'Inglês',
+          criterion: 'Inglês',
           description: 'Nível de fluência em inglês para comunicação técnica e documentação',
           weight: 10,
           required: false,
@@ -227,28 +227,28 @@ async function main() {
       status: 'active',
       criteria: [
         {
-          name: 'Portfólio e Experiência',
+          criterion: 'Portfólio e Experiência',
           description: 'Qualidade do portfólio, diversidade de projetos e anos de experiência em UX/UI',
           weight: 40,
           required: true,
           category: 'experience'
         },
         {
-          name: 'Ferramentas de Design',
+          criterion: 'Ferramentas de Design',
           description: 'Domínio de Figma, Adobe Creative Suite, Sketch e outras ferramentas de design',
           weight: 25,
           required: true,
           category: 'skills'
         },
         {
-          name: 'UX Research e Estratégia',
+          criterion: 'UX Research e Estratégia',
           description: 'Conhecimento em pesquisa de usuário, design thinking, arquitetura de informação e usabilidade',
           weight: 20,
           required: true,
           category: 'skills'
         },
         {
-          name: 'Comunicação e Colaboração',
+          criterion: 'Comunicação e Colaboração',
           description: 'Habilidades de apresentação, trabalho em equipe e colaboração com desenvolvedores',
           weight: 15,
           required: false,

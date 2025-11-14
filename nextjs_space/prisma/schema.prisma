@@ -25,6 +25,7 @@ model User {
   sessions      Session[]
   jobs          Job[]
   subscriptions Subscription[]
+  notifications Notification[]
 }
 
 model Account {
@@ -251,10 +252,15 @@ model Application {
   criteriaScores    Json?    // Score breakdown by criteria
   
   // Application Status
-  status            String   @default("pending") // pending, approved, rejected
+  status            String   @default("pending") // pending, approved, rejected, hired
   currentStageId    String?
   notes             String?  @db.Text
   reviewedAt        DateTime?
+  
+  // Hiring Status
+  isHired           Boolean  @default(false)
+  hiredAt           DateTime?
+  hiredBy           String?  // User ID who marked as hired
   
   // Candidate Profile
   candidateProfileId String?
@@ -315,4 +321,21 @@ model Subscription {
   @@index([userId])
   @@index([planId])
   @@index([status])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // 'application_update', 'stage_change', 'system', etc.
+  title       String
+  message     String
+  isRead      Boolean  @default(false)
+  link        String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
 }

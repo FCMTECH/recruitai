@@ -2,16 +2,27 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, Eye, EyeOff, Loader2, Sparkles, User, Building2, Mail } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Brain, Eye, EyeOff, Loader2, Sparkles, User, Building2, Mail, Check, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+
+interface Plan {
+  id: string;
+  displayName: string;
+  description: string;
+  price: number;
+  jobLimit: number;
+  features: string[];
+  isPopular: boolean;
+}
 
 export default function SignUpPage() {
   const searchParams = useSearchParams();
@@ -25,12 +36,31 @@ export default function SignUpPage() {
     confirmPassword: "",
     companyName: "",
   });
+  const [selectedPlan, setSelectedPlan] = useState<string>("");
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOAuthLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+
+  // Load plans when user selects company type
+  useEffect(() => {
+    if (userType === "company") {
+      fetch("/api/plans")
+        .then(res => res.json())
+        .then(data => {
+          setPlans(data);
+          // Auto-select free plan by default
+          const freePlan = data.find((p: Plan) => p.price === 0);
+          if (freePlan) {
+            setSelectedPlan(freePlan.id);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [userType]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -51,6 +81,16 @@ export default function SignUpPage() {
       return;
     }
 
+    // Validate plan selection for companies
+    if (userType === "company" && !selectedPlan) {
+      toast({
+        title: "Erro",
+        description: "Por favor, selecione um plano para continuar",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -65,6 +105,7 @@ export default function SignUpPage() {
           password: formData.password,
           companyName: userType === "company" ? formData.companyName : "",
           role: userType,
+          planId: userType === "company" ? selectedPlan : undefined,
         }),
       });
 
@@ -81,10 +122,29 @@ export default function SignUpPage() {
 
       toast({
         title: "Conta criada com sucesso!",
-        description: "Redirecionando para login...",
+        description: userType === "company" 
+          ? "Sua conta foi criada! Fazendo login..." 
+          : "Redirecionando para login...",
       });
 
-      // Redirect to sign in page
+      // For companies with free plan, auto-login and redirect to dashboard
+      if (userType === "company" && selectedPlan) {
+        const selectedPlanData = plans.find(p => p.id === selectedPlan);
+        if (selectedPlanData && selectedPlanData.price === 0) {
+          // Auto sign in
+          await signIn("credentials", {
+            email: formData.email,
+            password: formData.password,
+            redirect: false,
+          });
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 1500);
+          return;
+        }
+      }
+
+      // Redirect to sign in page for candidates
       setTimeout(() => {
         router.push(`/auth/signin?type=${userType}`);
       }, 2000);
@@ -164,19 +224,80 @@ export default function SignUpPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {userType === "company" && (
-                <div className="space-y-2">
-                  <Label htmlFor="companyName" className="text-slate-700 font-medium">Nome da Empresa</Label>
-                  <Input
-                    id="companyName"
-                    name="companyName"
-                    type="text"
-                    placeholder="Sua Empresa Ltda"
-                    value={formData.companyName}
-                    onChange={handleChange}
-                    required
-                    className="h-12 border-slate-300 focus:border-primary"
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="companyName" className="text-slate-700 font-medium">Nome da Empresa</Label>
+                    <Input
+                      id="companyName"
+                      name="companyName"
+                      type="text"
+                      placeholder="Sua Empresa Ltda"
+                      value={formData.companyName}
+                      onChange={handleChange}
+                      required
+                      className="h-12 border-slate-300 focus:border-primary"
+                    />
+                  </div>
+
+                  {/* Plan Selection */}
+                  <div className="space-y-3">
+                    <Label className="text-slate-700 font-medium">Selecione seu Plano *</Label>
+                    <div className="grid gap-3">
+                      {plans.map((plan) => (
+                        <button
+                          key={plan.id}
+                          type="button"
+                          onClick={() => setSelectedPlan(plan.id)}
+                          className={`relative p-4 rounded-xl border-2 text-left transition-all hover:shadow-md ${
+                            selectedPlan === plan.id
+                              ? "border-primary bg-primary/5 shadow-md"
+                              : "border-slate-200 hover:border-slate-300"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold text-slate-900">{plan.displayName}</h4>
+                                {plan.isPopular && (
+                                  <Badge className="bg-gradient-to-r from-amber-400 to-orange-500">
+                                    <Crown className="h-3 w-3 mr-1" />
+                                    Popular
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-slate-600 mt-1">{plan.description}</p>
+                            </div>
+                            {selectedPlan === plan.id && (
+                              <div className="flex-shrink-0 ml-3">
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center">
+                                  <Check className="h-4 w-4 text-white" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-baseline gap-1 mb-2">
+                            <span className="text-2xl font-bold text-slate-900">
+                              {plan.price === 0 ? "Grátis" : `R$ ${plan.price}`}
+                            </span>
+                            {plan.price > 0 && (
+                              <span className="text-sm text-slate-500">/mês</span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 text-slate-700">
+                              {plan.jobLimit} vagas/mês
+                            </span>
+                            {plan.price === 0 && (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 text-green-700">
+                                7 dias de teste
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
 
               <div className="space-y-2">

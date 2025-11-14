@@ -58,7 +58,7 @@ export async function GET(
     const { user, ...jobData } = job;
     const formattedJob = {
       ...jobData,
-      companyName: user?.companyName || jobData.companyName || "Empresa",
+      companyName: user?.companyName || "Empresa",
     };
 
     return NextResponse.json(formattedJob);
