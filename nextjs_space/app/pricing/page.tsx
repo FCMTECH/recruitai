@@ -51,7 +51,7 @@ export default function PricingPage() {
       const response = await fetch('/api/plans');
       if (response.ok) {
         const data = await response.json();
-        setPlans(data.plans);
+        setPlans(data);
       }
     } catch (error) {
       console.error('Erro ao carregar planos:', error);

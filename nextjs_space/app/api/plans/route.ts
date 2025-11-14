@@ -17,7 +17,7 @@ export async function GET() {
       }
     });
 
-    return NextResponse.json({ plans });
+    return NextResponse.json(plans);
   } catch (error) {
     console.error('Erro ao buscar planos:', error);
     return NextResponse.json(
