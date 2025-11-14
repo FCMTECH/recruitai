@@ -17,11 +17,16 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const userRole = (session.user as any).role;
+    
+    // Superadmin pode ver qualquer vaga, empresas só suas vagas
     const job = await db.job.findFirst({
-      where: { 
-        id: params.id,
-        userId: session.user.id
-      },
+      where: userRole === "superadmin" 
+        ? { id: params.id }
+        : { 
+            id: params.id,
+            userId: session.user.id
+          },
       include: {
         criteria: true,
         applications: {

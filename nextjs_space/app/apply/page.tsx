@@ -75,6 +75,17 @@ export default function ApplyPage() {
   };
 
   const handleSubmit = async () => {
+    // Validar se tem currículo
+    if (!candidateProfile || !candidateProfile.resumeUrl) {
+      toast.error("Você precisa enviar seu currículo antes de se candidatar", {
+        action: {
+          label: "Enviar Currículo",
+          onClick: () => router.push("/candidate/profile"),
+        },
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -200,74 +211,77 @@ export default function ApplyPage() {
         )}
 
         {/* Profile Info */}
-        <Card className="border-0 shadow-lg mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Seus Dados
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <p className="text-sm text-muted-foreground">Nome</p>
-              <p className="font-medium">{candidateProfile?.fullName || session?.user?.name || "Não informado"}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Email</p>
-              <p className="font-medium">{candidateProfile?.email || session?.user?.email || "Não informado"}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Telefone</p>
-              <p className="font-medium">{candidateProfile?.phone || "Não informado"}</p>
-            </div>
-            <div className="pt-3 border-t">
-              <div className="flex items-center justify-between">
+        {candidateProfile && candidateProfile.resumeUrl ? (
+          <Card className="border-0 shadow-lg mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Seus Dados
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-sm text-muted-foreground">Nome</p>
+                <p className="font-medium">{candidateProfile.fullName || session?.user?.name || "Não informado"}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Email</p>
+                <p className="font-medium">{candidateProfile.email || session?.user?.email || "Não informado"}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Telefone</p>
+                <p className="font-medium">{candidateProfile.phone || "Não informado"}</p>
+              </div>
+              <div className="pt-3 border-t">
                 <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-primary" />
-                  <span className="text-sm">
-                    {candidateProfile?.resumeUrl ? "Currículo enviado ✓" : "Currículo não enviado"}
+                  <FileText className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-600">
+                    Currículo enviado ✓
                   </span>
                 </div>
-                {!candidateProfile?.resumeUrl && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => router.push("/candidate/profile")}
-                  >
-                    Enviar Currículo
-                  </Button>
-                )}
               </div>
-            </div>
-            {!candidateProfile?.resumeUrl && (
-              <div className="pt-3 border-t">
-                <p className="text-sm text-amber-600 dark:text-amber-500">
-                  ⚠️ Recomendamos enviar seu currículo para melhorar suas chances
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-0 shadow-lg mb-6 border-amber-200 dark:border-amber-800">
+            <CardContent className="py-8 text-center">
+              <FileText className="h-12 w-12 mx-auto text-amber-600 mb-4" />
+              <h3 className="text-lg font-medium mb-2">Currículo Necessário</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Você precisa enviar seu currículo antes de se candidatar a esta vaga
+              </p>
+              <Button 
+                onClick={() => router.push("/candidate/profile")}
+                className="bg-gradient-to-r from-primary to-accent"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Enviar Currículo
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Submit Button */}
-        <Button
-          size="lg"
-          className="w-full bg-gradient-to-r from-primary to-accent"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Enviando Candidatura...
-            </>
-          ) : (
-            <>
-              <CheckCircle className="mr-2 h-5 w-5" />
-              Confirmar Candidatura
-            </>
-          )}
-        </Button>
+        {candidateProfile && candidateProfile.resumeUrl && (
+          <Button
+            size="lg"
+            className="w-full bg-gradient-to-r from-primary to-accent"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Enviando Candidatura...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="mr-2 h-5 w-5" />
+                Confirmar Candidatura
+              </>
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );

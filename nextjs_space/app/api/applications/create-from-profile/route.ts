@@ -34,10 +34,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get candidate profile (optional)
+    // Get candidate profile
     const candidateProfile = await db.candidateProfile.findUnique({
       where: { email: session.user.email! },
     });
+
+    if (!candidateProfile) {
+      return NextResponse.json(
+        { error: "Perfil de candidato não encontrado" },
+        { status: 404 }
+      );
+    }
+
+    if (!candidateProfile.resumeUrl) {
+      return NextResponse.json(
+        { error: "Você precisa enviar seu currículo antes de se candidatar" },
+        { status: 400 }
+      );
+    }
 
     // Check if job exists
     const job = await db.job.findUnique({
@@ -66,15 +80,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create application (using default values if profile incomplete)
+    // Create application
     const application = await db.application.create({
       data: {
         jobId,
-        candidateName: candidateProfile?.fullName || session.user.name || "Candidato",
+        candidateName: candidateProfile.fullName || session.user.name || "Candidato",
         candidateEmail: session.user.email!,
-        candidatePhone: candidateProfile?.phone || "",
-        resumeUrl: candidateProfile?.resumeUrl || "",
-        resumeFilename: candidateProfile?.resumeUrl?.split('/').pop() || "sem_curriculo.pdf",
+        candidatePhone: candidateProfile.phone || "",
+        resumeUrl: candidateProfile.resumeUrl,
+        resumeFilename: candidateProfile.resumeUrl.split('/').pop() || "resume.pdf",
         status: "pending",
       },
     });

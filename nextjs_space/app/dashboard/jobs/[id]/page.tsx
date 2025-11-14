@@ -61,6 +61,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [stageFilter, setStageFilter] = useState<string>("all");
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -95,6 +96,28 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       console.error("Error fetching job details:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDownloadResume = async (applicationId: string) => {
+    try {
+      setIsDownloading(true);
+      const response = await fetch(`/api/applications/${applicationId}/download`);
+      
+      if (!response.ok) {
+        throw new Error("Erro ao baixar currículo");
+      }
+
+      const data = await response.json();
+      
+      // Open the signed URL in a new tab
+      window.open(data.downloadUrl, '_blank');
+      toast.success("Download iniciado");
+    } catch (error) {
+      console.error("Error downloading resume:", error);
+      toast.error("Erro ao baixar currículo");
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -535,15 +558,12 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                 <Button variant="outline" onClick={() => setSelectedApplication(null)}>
                   Fechar
                 </Button>
-                <Button asChild>
-                  <a
-                    href={`/api/applications/${selectedApplication.id}/download`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Baixar Currículo
-                  </a>
+                <Button 
+                  onClick={() => handleDownloadResume(selectedApplication.id)}
+                  disabled={isDownloading}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {isDownloading ? "Baixando..." : "Baixar Currículo"}
                 </Button>
               </div>
             </CardContent>

@@ -85,8 +85,41 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       return;
     }
 
-    // Redirecionar direto para candidatura sem validações
-    router.push(`/apply?jobId=${params.id}`);
+    setIsApplying(true);
+    
+    // Verificar se tem currículo
+    try {
+      const profileResponse = await fetch("/api/candidates/profile");
+      if (!profileResponse.ok) {
+        toast.error("Complete seu perfil antes de se candidatar", {
+          action: {
+            label: "Ir para Perfil",
+            onClick: () => router.push("/candidate/profile"),
+          },
+        });
+        setIsApplying(false);
+        return;
+      }
+
+      const profileData = await profileResponse.json();
+      if (!profileData.profile.resumeUrl) {
+        toast.error("Você precisa enviar seu currículo antes de se candidatar", {
+          action: {
+            label: "Enviar Currículo",
+            onClick: () => router.push("/candidate/profile"),
+          },
+        });
+        setIsApplying(false);
+        return;
+      }
+
+      // Se tudo ok, redirecionar para candidatura
+      router.push(`/apply?jobId=${params.id}`);
+    } catch (error) {
+      console.error("Error checking profile:", error);
+      toast.error("Erro ao verificar perfil");
+      setIsApplying(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -241,44 +274,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
           </Card>
         )}
 
-        {/* Criteria */}
-        {job.criteria && job.criteria.length > 0 && (
-          <Card className="border-0 shadow-lg mb-6">
-            <CardHeader>
-              <CardTitle className="text-xl">Critérios de Avaliação</CardTitle>
-              <CardDescription>
-                Nossa IA analisará seu perfil com base nesses critérios
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {job.criteria.map((criterion) => (
-                  <div
-                    key={criterion.id}
-                    className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium">{criterion.name}</h4>
-                        <Badge variant="outline" className="text-xs">
-                          {criterion.weight}%
-                        </Badge>
-                        <Badge variant="secondary" className="text-xs">
-                          {criterion.category}
-                        </Badge>
-                      </div>
-                      {criterion.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {criterion.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+
 
         {/* CTA */}
         <Card className="border-0 shadow-lg bg-gradient-to-r from-primary/10 to-accent/10">

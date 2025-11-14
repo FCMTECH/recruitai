@@ -18,14 +18,18 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Verify the application belongs to user's job
+    const userRole = (session.user as any).role;
+
+    // Superadmin pode baixar qualquer currículo, empresas só de suas vagas
     const application = await db.application.findFirst({
-      where: {
-        id: params.id,
-        job: {
-          userId: session.user.id
-        }
-      },
+      where: userRole === "superadmin"
+        ? { id: params.id }
+        : {
+            id: params.id,
+            job: {
+              userId: session.user.id
+            }
+          },
       select: {
         resumeUrl: true,
         resumeFilename: true
