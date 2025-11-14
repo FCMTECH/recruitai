@@ -16,7 +16,7 @@ async function main() {
     create: {
       email: 'admin@atsplatform.com',
       password: hashedPasswordAdmin,
-      criterion: 'Administrador da Plataforma',
+      name: 'Administrador da Plataforma',
       companyName: 'RecruitAI',
       role: 'superadmin'
     }
@@ -33,7 +33,7 @@ async function main() {
     create: {
       email: 'john@doe.com',
       password: hashedPassword,
-      criterion: 'João Silva',
+      name: 'João Silva',
       companyName: 'TechCorp Solutions',
       role: 'company'
     }
@@ -50,7 +50,7 @@ async function main() {
     create: {
       email: 'empresa@teste.com',
       password: hashedPassword2,
-      criterion: 'Maria Oliveira',
+      name: 'Maria Oliveira',
       companyName: 'Startup Inovadora',
       role: 'company'
     }
@@ -61,7 +61,7 @@ async function main() {
   // Create plans
   const plans = [
     {
-      criterion: 'free',
+      name: 'free',
       displayName: 'Teste Grátis',
       price: 0,
       jobLimit: 5, // 5 vagas durante 1 semana
@@ -78,7 +78,7 @@ async function main() {
       ]
     },
     {
-      criterion: 'bronze',
+      name: 'bronze',
       displayName: 'Bronze',
       price: 300,
       jobLimit: 25,
@@ -91,7 +91,7 @@ async function main() {
       ]
     },
     {
-      criterion: 'prata',
+      name: 'prata',
       displayName: 'Prata',
       price: 500,
       jobLimit: 50,
@@ -106,7 +106,7 @@ async function main() {
       ]
     },
     {
-      criterion: 'ouro',
+      name: 'ouro',
       displayName: 'Ouro',
       price: 800,
       jobLimit: 100,
@@ -122,7 +122,7 @@ async function main() {
       ]
     },
     {
-      criterion: 'personalizado',
+      name: 'personalizado',
       displayName: 'Personalizado',
       price: 0, // Preço personalizado
       jobLimit: 999,
