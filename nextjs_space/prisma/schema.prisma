@@ -1,16 +1,30 @@
 
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-    provider = "prisma-client-js"
-    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
-    output = "/home/ubuntu/ats_platform/nextjs_space/node_modules/.prisma/client"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  role          String    @default("candidate") // candidate, company, superadmin
+  companyName   String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  jobs          Job[]
+  subscription  Subscription?
 }
 
 model Account {
@@ -40,26 +54,6 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  password      String?
-  emailVerified DateTime?
-  image         String?
-  companyName   String?
-  role          String    @default("company") // "company" or "superadmin"
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  accounts      Account[]
-  sessions      Session[]
-  jobs          Job[]
-  subscriptions Subscription[]
-
-  @@map("users")
-}
-
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -68,35 +62,173 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Job {
+model CandidateProfile {
   id          String   @id @default(cuid())
-  title       String
-  description String   @db.Text
-  requirements String  @db.Text
-  location    String?  // Deprecated - use country, state, city instead
-  country     String?  @default("Brasil") // País da vaga
-  state       String?  // Estado/UF da vaga
-  city        String?  // Cidade da vaga
-  type        String   @default("full-time") // full-time, part-time, contract
-  status      String   @default("active") // active, paused, closed
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  userId      String
+  email       String   @unique
+  fullName    String?
+  phone       String?
+  dateOfBirth DateTime?
+  address     String?
+  street      String?      // Novo campo para logradouro
+  neighborhood String?    // Novo campo para bairro
+  city        String?
+  state       String?
+  country     String?
+  zipCode     String?
+  profession  String?      // Novo campo para profissão
+  photoUrl    String?
+  linkedinUrl String?
+  resumeUrl   String?      // S3 path
+  hasNoExperience Boolean @default(false) // Novo campo
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  criteria     JobCriteria[]
+  education      Education[]
+  experiences    Experience[]
+  skills         Skill[]
+  courses        Course[]
+  certifications Certification[]
+  applications   Application[]
+
+  @@index([email])
+}
+
+model Education {
+  id           String    @id @default(cuid())
+  candidateId  String
+  institution  String
+  degree       String
+  courseName   String?   // Renomeado de fieldOfStudy
+  fieldOfStudy String?   // Mantido para compatibilidade
+  startDate    DateTime?
+  endDate      DateTime?
+  isCurrent    Boolean   @default(false)
+  description  String?   @db.Text
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model Experience {
+  id          String    @id @default(cuid())
+  candidateId String
+  company     String
+  position    String
+  jobType     String?   // Novo campo: tipo de cargo
+  location    String?
+  startDate   DateTime?
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  description String?   @db.Text
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model Skill {
+  id          String   @id @default(cuid())
+  candidateId String
+  name        String
+  level       String   // básico, intermediário, avançado
+  category    String?  // técnica, comportamental, idioma
+  
+  createdAt DateTime @default(now())
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model Course {
+  id           String   @id @default(cuid())
+  candidateId  String
+  name         String
+  institution  String?
+  completionDate DateTime?
+  hours        Int?
+  description  String?  @db.Text
+  
+  createdAt DateTime @default(now())
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model Certification {
+  id           String   @id @default(cuid())
+  candidateId  String
+  name         String
+  issuingOrg   String
+  issueDate    DateTime?
+  expiryDate   DateTime?
+  credentialId String?
+  
+  createdAt DateTime @default(now())
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model Job {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String
+  description  String   @db.Text
+  requirements String?  @db.Text
+  location     String?
+  country      String?
+  state        String?
+  city         String?
+  type         String?  // full-time, part-time, contract, etc.
+  status       String   @default("active") // active, paused, closed
+  
+  companyName  String   @default("Empresa")
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   applications Application[]
+  criteria     JobCriteria[]
   stages       JobStage[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model JobStage {
+  id          String   @id @default(cuid())
+  jobId       String
+  name        String
+  description String?  @db.Text
+  order       Int
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  job          Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@index([jobId])
 }
 
 model JobCriteria {
   id          String @id @default(cuid())
   jobId       String
-  name        String // "Experiência", "Habilidades Técnicas", "Formação", etc.
-  description String @db.Text
-  weight      Float  @default(1.0) // Peso de 0.1 a 1.0
-  required    Boolean @default(false) // Obrigatório ou desejável
-  category    String // "experience", "skills", "education", "location", "languages", "other"
+  criterion   String @default("Critério")
+  weight      Float  // Weight percentage (0-100)
+  description String? @db.Text
 
   job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
 }
@@ -144,198 +276,44 @@ model Application {
 
 model Plan {
   id          String   @id @default(cuid())
-  name        String   @unique // "bronze", "prata", "ouro", "personalizado"
-  displayName String   // "Bronze", "Prata", "Ouro", "Personalizado"
+  name        String   @unique // "free", "bronze", "prata", "ouro", "personalizado"
+  displayName String   // "Grátis", "Bronze", "Prata", "Ouro", "Personalizado"
   price       Float    // Em Reais (R$)
   jobLimit    Int      // Número de vagas por mês
-  features    Json     // Array de features do plano
+  features    String[] // Lista de features
   isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  stripePriceId String? // Stripe price ID for recurring billing
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   subscriptions Subscription[]
 }
 
 model Subscription {
-  id                  String    @id @default(cuid())
-  userId              String
-  planId              String
+  id                    String    @id @default(cuid())
+  userId                String
+  planId                String
+  status                String    // trial, active, past_due, canceled, expired
+  startDate             DateTime  @default(now())
+  endDate               DateTime?
+  trialEndDate          DateTime? // For trial period
+  jobsCreatedThisMonth  Int       @default(0)
+  lastResetDate         DateTime  @default(now())
   
-  // Stripe Info
-  stripeCustomerId    String?   @unique
-  stripeSubscriptionId String?  @unique
-  stripeCheckoutSessionId String? // Para rastrear sessões de checkout
+  // Stripe fields
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?   @unique
+  stripeCheckoutSessionId String? @unique
   
-  // Subscription Status
-  status              String    @default("trial") // trial, active, past_due, canceled, expired
-  currentPeriodStart  DateTime?
-  currentPeriodEnd    DateTime?
-  trialEndsAt         DateTime? // Para o período de teste de 1 semana
-  canceledAt          DateTime?
-  
-  // Usage Tracking
-  jobsCreatedThisMonth Int      @default(0)
-  jobsCreatedAt        DateTime? // Para resetar o contador mensalmente
-  
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan Plan @relation(fields: [planId], references: [id])
 
+  @@unique([userId, planId])
   @@index([userId])
+  @@index([planId])
   @@index([status])
-  @@index([stripeCustomerId])
-  @@index([stripeSubscriptionId])
-}
-
-// Fases personalizadas das vagas
-model JobStage {
-  id           String        @id @default(cuid())
-  jobId        String
-  name         String
-  description  String?       @db.Text
-  order        Int
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  
-  job          Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  applications Application[]
-
-  @@index([jobId])
-  @@index([order])
-}
-
-// Perfil completo do candidato
-model CandidateProfile {
-  id                String          @id @default(cuid())
-  email             String          @unique
-  fullName          String
-  phone             String?
-  dateOfBirth       DateTime?
-  gender            String?
-  address           String?
-  city              String?
-  state             String?
-  zipCode           String?
-  country           String?          @default("Brasil")
-  profession        String?         // Profissão com autocomplete
-  hasNoExperience   Boolean         @default(false)
-  linkedinUrl       String?
-  portfolioUrl      String?
-  githubUrl         String?
-  summary           String?          @db.Text
-  resumeUrl         String?
-  photoUrl          String?
-  
-  // Relacionamentos
-  education         Education[]
-  experiences       Experience[]
-  skills            Skill[]
-  courses           Course[]
-  certifications    Certification[]
-  applications      Application[]
-  
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-
-  @@index([email])
-  @@index([fullName])
-  @@index([city])
-  @@index([state])
-}
-
-// Escolaridade
-model Education {
-  id              String           @id @default(cuid())
-  candidateId     String
-  institution     String
-  degree          String           // "Ensino Médio", "Tecnólogo", "Bacharelado", "Licenciatura", "Pós-graduação", "Mestrado", "Doutorado"
-  courseName      String?          // Renomeado de fieldOfStudy
-  fieldOfStudy    String?          // Mantido para compatibilidade
-  startDate       DateTime?
-  endDate         DateTime?
-  isCurrent       Boolean          @default(false)
-  description     String?          @db.Text
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  
-  candidate       CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-
-  @@index([candidateId])
-}
-
-// Experiência Profissional
-model Experience {
-  id              String           @id @default(cuid())
-  candidateId     String
-  company         String
-  position        String
-  jobType         String?          // Tipo de cargo: "Menor Aprendiz", "Estagiário", "Auxiliar", etc.
-  location        String?
-  startDate       DateTime?
-  endDate         DateTime?
-  isCurrent       Boolean          @default(false)
-  description     String?          @db.Text
-  achievements    Json?            // Lista de conquistas
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  
-  candidate       CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-
-  @@index([candidateId])
-}
-
-// Competências/Habilidades
-model Skill {
-  id                String           @id @default(cuid())
-  candidateId       String
-  name              String
-  level             String           // "iniciante", "intermediário", "avançado", "expert"
-  yearsOfExperience Int?
-  category          String?          // "técnica", "comportamental", "idioma"
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  
-  candidate         CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-
-  @@index([candidateId])
-  @@index([category])
-}
-
-// Cursos
-model Course {
-  id              String           @id @default(cuid())
-  candidateId     String
-  name            String
-  institution     String
-  completionDate  DateTime?
-  workload        Int?             // Carga horária em horas
-  description     String?          @db.Text
-  certificateUrl  String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  
-  candidate       CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-
-  @@index([candidateId])
-}
-
-// Certificações
-model Certification {
-  id              String           @id @default(cuid())
-  candidateId     String
-  name            String
-  issuingOrg      String           // Organização emissora
-  issueDate       DateTime
-  expiryDate      DateTime?
-  credentialId    String?
-  credentialUrl   String?
-  description     String?          @db.Text
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  
-  candidate       CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-
-  @@index([candidateId])
 }
