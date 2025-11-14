@@ -96,9 +96,18 @@ export default function DashboardContent() {
     try {
       const res = await fetch("/api/dashboard/advanced-stats");
       const data = await res.json();
+      
+      // Validar se a resposta contém os dados esperados
+      if (data.error || !data.overview || !data.classification) {
+        console.error("Error in API response:", data.error || "Invalid data structure");
+        setStats(null);
+        return;
+      }
+      
       setStats(data);
     } catch (error) {
       console.error("Error fetching stats:", error);
+      setStats(null);
     } finally {
       setLoading(false);
     }
@@ -131,10 +140,10 @@ export default function DashboardContent() {
     datasets: [{
       label: 'Candidatos por Classificação',
       data: [
-        stats.classification.strong,
-        stats.classification.potential,
-        stats.classification.review,
-        stats.classification.incompatible
+        stats.classification?.strong || 0,
+        stats.classification?.potential || 0,
+        stats.classification?.review || 0,
+        stats.classification?.incompatible || 0
       ],
       backgroundColor: [
         'rgba(34, 197, 94, 0.8)',
@@ -157,9 +166,9 @@ export default function DashboardContent() {
     datasets: [{
       label: 'Status das Candidaturas',
       data: [
-        stats.overview.pendingApplications,
-        stats.overview.approvedApplications,
-        stats.overview.rejectedApplications
+        stats.overview?.pendingApplications || 0,
+        stats.overview?.approvedApplications || 0,
+        stats.overview?.rejectedApplications || 0
       ],
       backgroundColor: [
         'rgba(251, 191, 36, 0.8)',
@@ -175,8 +184,8 @@ export default function DashboardContent() {
     }]
   };
 
-  const stateLabels = Object.keys(stats.stateDistribution);
-  const stateValues = Object.values(stats.stateDistribution);
+  const stateLabels = Object.keys(stats.stateDistribution || {});
+  const stateValues = Object.values(stats.stateDistribution || {});
   
   const stateData = {
     labels: stateLabels,
@@ -189,8 +198,8 @@ export default function DashboardContent() {
     }]
   };
 
-  const dailyLabels = Object.keys(stats.dailyApplications).sort();
-  const dailyValues = dailyLabels.map(date => stats.dailyApplications[date]);
+  const dailyLabels = Object.keys(stats.dailyApplications || {}).sort();
+  const dailyValues = dailyLabels.map(date => (stats.dailyApplications || {})[date] || 0);
 
   const dailyData = {
     labels: dailyLabels.map(date => {
@@ -208,8 +217,8 @@ export default function DashboardContent() {
     }]
   };
 
-  const typeLabels = Object.keys(stats.typeDistribution);
-  const typeValues = Object.values(stats.typeDistribution);
+  const typeLabels = Object.keys(stats.typeDistribution || {});
+  const typeValues = Object.values(stats.typeDistribution || {});
 
   const typeData = {
     labels: typeLabels,
@@ -265,9 +274,9 @@ export default function DashboardContent() {
               <Briefcase className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats.overview.totalJobs}</div>
+              <div className="text-3xl font-bold">{stats.overview?.totalJobs || 0}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.overview.activeJobs} ativas
+                {stats.overview?.activeJobs || 0} ativas
               </p>
             </CardContent>
           </Card>
@@ -278,9 +287,9 @@ export default function DashboardContent() {
               <Users className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats.overview.totalApplications}</div>
+              <div className="text-3xl font-bold">{stats.overview?.totalApplications || 0}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.overview.pendingApplications} pendentes
+                {stats.overview?.pendingApplications || 0} pendentes
               </p>
             </CardContent>
           </Card>
@@ -291,9 +300,9 @@ export default function DashboardContent() {
               <Target className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats.overview.approvalRate}%</div>
+              <div className="text-3xl font-bold">{stats.overview?.approvalRate || 0}%</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.overview.approvedApplications} aprovados
+                {stats.overview?.approvedApplications || 0} aprovados
               </p>
             </CardContent>
           </Card>
@@ -305,7 +314,7 @@ export default function DashboardContent() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {stats.overview.avgCompatibilityScore.toFixed(1)}
+                {(stats.overview?.avgCompatibilityScore || 0).toFixed(1)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Compatibilidade média
@@ -325,7 +334,7 @@ export default function DashboardContent() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
-                {stats.overview.conversionRate}%
+                {stats.overview?.conversionRate || 0}%
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Candidatos aprovados + fortes
@@ -342,7 +351,7 @@ export default function DashboardContent() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-600">
-                {stats.overview.avgApprovalTime} dias
+                {stats.overview?.avgApprovalTime || 0} dias
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Para aprovação
@@ -359,7 +368,7 @@ export default function DashboardContent() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {stats.classification.strong}
+                {stats.classification?.strong || 0}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Classificação alta pela IA
@@ -526,7 +535,7 @@ export default function DashboardContent() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats.topJobs.map((job, index) => (
+              {(stats.topJobs || []).map((job, index) => (
                 <div key={job.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-600 text-white font-bold">
