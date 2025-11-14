@@ -184,37 +184,27 @@ async function main() {
         {
           criterion: 'Experiência em Desenvolvimento',
           description: 'Anos de experiência em desenvolvimento de software e complexidade dos projetos realizados',
-          weight: 35,
-          required: true,
-          category: 'experience'
+          weight: 35
         },
         {
           criterion: 'Tecnologias Frontend',
           description: 'Conhecimento em React, JavaScript/TypeScript, HTML5, CSS3 e ferramentas modernas de desenvolvimento',
-          weight: 25,
-          required: true,
-          category: 'skills'
+          weight: 25
         },
         {
           criterion: 'Tecnologias Backend',
           description: 'Experiência com Node.js, APIs REST, bancos de dados e arquitetura de sistemas',
-          weight: 20,
-          required: true,
-          category: 'skills'
+          weight: 20
         },
         {
           criterion: 'Formação Acadêmica',
           description: 'Graduação em área relacionada à tecnologia (Ciência da Computação, Engenharia, etc.)',
-          weight: 10,
-          required: false,
-          category: 'education'
+          weight: 10
         },
         {
           criterion: 'Inglês',
           description: 'Nível de fluência em inglês para comunicação técnica e documentação',
-          weight: 10,
-          required: false,
-          category: 'languages'
+          weight: 10
         }
       ]
     },
@@ -229,30 +219,22 @@ async function main() {
         {
           criterion: 'Portfólio e Experiência',
           description: 'Qualidade do portfólio, diversidade de projetos e anos de experiência em UX/UI',
-          weight: 40,
-          required: true,
-          category: 'experience'
+          weight: 40
         },
         {
           criterion: 'Ferramentas de Design',
           description: 'Domínio de Figma, Adobe Creative Suite, Sketch e outras ferramentas de design',
-          weight: 25,
-          required: true,
-          category: 'skills'
+          weight: 25
         },
         {
           criterion: 'UX Research e Estratégia',
           description: 'Conhecimento em pesquisa de usuário, design thinking, arquitetura de informação e usabilidade',
-          weight: 20,
-          required: true,
-          category: 'skills'
+          weight: 20
         },
         {
           criterion: 'Comunicação e Colaboração',
           description: 'Habilidades de apresentação, trabalho em equipe e colaboração com desenvolvedores',
-          weight: 15,
-          required: false,
-          category: 'other'
+          weight: 15
         }
       ]
     }
