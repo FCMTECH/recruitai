@@ -87,9 +87,9 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
 
     setIsApplying(true);
     
-    // Verificar se tem currículo
+    // Verificar perfil completo
     try {
-      const profileResponse = await fetch("/api/candidates/profile");
+      const profileResponse = await fetch(`/api/candidates/profile?email=${encodeURIComponent(session.user?.email || '')}`);
       if (!profileResponse.ok) {
         toast.error("Complete seu perfil antes de se candidatar", {
           action: {
@@ -102,11 +102,22 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       }
 
       const profileData = await profileResponse.json();
-      if (!profileData.profile.resumeUrl) {
-        toast.error("Você precisa enviar seu currículo antes de se candidatar", {
+      
+      // Verificar campos obrigatórios
+      const missingFields: string[] = [];
+      
+      if (!profileData.resumeUrl) missingFields.push("Currículo");
+      if (!profileData.fullName) missingFields.push("Nome Completo");
+      if (!profileData.phone) missingFields.push("Telefone");
+      if (!profileData.dateOfBirth) missingFields.push("Data de Nascimento");
+      if (!profileData.address) missingFields.push("Endereço");
+
+      if (missingFields.length > 0) {
+        toast.error(`Complete os seguintes campos obrigatórios: ${missingFields.join(", ")}`, {
+          duration: 5000,
           action: {
-            label: "Enviar Currículo",
-            onClick: () => router.push("/candidate/profile"),
+            label: "Ir para Perfil",
+            onClick: () => router.push(`/candidate/profile?highlight=${missingFields.join(',')}`),
           },
         });
         setIsApplying(false);

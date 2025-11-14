@@ -219,6 +219,8 @@ model CandidateProfile {
   state             String?
   zipCode           String?
   country           String?          @default("Brasil")
+  profession        String?         // Profissão com autocomplete
+  hasNoExperience   Boolean         @default(false)
   linkedinUrl       String?
   portfolioUrl      String?
   githubUrl         String?
@@ -249,8 +251,9 @@ model Education {
   candidateId     String
   institution     String
   degree          String           // "Ensino Médio", "Tecnólogo", "Bacharelado", "Licenciatura", "Pós-graduação", "Mestrado", "Doutorado"
-  fieldOfStudy    String
-  startDate       DateTime
+  courseName      String?          // Renomeado de fieldOfStudy
+  fieldOfStudy    String?          // Mantido para compatibilidade
+  startDate       DateTime?
   endDate         DateTime?
   isCurrent       Boolean          @default(false)
   description     String?          @db.Text
@@ -268,8 +271,9 @@ model Experience {
   candidateId     String
   company         String
   position        String
+  jobType         String?          // Tipo de cargo: "Menor Aprendiz", "Estagiário", "Auxiliar", etc.
   location        String?
-  startDate       DateTime
+  startDate       DateTime?
   endDate         DateTime?
   isCurrent       Boolean          @default(false)
   description     String?          @db.Text

@@ -8,14 +8,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Brain, Plus, Trash2, Save, Loader2, User, Briefcase, GraduationCap, Award, BookOpen, FileText, Upload, X, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { professions, jobTypes } from "@/lib/professions";
 
 interface Education {
   id?: string;
   institution: string;
   degree: string;
-  fieldOfStudy: string;
+  courseName: string;  // Renomeado de fieldOfStudy
+  fieldOfStudy?: string;  // Mantido para compatibilidade
   startDate: string;
   endDate?: string;
   isCurrent: boolean;
@@ -26,6 +30,7 @@ interface Experience {
   id?: string;
   company: string;
   position: string;
+  jobType?: string;  // Novo campo: tipo de cargo
   location?: string;
   startDate: string;
   endDate?: string;
@@ -70,6 +75,10 @@ export default function CandidateProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingResume, setIsUploadingResume] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
+  const [professionSearch, setProfessionSearch] = useState("");
+  const [showProfessionSuggestions, setShowProfessionSuggestions] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: boolean}>({});
+  const [isSearchingZip, setIsSearchingZip] = useState(false);
 
   // Personal Info
   const [profile, setProfile] = useState({
@@ -83,6 +92,8 @@ export default function CandidateProfilePage() {
     state: "",
     zipCode: "",
     country: "Brasil",
+    profession: "",
+    hasNoExperience: false,
     linkedinUrl: "",
     portfolioUrl: "",
     githubUrl: "",
@@ -102,6 +113,31 @@ export default function CandidateProfilePage() {
       fetchProfile();
     }
   }, [email]);
+
+  // Detect highlight query parameter to show missing fields
+  useEffect(() => {
+    const highlightParam = searchParams?.get('highlight');
+    if (highlightParam) {
+      const fields = highlightParam.split(',');
+      const errors: {[key: string]: boolean} = {};
+      
+      fields.forEach(field => {
+        const fieldKey = field.toLowerCase().replace(/\s+/g, '');
+        if (fieldKey.includes('currículo')) errors['resumeUrl'] = true;
+        if (fieldKey.includes('nome')) errors['fullName'] = true;
+        if (fieldKey.includes('telefone')) errors['phone'] = true;
+        if (fieldKey.includes('nascimento')) errors['dateOfBirth'] = true;
+        if (fieldKey.includes('endereço')) errors['address'] = true;
+      });
+      
+      setValidationErrors(errors);
+      setActiveTab("personal"); // Go to personal tab
+      
+      toast.warning(`Complete os campos destacados em vermelho`, {
+        duration: 5000,
+      });
+    }
+  }, [searchParams]);
 
   const fetchProfile = async () => {
     if (!email) return;
@@ -171,6 +207,37 @@ export default function CandidateProfilePage() {
       toast.error("Erro ao enviar currículo");
     } finally {
       setIsUploadingResume(false);
+    }
+  };
+
+  const handleZipSearch = async (zipCode: string) => {
+    if (!zipCode || zipCode.length < 8) return;
+
+    setIsSearchingZip(true);
+    try {
+      const response = await fetch(`/api/locations/zip?zipCode=${encodeURIComponent(zipCode)}&country=${encodeURIComponent(profile.country || 'Brasil')}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setProfile({
+            ...profile,
+            city: data.city,
+            state: data.state,
+            country: data.country,
+          });
+          toast.success("Endereço encontrado automaticamente!");
+        }
+      } else {
+        const error = await response.json();
+        if (error.error !== 'Busca automática de endereço disponível apenas para CEPs brasileiros no momento') {
+          toast.error(error.error || "CEP não encontrado");
+        }
+      }
+    } catch (error) {
+      console.error("Error searching ZIP:", error);
+    } finally {
+      setIsSearchingZip(false);
     }
   };
 
@@ -248,7 +315,7 @@ export default function CandidateProfilePage() {
   };
 
   // Add/remove handlers
-  const addEducation = () => setEducation([...education, { institution: "", degree: "", fieldOfStudy: "", startDate: "", isCurrent: false }]);
+  const addEducation = () => setEducation([...education, { institution: "", degree: "", courseName: "", startDate: "", isCurrent: false }]);
   const removeEducation = (index: number) => setEducation(education.filter((_, i) => i !== index));
   
   const addExperience = () => setExperiences([...experiences, { company: "", position: "", startDate: "", isCurrent: false }]);
@@ -378,12 +445,35 @@ export default function CandidateProfilePage() {
 
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="phone">Telefone</Label>
-                  <Input id="phone" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
+                  <Label htmlFor="phone" className={validationErrors.phone ? "text-destructive" : ""}>
+                    Telefone *
+                  </Label>
+                  <Input 
+                    id="phone" 
+                    value={profile.phone} 
+                    onChange={(e) => {
+                      setProfile({ ...profile, phone: e.target.value });
+                      setValidationErrors({ ...validationErrors, phone: false });
+                    }} 
+                    className={validationErrors.phone ? "border-destructive" : ""}
+                    required 
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="dateOfBirth">Data de Nascimento</Label>
-                  <Input id="dateOfBirth" type="date" value={profile.dateOfBirth} onChange={(e) => setProfile({ ...profile, dateOfBirth: e.target.value })} />
+                  <Label htmlFor="dateOfBirth" className={validationErrors.dateOfBirth ? "text-destructive" : ""}>
+                    Data de Nascimento *
+                  </Label>
+                  <Input 
+                    id="dateOfBirth" 
+                    type="date" 
+                    value={profile.dateOfBirth} 
+                    onChange={(e) => {
+                      setProfile({ ...profile, dateOfBirth: e.target.value });
+                      setValidationErrors({ ...validationErrors, dateOfBirth: false });
+                    }} 
+                    className={validationErrors.dateOfBirth ? "border-destructive" : ""}
+                    required 
+                  />
                 </div>
                 <div>
                   <Label htmlFor="gender">Gênero</Label>
@@ -398,8 +488,19 @@ export default function CandidateProfilePage() {
               </div>
 
               <div>
-                <Label htmlFor="address">Endereço</Label>
-                <Input id="address" value={profile.address} onChange={(e) => setProfile({ ...profile, address: e.target.value })} />
+                <Label htmlFor="address" className={validationErrors.address ? "text-destructive" : ""}>
+                  Endereço *
+                </Label>
+                <Input 
+                  id="address" 
+                  value={profile.address} 
+                  onChange={(e) => {
+                    setProfile({ ...profile, address: e.target.value });
+                    setValidationErrors({ ...validationErrors, address: false });
+                  }} 
+                  className={validationErrors.address ? "border-destructive" : ""}
+                  required 
+                />
               </div>
 
               <div className="grid md:grid-cols-4 gap-4">
@@ -413,7 +514,30 @@ export default function CandidateProfilePage() {
                 </div>
                 <div>
                   <Label htmlFor="zipCode">CEP</Label>
-                  <Input id="zipCode" value={profile.zipCode} onChange={(e) => setProfile({ ...profile, zipCode: e.target.value })} />
+                  <div className="relative">
+                    <Input 
+                      id="zipCode" 
+                      value={profile.zipCode} 
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setProfile({ ...profile, zipCode: value });
+                        // Busca automática quando tem 8 dígitos
+                        if (value.replace(/\D/g, '').length === 8) {
+                          handleZipSearch(value);
+                        }
+                      }}
+                      placeholder="00000-000" 
+                      disabled={isSearchingZip}
+                    />
+                    {isSearchingZip && (
+                      <div className="absolute right-3 top-2.5">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Digite o CEP para preencher automaticamente cidade e estado
+                  </p>
                 </div>
               </div>
 
@@ -430,6 +554,57 @@ export default function CandidateProfilePage() {
                   <Label htmlFor="githubUrl">GitHub</Label>
                   <Input id="githubUrl" type="url" placeholder="https://github.com/..." value={profile.githubUrl} onChange={(e) => setProfile({ ...profile, githubUrl: e.target.value })} />
                 </div>
+              </div>
+
+              {/* Campo de Profissão com Autocomplete */}
+              <div>
+                <Label htmlFor="profession">Profissão</Label>
+                <div className="relative">
+                  <Input 
+                    id="profession" 
+                    value={professionSearch || profile.profession} 
+                    onChange={(e) => {
+                      setProfessionSearch(e.target.value);
+                      setProfile({ ...profile, profession: e.target.value });
+                      setShowProfessionSuggestions(e.target.value.length > 0);
+                    }}
+                    onFocus={() => setShowProfessionSuggestions(professionSearch.length > 0)}
+                    onBlur={() => setTimeout(() => setShowProfessionSuggestions(false), 200)}
+                    placeholder="Digite sua profissão..."
+                  />
+                  {showProfessionSuggestions && (
+                    <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+                      {professions
+                        .filter(p => p.toLowerCase().includes((professionSearch || profile.profession).toLowerCase()))
+                        .slice(0, 10)
+                        .map((profession, index) => (
+                          <div
+                            key={index}
+                            className="px-3 py-2 hover:bg-muted cursor-pointer"
+                            onClick={() => {
+                              setProfile({ ...profile, profession });
+                              setProfessionSearch(profession);
+                              setShowProfessionSuggestions(false);
+                            }}
+                          >
+                            {profession}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Checkbox "Sem experiência" */}
+              <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
+                <Checkbox
+                  id="hasNoExperience"
+                  checked={profile.hasNoExperience}
+                  onCheckedChange={(checked) => setProfile({ ...profile, hasNoExperience: checked as boolean })}
+                />
+                <Label htmlFor="hasNoExperience" className="cursor-pointer">
+                  Não tenho experiência profissional
+                </Label>
               </div>
 
               <div>
@@ -485,8 +660,8 @@ export default function CandidateProfilePage() {
                       </div>
                     </div>
                     <div>
-                      <Label>Área de Estudo *</Label>
-                      <Input value={edu.fieldOfStudy} onChange={(e) => { const newEdu = [...education]; newEdu[index].fieldOfStudy = e.target.value; setEducation(newEdu); }} required />
+                      <Label>Nome do Curso *</Label>
+                      <Input value={edu.courseName || edu.fieldOfStudy || ""} onChange={(e) => { const newEdu = [...education]; newEdu[index].courseName = e.target.value; setEducation(newEdu); }} required />
                     </div>
                     <div className="grid md:grid-cols-3 gap-4">
                       <div>
@@ -520,15 +695,23 @@ export default function CandidateProfilePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Experiência Profissional</CardTitle>
-                  <CardDescription>Adicione suas experiências de trabalho</CardDescription>
+                  <CardDescription>
+                    {profile.hasNoExperience 
+                      ? "Você marcou que não tem experiência profissional" 
+                      : "Adicione suas experiências de trabalho"}
+                  </CardDescription>
                 </div>
-                <Button onClick={addExperience} size="sm">
+                <Button onClick={addExperience} size="sm" disabled={profile.hasNoExperience}>
                   <Plus className="h-4 w-4 mr-2" />Adicionar
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {experiences.length === 0 ? (
+              {profile.hasNoExperience ? (
+                <p className="text-center text-muted-foreground py-8 bg-muted/30 rounded-lg">
+                  Campos de experiência desabilitados. Desmarque "Não tenho experiência profissional" nos dados pessoais para adicionar experiências.
+                </p>
+              ) : experiences.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">Nenhuma experiência adicionada ainda</p>
               ) : (
                 experiences.map((exp, index) => (
@@ -536,7 +719,7 @@ export default function CandidateProfilePage() {
                     <Button variant="ghost" size="sm" className="absolute top-2 right-2" onClick={() => removeExperience(index)}>
                       <X className="h-4 w-4" />
                     </Button>
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid md:grid-cols-3 gap-4">
                       <div>
                         <Label>Empresa *</Label>
                         <Input value={exp.company} onChange={(e) => { const newExp = [...experiences]; newExp[index].company = e.target.value; setExperiences(newExp); }} required />
@@ -544,6 +727,19 @@ export default function CandidateProfilePage() {
                       <div>
                         <Label>Cargo *</Label>
                         <Input value={exp.position} onChange={(e) => { const newExp = [...experiences]; newExp[index].position = e.target.value; setExperiences(newExp); }} required />
+                      </div>
+                      <div>
+                        <Label>Tipo de Cargo</Label>
+                        <Select value={exp.jobType || ""} onValueChange={(value) => { const newExp = [...experiences]; newExp[index].jobType = value; setExperiences(newExp); }}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {jobTypes.map((type) => (
+                              <SelectItem key={type} value={type}>{type}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                     <div>

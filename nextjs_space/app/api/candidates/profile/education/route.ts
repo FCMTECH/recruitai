@@ -40,14 +40,17 @@ export async function POST(request: NextRequest) {
       candidateId,
       institution,
       degree,
-      fieldOfStudy,
+      courseName,
+      fieldOfStudy,  // Mantido para compatibilidade
       startDate,
       endDate,
       isCurrent,
       description,
     } = body;
 
-    if (!candidateId || !institution || !degree || !fieldOfStudy) {
+    const courseValue = courseName || fieldOfStudy;
+
+    if (!candidateId || !institution || !degree || !courseValue) {
       return NextResponse.json(
         { error: 'Campos obrigatórios faltando' },
         { status: 400 }
@@ -69,8 +72,9 @@ export async function POST(request: NextRequest) {
         candidateId,
         institution,
         degree,
-        fieldOfStudy,
-        startDate: startDate ? convertToDate(startDate)! : new Date(),
+        courseName: courseValue,
+        fieldOfStudy: courseValue,  // Manter ambos por compatibilidade
+        startDate: startDate ? convertToDate(startDate) : null,
         endDate: endDate ? convertToDate(endDate) : null,
         isCurrent: isCurrent || false,
         description,
