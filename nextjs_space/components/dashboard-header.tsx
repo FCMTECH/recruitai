@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Brain, Calendar, Users, LogOut } from 'lucide-react';
+import { Brain, Calendar, Users, LogOut, Briefcase, User } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -19,11 +19,15 @@ export function DashboardHeader() {
 
   const isCompany = session?.user?.role === 'company';
   const isSuperAdmin = session?.user?.role === 'superadmin';
+  const isCandidate = session?.user?.role === 'candidate';
+
+  // Define o link da home baseado no role
+  const homeLink = isCandidate ? '/candidate/dashboard' : '/dashboard';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
-        <Link href="/dashboard" className="flex items-center gap-2">
+        <Link href={homeLink} className="flex items-center gap-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent">
             <Brain className="h-6 w-6 text-primary-foreground" />
           </div>
@@ -45,6 +49,23 @@ export function DashboardHeader() {
                 <Button variant="ghost" size="sm">
                   <Users className="h-4 w-4 mr-2" />
                   <span className="hidden sm:inline">Equipe</span>
+                </Button>
+              </Link>
+            </>
+          )}
+
+          {isCandidate && (
+            <>
+              <Link href="/vagas">
+                <Button variant="ghost" size="sm">
+                  <Briefcase className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Vagas</span>
+                </Button>
+              </Link>
+              <Link href="/candidate/profile">
+                <Button variant="ghost" size="sm">
+                  <User className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Perfil</span>
                 </Button>
               </Link>
             </>

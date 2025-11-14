@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { DashboardHeader } from "@/components/dashboard-header";
 
 interface Job {
   id: string;
@@ -229,31 +230,7 @@ export default function CandidateDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      {/* Header */}
-      <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 max-w-7xl">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <Brain className="h-8 w-8 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent" />
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                RecruitAI
-              </h1>
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link href="/candidate/profile">
-                <Button variant="outline">
-                  <User className="h-4 w-4 mr-2" />
-                  Meu Perfil
-                </Button>
-              </Link>
-              <Button variant="ghost" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader />
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Welcome Section */}
