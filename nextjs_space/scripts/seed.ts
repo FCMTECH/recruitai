@@ -153,17 +153,17 @@ async function main() {
   // Create trial subscription for test user
   const freePlan = createdPlans.find(p => p.name === 'free');
   if (freePlan) {
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + 7); // 1 semana de teste
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + 7); // 1 semana de teste
 
     const subscription = await prisma.subscription.create({
       data: {
         userId: testUser.id,
         planId: freePlan.id,
         status: 'trial',
-        trialEndsAt: trialEndsAt,
-        currentPeriodStart: new Date(),
-        currentPeriodEnd: trialEndsAt,
+        trialEndDate: trialEndDate,
+        startDate: new Date(),
+        endDate: trialEndDate,
         jobsCreatedThisMonth: 0
       }
     });

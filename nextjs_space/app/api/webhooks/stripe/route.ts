@@ -96,8 +96,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     update: {
       stripeSubscriptionId: stripeSubscriptionId,
       status: 'active',
-      currentPeriodStart: stripeSubscription.current_period_start ? new Date(stripeSubscription.current_period_start * 1000) : new Date(),
-      currentPeriodEnd: stripeSubscription.current_period_end ? new Date(stripeSubscription.current_period_end * 1000) : new Date(),
+      startDate: stripeSubscription.current_period_start ? new Date(stripeSubscription.current_period_start * 1000) : new Date(),
+      endDate: stripeSubscription.current_period_end ? new Date(stripeSubscription.current_period_end * 1000) : new Date(),
       planId: planId
     },
     create: {
@@ -106,8 +106,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       stripeCustomerId: customerId,
       stripeSubscriptionId: stripeSubscriptionId,
       status: 'active',
-      currentPeriodStart: stripeSubscription.current_period_start ? new Date(stripeSubscription.current_period_start * 1000) : new Date(),
-      currentPeriodEnd: stripeSubscription.current_period_end ? new Date(stripeSubscription.current_period_end * 1000) : new Date(),
+      startDate: stripeSubscription.current_period_start ? new Date(stripeSubscription.current_period_start * 1000) : new Date(),
+      endDate: stripeSubscription.current_period_end ? new Date(stripeSubscription.current_period_end * 1000) : new Date(),
       jobsCreatedThisMonth: 0
     }
   });
@@ -145,8 +145,8 @@ async function handleSubscriptionUpdate(stripeSubscription: Stripe.Subscription)
     },
     data: {
       status: status,
-      currentPeriodStart: sub.current_period_start ? new Date(sub.current_period_start * 1000) : undefined,
-      currentPeriodEnd: sub.current_period_end ? new Date(sub.current_period_end * 1000) : undefined
+      startDate: sub.current_period_start ? new Date(sub.current_period_start * 1000) : undefined,
+      endDate: sub.current_period_end ? new Date(sub.current_period_end * 1000) : undefined
     }
   });
 
@@ -171,7 +171,7 @@ async function handleSubscriptionDeleted(stripeSubscription: Stripe.Subscription
     },
     data: {
       status: 'canceled',
-      canceledAt: new Date()
+      endDate: new Date()
     }
   });
 
@@ -194,7 +194,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 
   // Resetar contador de vagas criadas no novo período
   const now = new Date();
-  const lastReset = subscription.jobsCreatedAt;
+  const lastReset = subscription.lastResetDate;
   
   if (!lastReset || now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()) {
     await prisma.subscription.update({
@@ -203,7 +203,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
       },
       data: {
         jobsCreatedThisMonth: 0,
-        jobsCreatedAt: now,
+        lastResetDate: now,
         status: 'active'
       }
     });

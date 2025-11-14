@@ -49,17 +49,17 @@ export async function POST(request: Request) {
     }
 
     // Criar assinatura de teste
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + 7); // 1 semana
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialEndDate.getDate() + 7); // 1 semana
 
     const subscription = await prisma.subscription.create({
       data: {
         userId: session.user.id,
         planId: plan.id,
         status: 'trial',
-        trialEndsAt: trialEndsAt,
-        currentPeriodStart: new Date(),
-        currentPeriodEnd: trialEndsAt,
+        trialEndDate: trialEndDate,
+        startDate: new Date(),
+        endDate: trialEndDate,
         jobsCreatedThisMonth: 0
       }
     });

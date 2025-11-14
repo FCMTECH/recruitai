@@ -126,9 +126,9 @@ export async function GET(request: NextRequest) {
         },
         criteria: {
           select: {
-            name: true,
-            category: true,
+            criterion: true,
             weight: true,
+            description: true,
           },
         },
         _count: {
@@ -148,9 +148,17 @@ export async function GET(request: NextRequest) {
       const matchPercentage = calculateMatch(profile, job);
       
       return {
-        ...job,
-        companyName: job.user.companyName,
-        user: undefined,
+        id: job.id,
+        title: job.title,
+        description: job.description,
+        location: job.location,
+        country: job.country,
+        state: job.state,
+        city: job.city,
+        type: job.type,
+        companyName: job.user?.companyName || "Empresa",
+        criteria: job.criteria,
+        _count: job._count,
         matchPercentage,
       };
     });

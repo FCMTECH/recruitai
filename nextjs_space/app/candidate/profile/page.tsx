@@ -86,7 +86,6 @@ export default function CandidateProfilePage() {
     fullName: "",
     phone: "",
     dateOfBirth: "",
-    gender: "",
     address: "",
     city: "",
     state: "",
@@ -225,6 +224,8 @@ export default function CandidateProfilePage() {
             city: data.city,
             state: data.state,
             country: data.country,
+            street: data.street || "",
+            neighborhood: data.neighborhood || "",
           });
           toast.success("Endereço encontrado automaticamente!");
         }
@@ -474,16 +475,6 @@ export default function CandidateProfilePage() {
                     className={validationErrors.dateOfBirth ? "border-destructive" : ""}
                     required 
                   />
-                </div>
-                <div>
-                  <Label htmlFor="gender">Gênero</Label>
-                  <select id="gender" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={profile.gender} onChange={(e) => setProfile({ ...profile, gender: e.target.value })}>
-                    <option value="">Selecione</option>
-                    <option value="masculino">Masculino</option>
-                    <option value="feminino">Feminino</option>
-                    <option value="outro">Outro</option>
-                    <option value="prefiro-nao-dizer">Prefiro não dizer</option>
-                  </select>
                 </div>
               </div>
 

@@ -46,7 +46,6 @@ export async function POST(request: NextRequest) {
       endDate,
       isCurrent,
       description,
-      achievements,
     } = body;
 
     if (!candidateId || !company || !position) {
@@ -77,7 +76,6 @@ export async function POST(request: NextRequest) {
         endDate: endDate ? convertToDate(endDate) : null,
         isCurrent: isCurrent || false,
         description,
-        achievements,
       },
     });
 

@@ -41,9 +41,8 @@ export async function POST(request: NextRequest) {
       name,
       institution,
       completionDate,
-      workload,
+      hours,
       description,
-      certificateUrl,
     } = body;
 
     if (!candidateId || !name || !institution) {
@@ -69,9 +68,8 @@ export async function POST(request: NextRequest) {
         name,
         institution,
         completionDate: convertToDate(completionDate),
-        workload,
+        hours,
         description,
-        certificateUrl,
       },
     });
 

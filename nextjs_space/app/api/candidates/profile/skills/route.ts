@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { candidateId, name, level, yearsOfExperience, category } = body;
+    const { candidateId, name, level, category } = body;
 
     if (!candidateId || !name || !level) {
       return NextResponse.json(
@@ -50,7 +50,6 @@ export async function POST(request: NextRequest) {
         candidateId,
         name,
         level,
-        yearsOfExperience,
         category,
       },
     });

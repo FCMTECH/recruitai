@@ -85,8 +85,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se o período de teste expirou
-    if (subscription.status === 'trial' && subscription.trialEndsAt) {
-      if (new Date() > subscription.trialEndsAt) {
+    if (subscription.status === 'trial' && subscription.trialEndDate) {
+      if (new Date() > subscription.trialEndDate) {
         await db.subscription.update({
           where: { id: subscription.id },
           data: { status: 'expired' }
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     // Resetar contador se mudou o mês
     const now = new Date();
-    const lastReset = subscription.jobsCreatedAt;
+    const lastReset = subscription.lastResetDate;
     let jobsThisMonth = subscription.jobsCreatedThisMonth;
 
     if (!lastReset || now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()) {
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
         where: { id: subscription.id },
         data: {
           jobsCreatedThisMonth: 0,
-          jobsCreatedAt: now
+          lastResetDate: now
         }
       });
     }

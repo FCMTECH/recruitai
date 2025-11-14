@@ -43,7 +43,6 @@ export async function POST(request: NextRequest) {
       issueDate,
       expiryDate,
       credentialId,
-      credentialUrl,
       description,
     } = body;
 
@@ -69,10 +68,9 @@ export async function POST(request: NextRequest) {
         candidateId,
         name,
         issuingOrg,
-        issueDate: issueDate ? convertToDate(issueDate)! : new Date(),
+        issueDate: issueDate ? convertToDate(issueDate) : null,
         expiryDate: expiryDate ? convertToDate(expiryDate) : null,
         credentialId,
-        credentialUrl,
         description,
       },
     });

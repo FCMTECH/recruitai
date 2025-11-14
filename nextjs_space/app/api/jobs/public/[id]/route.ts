@@ -34,11 +34,9 @@ export async function GET(
         criteria: {
           select: {
             id: true,
-            name: true,
+            criterion: true,
             description: true,
             weight: true,
-            category: true,
-            required: true,
           },
         },
         _count: {
@@ -57,10 +55,10 @@ export async function GET(
     }
 
     // Format the response
+    const { user, ...jobData } = job;
     const formattedJob = {
-      ...job,
-      companyName: job.user.companyName,
-      user: undefined,
+      ...jobData,
+      companyName: user?.companyName || jobData.companyName || "Empresa",
     };
 
     return NextResponse.json(formattedJob);

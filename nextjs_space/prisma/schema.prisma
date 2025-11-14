@@ -24,7 +24,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   jobs          Job[]
-  subscription  Subscription?
+  subscriptions Subscription[]
 }
 
 model Account {
@@ -312,7 +312,6 @@ model Subscription {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan Plan @relation(fields: [planId], references: [id])
 
-  @@unique([userId, planId])
   @@index([userId])
   @@index([planId])
   @@index([status])
