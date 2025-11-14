@@ -28,6 +28,9 @@ model User {
   jobs          Job[]
   subscriptions Subscription[]
   notifications Notification[]
+  companyUsers  CompanyUser[] @relation("CompanyUsers")
+  events        CalendarEvent[] @relation("UserEvents")
+  tasks         Task[] @relation("UserTasks")
 }
 
 model Account {
@@ -198,6 +201,9 @@ model Job {
   
   companyName  String   @default("Empresa")
   
+  // Templates de divulgação
+  publicationTemplate String? @db.Text // Template para redes sociais
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -259,10 +265,20 @@ model Application {
   notes             String?  @db.Text
   reviewedAt        DateTime?
   
+  // Interview Process
+  invitedForInterview Boolean  @default(false)
+  invitedAt           DateTime?
+  interviewLink       String?  // Link para agendamento (Calendly, Google Meet, etc.)
+  interviewNotes      String?  @db.Text // Notas pós-entrevista
+  interviewDate       DateTime?
+  attendedInterview   Boolean  @default(false)
+  
   // Hiring Status
   isHired           Boolean  @default(false)
   hiredAt           DateTime?
   hiredBy           String?  // User ID who marked as hired
+  hiringDocuments   Json?    // Array de documentos de contratação
+  admissionChecklist Json?   // Checklist de admissão
   
   // Candidate Profile
   candidateProfileId String?
@@ -280,6 +296,8 @@ model Application {
   @@index([currentStageId])
   @@index([candidateProfileId])
   @@index([candidateEmail])
+  @@index([invitedForInterview])
+  @@index([isHired])
 }
 
 model Plan {
@@ -338,6 +356,104 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model CompanyUser {
+  id            String   @id @default(cuid())
+  companyId     String   // ID do User com role "company"
+  name          String
+  email         String   @unique
+  password      String
+  role          String   @default("member") // admin, member
+  isActive      Boolean  @default(true)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  company       User     @relation("CompanyUsers", fields: [companyId], references: [id], onDelete: Cascade)
+  events        CalendarEvent[]
+  tasks         Task[]
+  notifications CompanyUserNotification[]
+
+  @@index([companyId])
+  @@index([email])
+}
+
+model CalendarEvent {
+  id            String   @id @default(cuid())
+  userId        String?  // Para User principal (empresa)
+  companyUserId String?  // Para CompanyUser
+  title         String
+  description   String?  @db.Text
+  eventType     String   @default("meeting") // meeting, interview, reminder
+  startDateTime DateTime
+  endDateTime   DateTime
+  location      String?  // Pode ser link de videochamada
+  attendees     String[] // Emails dos participantes
+  isAllDay      Boolean  @default(false)
+  reminderMinutes Int?   // Minutos antes para notificar
+  
+  // Relação com vaga/candidatura (opcional)
+  jobId         String?
+  applicationId String?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User?        @relation("UserEvents", fields: [userId], references: [id], onDelete: Cascade)
+  companyUser   CompanyUser? @relation(fields: [companyUserId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([companyUserId])
+  @@index([startDateTime])
+  @@index([jobId])
+  @@index([applicationId])
+}
+
+model Task {
+  id            String   @id @default(cuid())
+  userId        String?  // Para User principal (empresa)
+  companyUserId String?  // Para CompanyUser
+  title         String
+  description   String?  @db.Text
+  priority      String   @default("medium") // low, medium, high
+  status        String   @default("pending") // pending, in_progress, completed
+  dueDate       DateTime?
+  completedAt   DateTime?
+  
+  // Relação com vaga/candidatura (opcional)
+  jobId         String?
+  applicationId String?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User?        @relation("UserTasks", fields: [userId], references: [id], onDelete: Cascade)
+  companyUser   CompanyUser? @relation(fields: [companyUserId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([companyUserId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([jobId])
+  @@index([applicationId])
+}
+
+model CompanyUserNotification {
+  id            String   @id @default(cuid())
+  companyUserId String
+  type          String   // 'application_update', 'stage_change', 'system', etc.
+  title         String
+  message       String
+  isRead        Boolean  @default(false)
+  link          String?
+  createdAt     DateTime @default(now())
+
+  companyUser CompanyUser @relation(fields: [companyUserId], references: [id], onDelete: Cascade)
+
+  @@index([companyUserId])
   @@index([isRead])
   @@index([createdAt])
 }
