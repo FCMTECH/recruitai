@@ -61,10 +61,11 @@ export default function ApplyPage() {
       setSelectedJob(jobData);
 
       // Load candidate profile
-      const profileResponse = await fetch("/api/candidates/profile");
+      const profileResponse = await fetch(`/api/candidates/profile?email=${encodeURIComponent(session?.user?.email || '')}`);
       if (profileResponse.ok) {
         const profileData = await profileResponse.json();
-        setCandidateProfile(profileData.profile);
+        // A API retorna o profile diretamente, não dentro de um objeto { profile: ... }
+        setCandidateProfile(profileData);
       }
     } catch (error) {
       console.error("Error loading data:", error);
