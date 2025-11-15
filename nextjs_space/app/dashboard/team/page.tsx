@@ -340,11 +340,11 @@ export default function TeamPage() {
         {/* Tabs */}
         <Tabs defaultValue="members" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="members">
+            <TabsTrigger value="members" onClick={() => {}}>
               <Users className="h-4 w-4 mr-2" />
               Membros
             </TabsTrigger>
-            <TabsTrigger value="groups">
+            <TabsTrigger value="groups" onClick={() => {}}>
               <Folder className="h-4 w-4 mr-2" />
               Grupos
             </TabsTrigger>
