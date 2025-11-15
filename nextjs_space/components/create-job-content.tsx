@@ -13,11 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 
 interface JobCriteria {
   id?: string;
-  name: string;
-  description: string;
+  criterion: string;
+  description?: string;
   weight: number;
-  required: boolean;
-  category: string;
 }
 
 interface JobStage {
@@ -29,46 +27,34 @@ interface JobStage {
 
 const defaultCriteria: JobCriteria[] = [
   {
-    name: "Experiência Profissional",
+    criterion: "Experiência Profissional",
     description: "Anos de experiência na área e relevância das posições anteriores",
-    weight: 30,
-    required: true,
-    category: "experience"
+    weight: 30
   },
   {
-    name: "Habilidades Técnicas",
+    criterion: "Habilidades Técnicas",
     description: "Conhecimento em tecnologias, ferramentas e competências específicas",
-    weight: 25,
-    required: true,
-    category: "skills"
+    weight: 25
   },
   {
-    name: "Formação Acadêmica",
+    criterion: "Formação Acadêmica",
     description: "Nível de escolaridade, curso e instituição de ensino",
-    weight: 15,
-    required: false,
-    category: "education"
+    weight: 15
   },
   {
-    name: "Localização",
+    criterion: "Localização",
     description: "Proximidade geográfica ou disponibilidade para trabalho remoto",
-    weight: 10,
-    required: false,
-    category: "location"
+    weight: 10
   },
   {
-    name: "Idiomas",
+    criterion: "Idiomas",
     description: "Fluência em idiomas necessários para a posição",
-    weight: 10,
-    required: false,
-    category: "languages"
+    weight: 10
   },
   {
-    name: "Competências Comportamentais",
+    criterion: "Competências Comportamentais",
     description: "Soft skills como liderança, comunicação e trabalho em equipe",
-    weight: 10,
-    required: false,
-    category: "other"
+    weight: 10
   }
 ];
 
@@ -191,11 +177,9 @@ export default function CreateJobContent() {
 
   const addCriteria = () => {
     setCriteria(prev => [...prev, {
-      name: "",
+      criterion: "",
       description: "",
-      weight: 5,
-      required: false,
-      category: "other"
+      weight: 5
     }]);
   };
 
@@ -269,11 +253,11 @@ export default function CreateJobContent() {
       return false;
     }
 
-    const emptyCriteria = criteria.find(c => !c.name.trim() || !c.description.trim());
+    const emptyCriteria = criteria.find(c => !c.criterion.trim());
     if (emptyCriteria) {
       toast({
         title: "Erro de validação",
-        description: "Todos os critérios devem ter nome e descrição",
+        description: "Todos os critérios devem ter um nome",
         variant: "destructive"
       });
       return false;
@@ -634,74 +618,39 @@ export default function CreateJobContent() {
                     )}
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor={`criterion-name-${index}`}>Nome do Critério *</Label>
-                      <Input
-                        id={`criterion-name-${index}`}
-                        placeholder="Ex: Experiência Profissional"
-                        value={criterion.name}
-                        onChange={(e) => handleCriteriaChange(index, "name", e.target.value)}
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor={`criterion-category-${index}`}>Categoria</Label>
-                      <select
-                        id={`criterion-category-${index}`}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        value={criterion.category}
-                        onChange={(e) => handleCriteriaChange(index, "category", e.target.value)}
-                      >
-                        <option value="experience">Experiência</option>
-                        <option value="skills">Habilidades</option>
-                        <option value="education">Formação</option>
-                        <option value="location">Localização</option>
-                        <option value="languages">Idiomas</option>
-                        <option value="other">Outros</option>
-                      </select>
-                    </div>
-                  </div>
-
                   <div>
-                    <Label htmlFor={`criterion-description-${index}`}>Descrição *</Label>
-                    <Textarea
-                      id={`criterion-description-${index}`}
-                      placeholder="Descreva o que será avaliado neste critério..."
-                      rows={2}
-                      value={criterion.description}
-                      onChange={(e) => handleCriteriaChange(index, "description", e.target.value)}
+                    <Label htmlFor={`criterion-name-${index}`}>Nome do Critério *</Label>
+                    <Input
+                      id={`criterion-name-${index}`}
+                      placeholder="Ex: Experiência Profissional"
+                      value={criterion.criterion}
+                      onChange={(e) => handleCriteriaChange(index, "criterion", e.target.value)}
                       required
                     />
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor={`criterion-weight-${index}`}>Peso (%)</Label>
-                      <Input
-                        id={`criterion-weight-${index}`}
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={criterion.weight}
-                        onChange={(e) => handleCriteriaChange(index, "weight", parseInt(e.target.value) || 0)}
-                        required
-                      />
-                    </div>
+                  <div>
+                    <Label htmlFor={`criterion-description-${index}`}>Descrição</Label>
+                    <Textarea
+                      id={`criterion-description-${index}`}
+                      placeholder="Descreva o que será avaliado neste critério..."
+                      rows={2}
+                      value={criterion.description || ""}
+                      onChange={(e) => handleCriteriaChange(index, "description", e.target.value)}
+                    />
+                  </div>
 
-                    <div className="flex items-center space-x-2 pt-8">
-                      <input
-                        type="checkbox"
-                        id={`criterion-required-${index}`}
-                        checked={criterion.required}
-                        onChange={(e) => handleCriteriaChange(index, "required", e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300"
-                      />
-                      <Label htmlFor={`criterion-required-${index}`} className="cursor-pointer">
-                        Obrigatório
-                      </Label>
-                    </div>
+                  <div>
+                    <Label htmlFor={`criterion-weight-${index}`}>Peso (%)</Label>
+                    <Input
+                      id={`criterion-weight-${index}`}
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={criterion.weight}
+                      onChange={(e) => handleCriteriaChange(index, "weight", parseInt(e.target.value) || 0)}
+                      required
+                    />
                   </div>
                 </div>
               ))}

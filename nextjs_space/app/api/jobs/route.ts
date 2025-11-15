@@ -8,11 +8,9 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 
 const criteriaSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório"),
-  description: z.string().min(1, "Descrição é obrigatória"),
-  weight: z.number().min(1).max(100),
-  required: z.boolean(),
-  category: z.enum(["experience", "skills", "education", "location", "languages", "other"])
+  criterion: z.string().min(1, "Critério é obrigatório"),
+  description: z.string().optional(),
+  weight: z.number().min(1).max(100)
 });
 
 const jobSchema = z.object({
@@ -20,6 +18,9 @@ const jobSchema = z.object({
   description: z.string().min(1, "Descrição é obrigatória"),
   requirements: z.string().optional(),
   location: z.string().optional(),
+  country: z.string().optional(),
+  state: z.string().optional(),
+  city: z.string().optional(),
   type: z.enum(["full-time", "part-time", "contract"]).default("full-time"),
   criteria: z.array(criteriaSchema).min(1, "Pelo menos um critério é obrigatório")
 });
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, description, requirements, location, type, criteria } = jobSchema.parse(body);
+    const { title, description, requirements, location, country, state, city, type, criteria } = jobSchema.parse(body);
 
     // Validate criteria weights sum to 100
     const totalWeight = criteria.reduce((sum, c) => sum + c.weight, 0);
@@ -147,6 +148,9 @@ export async function POST(request: NextRequest) {
         description,
         requirements: requirements || "",
         location,
+        country,
+        state,
+        city,
         type,
         status: "active",
         userId: session.user.id,
