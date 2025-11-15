@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardHeader } from "@/components/dashboard-header";
 import {
   Briefcase,
   Users,
@@ -241,29 +242,7 @@ export default function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
-      {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-lg bg-background/80 border-b border-border shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-purple-600 to-accent bg-clip-text text-transparent">
-                RecruitAI
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Bem-vindo, {session?.user?.name || session?.user?.companyName}
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleLogout}
-              className="gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Sair
-            </Button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader />
 
       <div className="container mx-auto px-4 py-8">
         {/* KPIs Overview */}
