@@ -23,6 +23,8 @@ import {
   Github,
   Linkedin,
   Globe,
+  MessageCircle,
+  Instagram,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -45,6 +47,7 @@ interface CandidateProfile {
   linkedinUrl?: string;
   portfolioUrl?: string;
   githubUrl?: string;
+  instagramUrl?: string;
   photoUrl?: string;
   education: Array<{
     id: string;
@@ -207,21 +210,34 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
               <div className="flex-1">
                 <h2 className="text-3xl font-bold mb-2">{profile.fullName}</h2>
                 
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
+                {/* Contact Info */}
+                <div className="flex flex-wrap gap-4 mb-6">
                   {profile.email && (
-                    <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => window.location.href = `mailto:${profile.email}`}
+                      className="gap-2"
+                    >
                       <Mail className="h-4 w-4" />
-                      <a href={`mailto:${profile.email}`} className="hover:text-primary">
-                        {profile.email}
-                      </a>
-                    </div>
+                      Email
+                    </Button>
                   )}
                   {profile.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      <span>{profile.phone}</span>
-                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => window.open(`https://wa.me/${(profile.phone || '').replace(/\D/g, '')}`, '_blank')}
+                      className="gap-2 bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      WhatsApp
+                    </Button>
                   )}
+                </div>
+
+                {/* Location & Birth */}
+                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-6">
                   {profile.city && profile.state && (
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
@@ -239,42 +255,50 @@ export default function CandidateDetailPage({ params }: { params: { id: string }
                 </div>
 
                 {/* Social Links */}
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-3 mb-4">
                   {profile.linkedinUrl && (
-                    <a
-                      href={profile.linkedinUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(profile.linkedinUrl, '_blank')}
+                      className="gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
                     >
                       <Linkedin className="h-4 w-4" />
                       LinkedIn
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                    </Button>
                   )}
                   {profile.githubUrl && (
-                    <a
-                      href={profile.githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(profile.githubUrl, '_blank')}
+                      className="gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
                     >
                       <Github className="h-4 w-4" />
                       GitHub
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                    </Button>
                   )}
                   {profile.portfolioUrl && (
-                    <a
-                      href={profile.portfolioUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(profile.portfolioUrl, '_blank')}
+                      className="gap-2"
                     >
                       <Globe className="h-4 w-4" />
                       Portfólio
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                    </Button>
+                  )}
+                  {profile.instagramUrl && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(profile.instagramUrl, '_blank')}
+                      className="gap-2 bg-pink-50 hover:bg-pink-100 text-pink-700 border-pink-200"
+                    >
+                      <Instagram className="h-4 w-4" />
+                      Instagram
+                    </Button>
                   )}
                 </div>
 

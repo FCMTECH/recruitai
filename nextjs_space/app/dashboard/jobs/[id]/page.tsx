@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, Users, ArrowLeft, Filter, Download, Eye, Check, X, ListOrdered } from "lucide-react";
+import { Brain, Users, ArrowLeft, Filter, Download, Eye, Check, X, ListOrdered, ArrowRight, MessageCircle, User } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -38,6 +38,7 @@ interface Job {
 
 interface Application {
   id: string;
+  candidateId?: string;
   candidateName: string;
   candidateEmail: string;
   candidatePhone?: string;
@@ -140,6 +141,34 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
       console.error("Error changing stage:", error);
       toast.error("Erro ao atualizar fase");
     }
+  };
+
+  const handleAdvanceToNextStage = async (app: Application) => {
+    if (!job?.stages || job.stages.length === 0) {
+      toast.error("Esta vaga não possui fases configuradas");
+      return;
+    }
+
+    // Sort stages by order
+    const sortedStages = [...job.stages].sort((a, b) => a.order - b.order);
+    
+    let nextStageId: string | null = null;
+    
+    if (!app.currentStageId) {
+      // If no current stage, move to first stage
+      nextStageId = sortedStages[0].id;
+    } else {
+      // Find current stage index and get next stage
+      const currentIndex = sortedStages.findIndex(s => s.id === app.currentStageId);
+      if (currentIndex !== -1 && currentIndex < sortedStages.length - 1) {
+        nextStageId = sortedStages[currentIndex + 1].id;
+      } else {
+        toast.info("Candidato já está na última fase");
+        return;
+      }
+    }
+
+    await handleChangeStage(app.id, nextStageId);
   };
 
   const handleStatusChange = async (applicationId: string, newStatus: string) => {
@@ -467,6 +496,33 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                             <Eye className="h-4 w-4 mr-2" />
                             Detalhes
                           </Button>
+                          
+                          {/* Contact Button */}
+                          {app.candidateId && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => router.push(`/dashboard/talents/${app.candidateId}`)}
+                              className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                            >
+                              <MessageCircle className="h-4 w-4 mr-2" />
+                              Contato
+                            </Button>
+                          )}
+
+                          {/* Advance Stage Button */}
+                          {job.stages && job.stages.length > 0 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleAdvanceToNextStage(app)}
+                              className="bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
+                            >
+                              <ArrowRight className="h-4 w-4 mr-2" />
+                              Avançar Fase
+                            </Button>
+                          )}
+
                           {app.status === "pending" && (
                             <>
                               <Button
