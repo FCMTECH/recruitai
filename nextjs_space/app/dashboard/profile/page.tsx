@@ -53,14 +53,17 @@ export default function CompanyProfilePage() {
       return;
     }
 
-    if (session?.user?.role !== "company") {
-      router.push("/dashboard");
-      return;
-    }
+    if (status === "authenticated") {
+      const userRole = (session?.user as any)?.role;
+      if (userRole !== "company") {
+        router.push("/dashboard");
+        return;
+      }
 
-    loadProfile();
-    loadSubscription();
-    loadAvailablePlans();
+      loadProfile();
+      loadSubscription();
+      loadAvailablePlans();
+    }
   }, [session, status, router]);
 
   const loadProfile = async () => {

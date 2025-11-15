@@ -11,7 +11,15 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== "company") {
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Não autenticado" },
+        { status: 401 }
+      );
+    }
+
+    const userRole = (session.user as any)?.role;
+    if (userRole !== "company") {
       return NextResponse.json(
         { error: "Acesso negado" },
         { status: 403 }
@@ -54,7 +62,15 @@ export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== "company") {
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: "Não autenticado" },
+        { status: 401 }
+      );
+    }
+
+    const userRole = (session.user as any)?.role;
+    if (userRole !== "company") {
       return NextResponse.json(
         { error: "Acesso negado" },
         { status: 403 }
