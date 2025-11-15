@@ -79,7 +79,8 @@ export default function CreateJobContent() {
     country: "Brasil",
     state: "",
     city: "",
-    type: "full-time"
+    type: "full-time",
+    workMode: "presencial"
   });
 
   const [criteria, setCriteria] = useState<JobCriteria[]>(defaultCriteria);
@@ -495,6 +496,21 @@ export default function CreateJobContent() {
                   <option value="full-time">Tempo Integral</option>
                   <option value="part-time">Meio Período</option>
                   <option value="contract">Contrato</option>
+                </select>
+              </div>
+
+              <div>
+                <Label htmlFor="workMode">Modalidade de Trabalho</Label>
+                <select
+                  id="workMode"
+                  name="workMode"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={formData.workMode}
+                  onChange={handleInputChange}
+                >
+                  <option value="presencial">Presencial (100%)</option>
+                  <option value="hibrido">Híbrido</option>
+                  <option value="remoto">Remoto (100%)</option>
                 </select>
               </div>
             </CardContent>

@@ -31,6 +31,14 @@ export async function GET(req: NextRequest) {
         email: true,
         role: true,
         isActive: true,
+        groupId: true,
+        group: {
+          select: {
+            id: true,
+            name: true,
+            color: true
+          }
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -64,7 +72,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await req.json();
-    const { name, email, password, role } = data;
+    const { name, email, password, role, groupId } = data;
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -95,6 +103,7 @@ export async function POST(req: NextRequest) {
         email,
         password: hashedPassword,
         role: role || 'member',
+        groupId: groupId || null,
       },
       select: {
         id: true,

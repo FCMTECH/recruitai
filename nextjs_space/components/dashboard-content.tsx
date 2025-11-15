@@ -36,6 +36,7 @@ import {
   Legend,
   Filler
 } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 // Registrar componentes do Chart.js
 ChartJS.register(
@@ -48,7 +49,8 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  ChartDataLabels
 );
 
 interface AdvancedStats {
@@ -376,6 +378,14 @@ export default function DashboardContent() {
                     plugins: {
                       legend: {
                         position: 'bottom'
+                      },
+                      datalabels: {
+                        color: '#fff',
+                        font: {
+                          weight: 'bold',
+                          size: 14
+                        },
+                        formatter: (value: number) => value > 0 ? value : ''
                       }
                     }
                   }}
@@ -402,6 +412,14 @@ export default function DashboardContent() {
                     plugins: {
                       legend: {
                         position: 'bottom'
+                      },
+                      datalabels: {
+                        color: '#fff',
+                        font: {
+                          weight: 'bold',
+                          size: 14
+                        },
+                        formatter: (value: number) => value > 0 ? value : ''
                       }
                     }
                   }}
@@ -431,6 +449,16 @@ export default function DashboardContent() {
                     plugins: {
                       legend: {
                         display: false
+                      },
+                      datalabels: {
+                        color: '#fff',
+                        font: {
+                          weight: 'bold',
+                          size: 12
+                        },
+                        formatter: (value: number) => value > 0 ? value : '',
+                        anchor: 'end',
+                        align: 'start'
                       }
                     },
                     scales: {
@@ -462,6 +490,14 @@ export default function DashboardContent() {
                     plugins: {
                       legend: {
                         position: 'bottom'
+                      },
+                      datalabels: {
+                        color: '#fff',
+                        font: {
+                          weight: 'bold',
+                          size: 14
+                        },
+                        formatter: (value: number) => value > 0 ? value : ''
                       }
                     }
                   }}
@@ -490,6 +526,16 @@ export default function DashboardContent() {
                   plugins: {
                     legend: {
                       display: false
+                    },
+                    datalabels: {
+                      color: 'rgb(59, 130, 246)',
+                      font: {
+                        weight: 'bold',
+                        size: 11
+                      },
+                      formatter: (value: number) => value > 0 ? value : '',
+                      align: 'top',
+                      offset: 4
                     }
                   },
                   scales: {

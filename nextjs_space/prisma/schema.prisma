@@ -30,6 +30,7 @@ model User {
   subscriptions Subscription[]
   notifications Notification[]
   companyUsers  CompanyUser[] @relation("CompanyUsers")
+  teamGroups    TeamGroup[] @relation("CompanyTeamGroups")
   events        CalendarEvent[] @relation("UserEvents")
   tasks         Task[] @relation("UserTasks")
 }
@@ -198,6 +199,7 @@ model Job {
   state        String?
   city         String?
   type         String?  // full-time, part-time, contract, etc.
+  workMode     String?  @default("presencial") // remoto, hibrido, presencial
   status       String   @default("active") // active, paused, closed
   
   companyName  String   @default("Empresa")
@@ -361,9 +363,26 @@ model Notification {
   @@index([createdAt])
 }
 
+model TeamGroup {
+  id          String   @id @default(cuid())
+  companyId   String   // ID do User com role "company"
+  name        String   // ex: "Tecnologia", "Administrativo"
+  description String?  @db.Text
+  color       String?  // Cor para visualização
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company     User          @relation("CompanyTeamGroups", fields: [companyId], references: [id], onDelete: Cascade)
+  members     CompanyUser[]
+
+  @@index([companyId])
+}
+
 model CompanyUser {
   id            String   @id @default(cuid())
   companyId     String   // ID do User com role "company"
+  groupId       String?  // ID do TeamGroup (opcional)
   name          String
   email         String   @unique
   password      String
@@ -373,12 +392,14 @@ model CompanyUser {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  company       User     @relation("CompanyUsers", fields: [companyId], references: [id], onDelete: Cascade)
+  company       User      @relation("CompanyUsers", fields: [companyId], references: [id], onDelete: Cascade)
+  group         TeamGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
   events        CalendarEvent[]
   tasks         Task[]
   notifications CompanyUserNotification[]
 
   @@index([companyId])
+  @@index([groupId])
   @@index([email])
 }
 

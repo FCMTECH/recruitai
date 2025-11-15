@@ -114,6 +114,7 @@ export async function PATCH(
     }
     if (data.role !== undefined) updateData.role = data.role;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.groupId !== undefined) updateData.groupId = data.groupId;
 
     const updatedUser = await db.companyUser.update({
       where: { id: params.id },

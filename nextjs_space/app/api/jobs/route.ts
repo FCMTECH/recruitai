@@ -22,6 +22,7 @@ const jobSchema = z.object({
   state: z.string().optional(),
   city: z.string().optional(),
   type: z.enum(["full-time", "part-time", "contract"]).default("full-time"),
+  workMode: z.enum(["remoto", "hibrido", "presencial"]).default("presencial"),
   criteria: z.array(criteriaSchema).min(1, "Pelo menos um critério é obrigatório")
 });
 
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, description, requirements, location, country, state, city, type, criteria } = jobSchema.parse(body);
+    const { title, description, requirements, location, country, state, city, type, workMode, criteria } = jobSchema.parse(body);
 
     // Validate criteria weights sum to 100
     const totalWeight = criteria.reduce((sum, c) => sum + c.weight, 0);
@@ -152,6 +153,7 @@ export async function POST(request: NextRequest) {
         state,
         city,
         type,
+        workMode,
         status: "active",
         userId: session.user.id,
         criteria: {
