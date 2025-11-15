@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Brain, ArrowLeft, Save, Loader2, User, Mail, Building, CreditCard, CheckCircle2 } from "lucide-react";
+import { Brain, ArrowLeft, Save, Loader2, User, Mail, Building, CreditCard, CheckCircle2, Upload, Image as ImageIcon } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 
 interface Plan {
@@ -36,10 +37,12 @@ export default function CompanyProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isChangingPlan, setIsChangingPlan] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [profile, setProfile] = useState({
     name: "",
     email: "",
     companyName: "",
+    logoUrl: "",
   });
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [availablePlans, setAvailablePlans] = useState<Plan[]>([]);
@@ -69,6 +72,7 @@ export default function CompanyProfilePage() {
           name: data.name || "",
           email: data.email || "",
           companyName: data.companyName || "",
+          logoUrl: data.logoUrl || "",
         });
       }
     } catch (error) {
@@ -76,6 +80,50 @@ export default function CompanyProfilePage() {
       toast.error("Erro ao carregar perfil");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de arquivo
+    if (!file.type.startsWith('image/')) {
+      toast.error("Por favor, selecione uma imagem");
+      return;
+    }
+
+    // Validar tamanho (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 5MB");
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append('logo', file);
+
+      const response = await fetch('/api/dashboard/upload-logo', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const { logoUrl } = await response.json();
+        setProfile({ ...profile, logoUrl });
+        toast.success("Logo atualizada com sucesso!");
+        // Recarregar a sessão para atualizar o logo no header
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        toast.error(error.error || "Erro ao fazer upload da logo");
+      }
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      toast.error("Erro ao fazer upload da logo");
+    } finally {
+      setIsUploadingLogo(false);
     }
   };
 
@@ -252,6 +300,59 @@ export default function CompanyProfilePage() {
                   placeholder="Nome da sua empresa"
                   className="pl-10"
                 />
+              </div>
+            </div>
+
+            {/* Logo Upload */}
+            <div className="space-y-2">
+              <Label htmlFor="logo">Logo da Empresa</Label>
+              <div className="flex items-center gap-4">
+                {/* Preview do Logo */}
+                <div className="relative w-24 h-24 rounded-lg border-2 border-dashed border-muted-foreground/25 overflow-hidden bg-muted/20">
+                  {profile.logoUrl ? (
+                    <Image
+                      src={profile.logoUrl}
+                      alt="Logo da empresa"
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Botão de Upload */}
+                <div className="flex-1 space-y-2">
+                  <Input
+                    id="logo"
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleLogoUpload}
+                    disabled={isUploadingLogo}
+                    className="hidden"
+                  />
+                  <Label
+                    htmlFor="logo"
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md cursor-pointer hover:bg-primary/90 transition-colors"
+                  >
+                    {isUploadingLogo ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4" />
+                        Escolher Logo
+                      </>
+                    )}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Formatos aceitos: JPEG, PNG, WebP (máximo 5MB)
+                  </p>
+                </div>
               </div>
             </div>
           </CardContent>

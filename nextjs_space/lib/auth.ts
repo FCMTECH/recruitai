@@ -161,10 +161,15 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session: updateSession }) {
       if (user) {
         token.role = user.role;
         token.companyName = user.companyName || "";
+        token.logoUrl = (user as any).logoUrl || "";
+      }
+      // Support for updating session
+      if (trigger === "update" && updateSession) {
+        token.logoUrl = updateSession.logoUrl;
       }
       return token;
     },
@@ -173,6 +178,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.sub || "";
         session.user.role = (token.role as string) || "";
         session.user.companyName = (token.companyName as string) || "";
+        (session.user as any).logoUrl = (token.logoUrl as string) || "";
       }
       return session;
     }
