@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashboardHeader } from "@/components/dashboard-header";
 import {
   Briefcase,
@@ -78,11 +79,19 @@ interface AdvancedStats {
   topJobs: Array<{ id: string; title: string; applications: number }>;
 }
 
+interface TeamGroup {
+  id: string;
+  name: string;
+  color?: string;
+}
+
 export default function DashboardContent() {
   const { data: session, status } = useSession() || {};
   const router = useRouter();
   const [stats, setStats] = useState<AdvancedStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [groups, setGroups] = useState<TeamGroup[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("all");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -91,9 +100,28 @@ export default function DashboardContent() {
     }
 
     if (status === "authenticated") {
+      fetchGroups();
       fetchStats();
     }
   }, [status, router]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchStats();
+    }
+  }, [selectedGroupId]);
+
+  const fetchGroups = async () => {
+    try {
+      const res = await fetch("/api/team-groups");
+      if (res.ok) {
+        const data = await res.json();
+        setGroups(data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching groups:", error);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -247,6 +275,52 @@ export default function DashboardContent() {
       <DashboardHeader />
 
       <div className="container mx-auto px-4 py-8">
+        {/* Filtro de Grupo */}
+        <div className="mb-6">
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Filtrar Análise por Grupo
+              </CardTitle>
+              <CardDescription>Visualize o desempenho de grupos específicos da sua equipe</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+                  <SelectTrigger className="w-[300px]">
+                    <SelectValue placeholder="Selecione um grupo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Grupos</SelectItem>
+                    {groups.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        <div className="flex items-center gap-2">
+                          {group.color && (
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: group.color }}
+                            />
+                          )}
+                          {group.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedGroupId !== "all" && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSelectedGroupId("all")}
+                  >
+                    Limpar Filtro
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* KPIs Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">

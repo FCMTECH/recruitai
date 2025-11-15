@@ -202,13 +202,13 @@ export default function AgendaPage() {
 
         <Tabs defaultValue="events" className="w-full">
           <TabsList className="mb-4">
-            <TabsTrigger value="events">
+            <TabsTrigger value="events" onClick={() => {}}>
               <CalendarIcon className="mr-2 h-4 w-4" />
-              Eventos ({events.length})
+              Eventos{events.length > 0 ? ` (${events.length})` : ''}
             </TabsTrigger>
-            <TabsTrigger value="tasks">
+            <TabsTrigger value="tasks" onClick={() => {}}>
               <CheckCircle2 className="mr-2 h-4 w-4" />
-              Tarefas ({tasks.filter(t => t.status !== 'completed').length})
+              Tarefas{tasks.filter(t => t.status !== 'completed').length > 0 ? ` (${tasks.filter(t => t.status !== 'completed').length})` : ''}
             </TabsTrigger>
           </TabsList>
 
