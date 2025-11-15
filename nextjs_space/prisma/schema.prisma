@@ -19,6 +19,7 @@ model User {
   image         String?
   role          String    @default("candidate") // candidate, company, superadmin
   companyName   String?
+  logoUrl       String?   // Logo da empresa
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
