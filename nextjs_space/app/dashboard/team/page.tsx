@@ -56,7 +56,7 @@ export default function TeamPage() {
     email: '',
     password: '',
     role: 'member',
-    groupId: '',
+    groupId: 'no-group',
   });
 
   // Estados para grupos
@@ -218,14 +218,14 @@ export default function TeamPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...userFormData,
-          groupId: userFormData.groupId || null
+          groupId: userFormData.groupId === 'no-group' ? null : userFormData.groupId
         }),
       });
 
       if (res.ok) {
         toast.success('Usuário criado com sucesso!');
         setIsUserDialogOpen(false);
-        setUserFormData({ name: '', email: '', password: '', role: 'member', groupId: '' });
+        setUserFormData({ name: '', email: '', password: '', role: 'member', groupId: 'no-group' });
         fetchUsers();
       } else {
         const data = await res.json();
@@ -297,7 +297,7 @@ export default function TeamPage() {
 
   const openCreateUser = () => {
     setSelectedUser(null);
-    setUserFormData({ name: '', email: '', password: '', role: 'member', groupId: '' });
+    setUserFormData({ name: '', email: '', password: '', role: 'member', groupId: 'no-group' });
     setIsUserDialogOpen(true);
   };
 
@@ -573,7 +573,7 @@ export default function TeamPage() {
                     <SelectValue placeholder="Selecione um grupo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Sem grupo</SelectItem>
+                    <SelectItem value="no-group">Sem grupo</SelectItem>
                     {groups.map((group) => (
                       <SelectItem key={group.id} value={group.id}>
                         {group.name}
