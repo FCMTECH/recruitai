@@ -32,11 +32,18 @@ export async function GET(req: NextRequest) {
         role: true,
         isActive: true,
         groupId: true,
+        permissionId: true,
         group: {
           select: {
             id: true,
             name: true,
             color: true
+          }
+        },
+        permission: {
+          select: {
+            id: true,
+            name: true
           }
         },
         createdAt: true,
@@ -71,12 +78,68 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
+    // Verificar limite de membros baseado no plano
+    const subscription = await db.subscription.findFirst({
+      where: {
+        userId: user.id,
+        status: {
+          in: ['trial', 'active', 'grace_period']
+        }
+      },
+      include: {
+        plan: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    if (!subscription) {
+      return NextResponse.json(
+        { error: 'Você precisa de uma assinatura ativa para adicionar membros' },
+        { status: 403 }
+      );
+    }
+
+    // Contar membros atuais
+    const currentMemberCount = await db.companyUser.count({
+      where: {
+        companyId: user.id,
+        isActive: true
+      }
+    });
+
+    if (currentMemberCount >= subscription.plan.memberLimit) {
+      return NextResponse.json(
+        { 
+          error: `Limite de membros atingido. Seu plano ${subscription.plan.displayName} permite até ${subscription.plan.memberLimit} membro(s). Faça upgrade para adicionar mais membros.`,
+          limit: subscription.plan.memberLimit,
+          current: currentMemberCount
+        },
+        { status: 403 }
+      );
+    }
+
     const data = await req.json();
-    const { name, email, password, role, groupId } = data;
+    const { name, email, password, role, groupId, permissionId } = data;
 
     if (!name || !email || !password) {
       return NextResponse.json(
         { error: 'Nome, email e senha são obrigatórios' },
+        { status: 400 }
+      );
+    }
+
+    // Validar domínio do email
+    const companyDomain = user.email.split('@')[1];
+    const memberDomain = email.split('@')[1];
+
+    if (companyDomain !== memberDomain) {
+      return NextResponse.json(
+        { 
+          error: `O domínio do email deve ser @${companyDomain}. Todos os membros devem usar o mesmo domínio da empresa.`,
+          expectedDomain: companyDomain
+        },
         { status: 400 }
       );
     }
@@ -104,6 +167,7 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         role: role || 'member',
         groupId: groupId || null,
+        permissionId: permissionId || null,
       },
       select: {
         id: true,
@@ -112,11 +176,18 @@ export async function POST(req: NextRequest) {
         role: true,
         isActive: true,
         groupId: true,
+        permissionId: true,
         group: {
           select: {
             id: true,
             name: true,
             color: true
+          }
+        },
+        permission: {
+          select: {
+            id: true,
+            name: true
           }
         },
         createdAt: true,

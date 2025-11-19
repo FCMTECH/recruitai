@@ -115,6 +115,7 @@ export async function PATCH(
     if (data.role !== undefined) updateData.role = data.role;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
     if (data.groupId !== undefined) updateData.groupId = data.groupId;
+    if (data.permissionId !== undefined) updateData.permissionId = data.permissionId;
 
     const updatedUser = await db.companyUser.update({
       where: { id: params.id },
@@ -125,6 +126,14 @@ export async function PATCH(
         email: true,
         role: true,
         isActive: true,
+        groupId: true,
+        permissionId: true,
+        permission: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
         createdAt: true,
         updatedAt: true,
       },

@@ -74,8 +74,10 @@ async function main() {
       displayName: 'Teste Grátis',
       price: 0,
       jobLimit: 5, // 5 vagas durante 1 semana
+      memberLimit: 1, // Apenas o usuário principal
       features: [
         'Até 5 vagas durante 1 semana',
+        'Apenas 1 usuário (sem membros adicionais)',
         'Análise completa de currículos com IA',
         'Dashboard avançado de candidatos',
         'Filtros e busca avançada',
@@ -91,8 +93,12 @@ async function main() {
       displayName: 'Bronze',
       price: 300,
       jobLimit: 25,
+      memberLimit: 4, // Até 4 membros da equipe
       features: [
         'Até 25 vagas por mês',
+        'Até 4 membros da equipe',
+        'Grupos ilimitados',
+        'Sistema de permissões',
         'Análise completa de currículos com IA',
         'Dashboard avançado de candidatos',
         'Filtros e busca avançada',
@@ -104,8 +110,12 @@ async function main() {
       displayName: 'Prata',
       price: 500,
       jobLimit: 50,
+      memberLimit: 15, // Até 15 membros da equipe
       features: [
         'Até 50 vagas por mês',
+        'Até 15 membros da equipe',
+        'Grupos ilimitados',
+        'Sistema de permissões avançado',
         'Análise completa de currículos com IA',
         'Dashboard avançado de candidatos',
         'Filtros e busca avançada',
@@ -119,8 +129,12 @@ async function main() {
       displayName: 'Ouro',
       price: 800,
       jobLimit: 100,
+      memberLimit: 30, // Até 30 membros da equipe
       features: [
         'Até 100 vagas por mês',
+        'Até 30 membros da equipe',
+        'Grupos ilimitados',
+        'Sistema de permissões completo',
         'Análise completa de currículos com IA',
         'Dashboard avançado de candidatos',
         'Filtros e busca avançada',
@@ -135,8 +149,12 @@ async function main() {
       displayName: 'Personalizado',
       price: 0, // Preço personalizado
       jobLimit: 999,
+      memberLimit: 999, // Ilimitado
       features: [
         'Vagas ilimitadas',
+        'Membros ilimitados',
+        'Grupos ilimitados',
+        'Permissões customizadas',
         'Todos os recursos dos planos anteriores',
         'Personalização completa',
         'Integrações customizadas',

@@ -30,15 +30,16 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  jobs          Job[]
-  subscriptions Subscription[]
-  notifications Notification[]
-  companyUsers  CompanyUser[] @relation("CompanyUsers")
-  teamGroups    TeamGroup[] @relation("CompanyTeamGroups")
-  events        CalendarEvent[] @relation("UserEvents")
-  tasks         Task[] @relation("UserTasks")
+  accounts           Account[]
+  sessions           Session[]
+  jobs               Job[]
+  subscriptions      Subscription[]
+  notifications      Notification[]
+  companyUsers       CompanyUser[] @relation("CompanyUsers")
+  teamGroups         TeamGroup[] @relation("CompanyTeamGroups")
+  memberPermissions  MemberPermission[] @relation("CompanyPermissions")
+  events             CalendarEvent[] @relation("UserEvents")
+  tasks              Task[] @relation("UserTasks")
 }
 
 model Account {
@@ -315,6 +316,7 @@ model Plan {
   displayName String   // "Grátis", "Bronze", "Prata", "Ouro", "Personalizado"
   price       Float    // Em Reais (R$)
   jobLimit    Int      // Número de vagas por mês
+  memberLimit Int      @default(1) // Limite de membros da equipe
   features    String[] // Lista de features
   isActive    Boolean  @default(true)
   stripePriceId String? // Stripe price ID for recurring billing
@@ -329,10 +331,13 @@ model Subscription {
   id                    String    @id @default(cuid())
   userId                String
   planId                String
-  status                String    // trial, active, past_due, canceled, expired
+  status                String    // trial, active, past_due, canceled, expired, grace_period
   startDate             DateTime  @default(now())
   endDate               DateTime?
   trialEndDate          DateTime? // For trial period
+  gracePeriodEndDate    DateTime? // Data limite do período de graça
+  gracePeriodDays       Int?      // Número de dias de graça concedidos
+  suspensionReason      String?   // Motivo da suspensão/problema
   jobsCreatedThisMonth  Int       @default(0)
   lastResetDate         DateTime  @default(now())
   
@@ -385,10 +390,46 @@ model TeamGroup {
   @@index([companyId])
 }
 
+model MemberPermission {
+  id                      String   @id @default(cuid())
+  companyId               String   // ID da empresa dona dessas permissões
+  name                    String   // Nome do perfil de permissão (ex: "Gerente", "Recrutador")
+  
+  // Permissões de visualização
+  canViewAllJobs          Boolean  @default(true)  // Ver todas as vagas
+  canViewOwnGroupJobs     Boolean  @default(false) // Ver apenas vagas do próprio grupo
+  canViewAllProfiles      Boolean  @default(true)  // Ver perfil de todos os candidatos
+  canViewAllApplications  Boolean  @default(true)  // Ver todas as candidaturas
+  canViewOwnApplications  Boolean  @default(false) // Ver apenas candidaturas das próprias vagas
+  canViewTeamMembers      Boolean  @default(true)  // Ver membros da equipe
+  canViewAllGroups        Boolean  @default(true)  // Ver todos os grupos
+  canViewOwnGroup         Boolean  @default(false) // Ver apenas o próprio grupo
+  
+  // Permissões de ação
+  canCreateJobs           Boolean  @default(false) // Criar vagas
+  canEditJobs             Boolean  @default(false) // Editar vagas
+  canDeleteJobs           Boolean  @default(false) // Deletar vagas
+  canManageApplications   Boolean  @default(false) // Gerenciar candidaturas (avançar fases, etc)
+  canHireCandidates       Boolean  @default(false) // Contratar candidatos
+  canInviteInterviews     Boolean  @default(false) // Convidar para entrevistas
+  canManageTeam           Boolean  @default(false) // Gerenciar membros da equipe
+  canManageGroups         Boolean  @default(false) // Gerenciar grupos
+  canAccessReports        Boolean  @default(false) // Acessar relatórios e dashboard
+  
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  
+  company                 User     @relation("CompanyPermissions", fields: [companyId], references: [id], onDelete: Cascade)
+  members                 CompanyUser[]
+  
+  @@index([companyId])
+}
+
 model CompanyUser {
   id            String   @id @default(cuid())
   companyId     String   // ID do User com role "company"
   groupId       String?  // ID do TeamGroup (opcional)
+  permissionId  String?  // ID do MemberPermission (opcional)
   name          String
   email         String   @unique
   password      String
@@ -400,6 +441,7 @@ model CompanyUser {
 
   company       User      @relation("CompanyUsers", fields: [companyId], references: [id], onDelete: Cascade)
   group         TeamGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  permission    MemberPermission? @relation(fields: [permissionId], references: [id], onDelete: SetNull)
   events        CalendarEvent[]
   tasks         Task[]
   notifications CompanyUserNotification[]
@@ -407,6 +449,7 @@ model CompanyUser {
   @@index([companyId])
   @@index([groupId])
   @@index([email])
+  @@index([permissionId])
 }
 
 model CalendarEvent {
