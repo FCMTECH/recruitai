@@ -111,19 +111,31 @@ export async function POST(req: NextRequest) {
         email: true,
         role: true,
         isActive: true,
+        groupId: true,
+        group: {
+          select: {
+            id: true,
+            name: true,
+            color: true
+          }
+        },
         createdAt: true,
       },
     });
 
-    // Criar notificação para o novo usuário
-    await db.companyUserNotification.create({
-      data: {
-        companyUserId: newUser.id,
-        type: 'system',
-        title: 'Bem-vindo ao RecruitAI',
-        message: `Sua conta foi criada com sucesso! Faça login com o email: ${email}`,
-      },
-    });
+    // Tentar criar notificação para o novo usuário (não crítico)
+    try {
+      await db.companyUserNotification.create({
+        data: {
+          companyUserId: newUser.id,
+          type: 'system',
+          title: 'Bem-vindo ao RecruitAI',
+          message: `Sua conta foi criada com sucesso! Faça login com o email: ${email}`,
+        },
+      });
+    } catch (notifError) {
+      console.error('Erro ao criar notificação (não crítico):', notifError);
+    }
 
     return NextResponse.json({ user: newUser }, { status: 201 });
   } catch (error: any) {

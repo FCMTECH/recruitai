@@ -12,13 +12,16 @@ async function main() {
   
   const superAdmin = await prisma.user.upsert({
     where: { email: 'admin@atsplatform.com' },
-    update: {},
+    update: {
+      emailVerified: new Date()
+    },
     create: {
       email: 'admin@atsplatform.com',
       password: hashedPasswordAdmin,
       name: 'Administrador da Plataforma',
       companyName: 'RecruitAI',
-      role: 'superadmin'
+      role: 'superadmin',
+      emailVerified: new Date()
     }
   });
 
@@ -29,13 +32,16 @@ async function main() {
   
   const testUser = await prisma.user.upsert({
     where: { email: 'john@doe.com' },
-    update: {},
+    update: {
+      emailVerified: new Date()
+    },
     create: {
       email: 'john@doe.com',
       password: hashedPassword,
       name: 'João Silva',
       companyName: 'TechCorp Solutions',
-      role: 'company'
+      role: 'company',
+      emailVerified: new Date()
     }
   });
 
@@ -46,13 +52,16 @@ async function main() {
   
   const testCompany = await prisma.user.upsert({
     where: { email: 'empresa@teste.com' },
-    update: {},
+    update: {
+      emailVerified: new Date()
+    },
     create: {
       email: 'empresa@teste.com',
       password: hashedPassword2,
       name: 'Maria Oliveira',
       companyName: 'Startup Inovadora',
-      role: 'company'
+      role: 'company',
+      emailVerified: new Date()
     }
   });
 

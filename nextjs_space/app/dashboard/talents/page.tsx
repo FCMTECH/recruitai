@@ -244,9 +244,9 @@ export default function TalentBankPage() {
                           <GraduationCap className="h-4 w-4 text-primary" />
                           <span className="text-xs font-medium">Formação</span>
                         </div>
-                        <div className="text-sm text-muted-foreground line-clamp-2">
-                          <div>{profile.education[0].degree} em {profile.education[0].fieldOfStudy}</div>
-                          <div>{profile.education[0].institution}</div>
+                        <div className="space-y-1">
+                          <div className="text-sm text-muted-foreground">{profile.education[0].degree} em {profile.education[0].fieldOfStudy}</div>
+                          <div className="text-sm text-muted-foreground">{profile.education[0].institution}</div>
                         </div>
                       </div>
                     )}
@@ -258,9 +258,9 @@ export default function TalentBankPage() {
                           <Briefcase className="h-4 w-4 text-primary" />
                           <span className="text-xs font-medium">Experiência</span>
                         </div>
-                        <div className="text-sm text-muted-foreground line-clamp-2">
-                          <div>{profile.experiences[0].position}</div>
-                          <div>
+                        <div className="space-y-1">
+                          <div className="text-sm text-muted-foreground">{profile.experiences[0].position}</div>
+                          <div className="text-sm text-muted-foreground">
                             {profile.experiences[0].company}
                             {profile.experiences[0].isCurrent && " (Atual)"}
                           </div>

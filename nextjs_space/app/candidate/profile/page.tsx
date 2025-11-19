@@ -149,13 +149,39 @@ export default function CandidateProfilePage() {
       if (response.ok) {
         const data = await response.json();
         if (data) {
+          // Helper para converter datas ISO para formato YYYY-MM
+          const formatDateToMonth = (dateStr: string | null | undefined) => {
+            if (!dateStr) return "";
+            try {
+              const date = new Date(dateStr);
+              const year = date.getFullYear();
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              return `${year}-${month}`;
+            } catch {
+              return "";
+            }
+          };
+
           setProfile({
             ...profile,
             ...data,
             dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : "",
           });
-          setEducation(data.education || []);
-          setExperiences(data.experiences || []);
+          
+          // Converter datas de educação
+          setEducation((data.education || []).map((edu: any) => ({
+            ...edu,
+            startDate: formatDateToMonth(edu.startDate),
+            endDate: formatDateToMonth(edu.endDate),
+          })));
+          
+          // Converter datas de experiência
+          setExperiences((data.experiences || []).map((exp: any) => ({
+            ...exp,
+            startDate: formatDateToMonth(exp.startDate),
+            endDate: formatDateToMonth(exp.endDate),
+          })));
+          
           setSkills(data.skills || []);
           setCourses(data.courses || []);
           setCertifications(data.certifications || []);
