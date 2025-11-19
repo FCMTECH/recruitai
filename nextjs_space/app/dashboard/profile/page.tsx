@@ -135,7 +135,7 @@ export default function CompanyProfilePage() {
       const response = await fetch("/api/subscriptions/current");
       if (response.ok) {
         const data = await response.json();
-        setSubscription(data);
+        setSubscription(data.subscription || null);
       }
     } catch (error) {
       console.error("Error loading subscription:", error);
@@ -362,7 +362,7 @@ export default function CompanyProfilePage() {
         </Card>
 
         {/* Subscription Information */}
-        {subscription && (
+        {subscription && subscription.plan && (
           <Card className="border-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -375,18 +375,18 @@ export default function CompanyProfilePage() {
               <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold">{subscription.plan.displayName}</h3>
+                    <h3 className="text-lg font-semibold">{subscription.plan?.displayName || "Plano"}</h3>
                     <Badge variant={getStatusBadge(subscription.status).variant}>
                       {getStatusBadge(subscription.status).label}
                     </Badge>
                   </div>
                   <p className="text-2xl font-bold text-primary">
-                    R$ {subscription.plan.price.toFixed(2)}
+                    R$ {subscription.plan?.price?.toFixed(2) || "0.00"}
                     <span className="text-sm font-normal text-muted-foreground">/mês</span>
                   </p>
                   <div className="text-sm text-muted-foreground space-y-1">
-                    <p>Limite: {subscription.plan.jobLimit} vagas/mês</p>
-                    <p>Criadas este mês: {subscription.jobsCreatedThisMonth}</p>
+                    <p>Limite: {subscription.plan?.jobLimit || 0} vagas/mês</p>
+                    <p>Criadas este mês: {subscription.jobsCreatedThisMonth || 0}</p>
                     {subscription.trialEndDate && (
                       <p>Período de teste até: {new Date(subscription.trialEndDate).toLocaleDateString("pt-BR")}</p>
                     )}
@@ -397,7 +397,7 @@ export default function CompanyProfilePage() {
               <div className="space-y-2">
                 <h4 className="font-medium">Recursos Incluídos:</h4>
                 <ul className="space-y-2">
-                  {subscription.plan.features.map((feature, index) => (
+                  {subscription.plan?.features?.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2">
                       <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                       <span className="text-sm">{feature}</span>
@@ -418,19 +418,19 @@ export default function CompanyProfilePage() {
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {availablePlans
-                .filter((plan) => plan.name !== "free" && plan.id !== subscription?.plan.id)
+                .filter((plan) => plan.name !== "free" && plan.id !== subscription?.plan?.id)
                 .map((plan) => (
                   <Card key={plan.id} className="relative">
                     <CardHeader>
-                      <CardTitle className="text-lg">{plan.displayName}</CardTitle>
+                      <CardTitle className="text-lg">{plan.displayName || plan.name}</CardTitle>
                       <div className="text-2xl font-bold text-primary">
-                        R$ {plan.price.toFixed(2)}
+                        R$ {plan.price?.toFixed(2) || "0.00"}
                         <span className="text-sm font-normal text-muted-foreground">/mês</span>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <p className="text-sm text-muted-foreground">
-                        Até {plan.jobLimit} vagas/mês
+                        Até {plan.jobLimit || 0} vagas/mês
                       </p>
                       <Button
                         onClick={() => handleChangePlan(plan.id)}
