@@ -33,6 +33,12 @@ export async function GET(request: NextRequest) {
         name: true,
         email: true,
         companyName: true,
+        tradeName: true,
+        cnpj: true,
+        phone: true,
+        address: true,
+        city: true,
+        state: true,
         logoUrl: true,
         role: true,
         image: true,
@@ -78,11 +84,11 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, email, companyName } = body;
+    const { name, email, companyName, tradeName, cnpj, phone, address, city, state } = body;
 
     if (!name || !email || !companyName) {
       return NextResponse.json(
-        { error: "Todos os campos são obrigatórios" },
+        { error: "Nome, e-mail e razão social são obrigatórios" },
         { status: 400 }
       );
     }
@@ -107,12 +113,24 @@ export async function PATCH(request: NextRequest) {
         name,
         email,
         companyName,
+        tradeName,
+        cnpj,
+        phone,
+        address,
+        city,
+        state,
       },
       select: {
         id: true,
         name: true,
         email: true,
         companyName: true,
+        tradeName: true,
+        cnpj: true,
+        phone: true,
+        address: true,
+        city: true,
+        state: true,
         logoUrl: true,
         role: true,
         image: true,

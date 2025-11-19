@@ -18,7 +18,13 @@ model User {
   password      String?
   image         String?
   role          String    @default("candidate") // candidate, company, superadmin
-  companyName   String?
+  companyName   String?   // Razão social
+  tradeName     String?   // Nome fantasia
+  cnpj          String?   // CNPJ da empresa
+  phone         String?   // Telefone da empresa
+  address       String?   // Endereço da empresa
+  city          String?   // Cidade
+  state         String?   // Estado
   logoUrl       String?   // Logo da empresa
   
   createdAt DateTime @default(now())

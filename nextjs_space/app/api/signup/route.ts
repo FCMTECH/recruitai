@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { generateVerificationToken } from "@/lib/verification";
+import { sendEmail } from "@/lib/email";
 
 const signupSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -107,11 +109,37 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Send verification email
+    try {
+      const token = await generateVerificationToken(user.email);
+      const verificationUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${token}`;
+
+      await sendEmail({
+        to: user.email,
+        subject: 'Verificação de Email - RecruitAI',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2563eb;">Bem-vindo ao RecruitAI!</h2>
+            <p>Por favor, clique no link abaixo para verificar seu email:</p>
+            <a href="${verificationUrl}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">
+              Verificar Email
+            </a>
+            <p>Este link expira em 24 horas.</p>
+            <p>Se você não criou uma conta no RecruitAI, ignore este email.</p>
+          </div>
+        `,
+        text: `Bem-vindo ao RecruitAI! Por favor, verifique seu email clicando neste link: ${verificationUrl}. Este link expira em 24 horas.`,
+      });
+    } catch (emailError) {
+      console.error("Error sending verification email:", emailError);
+      // Continue even if email fails
+    }
+
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
 
     return NextResponse.json({
-      message: "Usuário criado com sucesso",
+      message: "Usuário criado com sucesso! Verifique seu email para ativar sua conta.",
       user: userWithoutPassword
     });
 

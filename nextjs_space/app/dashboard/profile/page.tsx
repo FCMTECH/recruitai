@@ -42,6 +42,12 @@ export default function CompanyProfilePage() {
     name: "",
     email: "",
     companyName: "",
+    tradeName: "",
+    cnpj: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
     logoUrl: "",
   });
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -75,6 +81,12 @@ export default function CompanyProfilePage() {
           name: data.name || "",
           email: data.email || "",
           companyName: data.companyName || "",
+          tradeName: data.tradeName || "",
+          cnpj: data.cnpj || "",
+          phone: data.phone || "",
+          address: data.address || "",
+          city: data.city || "",
+          state: data.state || "",
           logoUrl: data.logoUrl || "",
         });
       }
@@ -154,9 +166,39 @@ export default function CompanyProfilePage() {
     }
   };
 
+  const handleCnpjSearch = async (cnpj: string) => {
+    const cleanCnpj = cnpj.replace(/\D/g, "");
+    if (cleanCnpj.length !== 14) {
+      toast.error("CNPJ inválido");
+      return;
+    }
+
+    try {
+      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
+      if (response.ok) {
+        const data = await response.json();
+        setProfile(prev => ({
+          ...prev,
+          companyName: data.razao_social || "",
+          tradeName: data.nome_fantasia || "",
+          phone: data.ddd_telefone_1 || "",
+          address: `${data.logradouro}, ${data.numero} - ${data.bairro}`,
+          city: data.municipio || "",
+          state: data.uf || "",
+        }));
+        toast.success("Dados da empresa carregados!");
+      } else {
+        toast.error("CNPJ não encontrado");
+      }
+    } catch (error) {
+      console.error("Error searching CNPJ:", error);
+      toast.error("Erro ao buscar CNPJ");
+    }
+  };
+
   const handleSave = async () => {
     if (!profile.name || !profile.email || !profile.companyName) {
-      toast.error("Todos os campos são obrigatórios");
+      toast.error("Nome, e-mail e razão social são obrigatórios");
       return;
     }
 
@@ -293,15 +335,88 @@ export default function CompanyProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="companyName">Nome da Empresa *</Label>
+              <Label htmlFor="cnpj">CNPJ</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="cnpj"
+                  value={profile.cnpj}
+                  onChange={(e) => setProfile({ ...profile, cnpj: e.target.value })}
+                  placeholder="00.000.000/0000-00"
+                  maxLength={18}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleCnpjSearch(profile.cnpj)}
+                  disabled={isLoading}
+                >
+                  Buscar
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="companyName">Razão Social *</Label>
               <div className="relative">
                 <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="companyName"
                   value={profile.companyName}
                   onChange={(e) => setProfile({ ...profile, companyName: e.target.value })}
-                  placeholder="Nome da sua empresa"
+                  placeholder="Razão social da empresa"
                   className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tradeName">Nome Fantasia</Label>
+              <Input
+                id="tradeName"
+                value={profile.tradeName}
+                onChange={(e) => setProfile({ ...profile, tradeName: e.target.value })}
+                placeholder="Nome fantasia"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telefone</Label>
+              <Input
+                id="phone"
+                value={profile.phone}
+                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                placeholder="(00) 00000-0000"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="address">Endereço</Label>
+              <Input
+                id="address"
+                value={profile.address}
+                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                placeholder="Rua, número - bairro"
+              />
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">Cidade</Label>
+                <Input
+                  id="city"
+                  value={profile.city}
+                  onChange={(e) => setProfile({ ...profile, city: e.target.value })}
+                  placeholder="Cidade"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="state">Estado</Label>
+                <Input
+                  id="state"
+                  value={profile.state}
+                  onChange={(e) => setProfile({ ...profile, state: e.target.value })}
+                  placeholder="UF"
+                  maxLength={2}
                 />
               </div>
             </div>
