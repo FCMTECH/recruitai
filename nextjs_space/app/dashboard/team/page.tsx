@@ -352,7 +352,15 @@ export default function TeamPage() {
 
           {/* Tab: Membros */}
           <TabsContent value="members" className="space-y-6">
-            <div className="flex justify-end">
+            <div className="flex justify-between items-center">
+              <Button
+                variant="outline"
+                onClick={() => router.push('/dashboard/permissions')}
+                className="gap-2"
+              >
+                <Shield className="h-4 w-4" />
+                Gerenciar Permissões
+              </Button>
               <Button onClick={openCreateUser}>
                 <UserPlus className="h-4 w-4 mr-2" />
                 Adicionar Membro

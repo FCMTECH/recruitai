@@ -12,7 +12,9 @@ import {
   Clock, 
   XCircle,
   TrendingUp,
-  ArrowRight
+  ArrowRight,
+  Shield,
+  CreditCard
 } from "lucide-react";
 
 async function getAdminStats() {
@@ -127,11 +129,23 @@ export default async function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           <Link href="/admin/companies">
             <Button variant="outline" className="w-full h-20 text-lg justify-start gap-3">
               <Building2 className="h-6 w-6" />
               Gerenciar Empresas
+            </Button>
+          </Link>
+          <Link href="/admin/subscriptions">
+            <Button variant="outline" className="w-full h-20 text-lg justify-start gap-3">
+              <CreditCard className="h-6 w-6" />
+              Gerenciar Assinaturas
+            </Button>
+          </Link>
+          <Link href="/admin/admins">
+            <Button variant="outline" className="w-full h-20 text-lg justify-start gap-3">
+              <Shield className="h-6 w-6" />
+              Gerenciar Administradores
             </Button>
           </Link>
           <Link href="/admin/jobs">
