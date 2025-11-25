@@ -77,6 +77,17 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  email      String
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+}
+
 model CandidateProfile {
   id          String   @id @default(cuid())
   email       String   @unique
@@ -331,7 +342,7 @@ model Subscription {
   id                    String    @id @default(cuid())
   userId                String
   planId                String
-  status                String    // trial, active, past_due, canceled, expired, grace_period
+  status                String    // trial, active, past_due, canceled, expired, grace_period, pending
   startDate             DateTime  @default(now())
   endDate               DateTime?
   trialEndDate          DateTime? // For trial period

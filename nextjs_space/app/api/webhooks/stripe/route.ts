@@ -84,9 +84,18 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   const stripeSubscriptionId = session.subscription as string;
   const customerId = session.customer as string;
+  const paymentStatus = session.payment_status;
 
   // Buscar a subscription do Stripe para obter detalhes completos
   const stripeSubscription: any = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+
+  // Determinar status baseado no payment_status
+  // Se o pagamento foi confirmado (cartão), ativa imediatamente
+  // Se está pendente (boleto), mantém como pending até o invoice.paid
+  let subscriptionStatus = 'pending';
+  if (paymentStatus === 'paid') {
+    subscriptionStatus = 'active';
+  }
 
   // Atualizar ou criar subscription no banco de dados
   await prisma.subscription.upsert({
@@ -95,7 +104,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     },
     update: {
       stripeSubscriptionId: stripeSubscriptionId,
-      status: 'active',
+      status: subscriptionStatus,
       startDate: stripeSubscription.current_period_start ? new Date(stripeSubscription.current_period_start * 1000) : new Date(),
       endDate: stripeSubscription.current_period_end ? new Date(stripeSubscription.current_period_end * 1000) : new Date(),
       planId: planId
@@ -105,14 +114,14 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       planId: planId,
       stripeCustomerId: customerId,
       stripeSubscriptionId: stripeSubscriptionId,
-      status: 'active',
+      status: subscriptionStatus,
       startDate: stripeSubscription.current_period_start ? new Date(stripeSubscription.current_period_start * 1000) : new Date(),
       endDate: stripeSubscription.current_period_end ? new Date(stripeSubscription.current_period_end * 1000) : new Date(),
       jobsCreatedThisMonth: 0
     }
   });
 
-  console.log(`Subscription activated for user ${userId}`);
+  console.log(`Subscription ${subscriptionStatus === 'active' ? 'activated' : 'created (pending payment)'} for user ${userId}`);
 }
 
 async function handleSubscriptionUpdate(stripeSubscription: Stripe.Subscription) {
