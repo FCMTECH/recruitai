@@ -2,13 +2,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Brain, ArrowLeft, Save, Loader2, User, Mail, Shield } from "lucide-react";
+import { Brain, ArrowLeft, Save, Loader2, User, Mail, Shield, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminProfilePage() {
@@ -110,13 +110,24 @@ export default function AdminProfilePage() {
                 </h1>
               </div>
             </div>
-            <Button onClick={handleSave} disabled={isSaving} className="bg-gradient-to-r from-primary to-accent">
-              {isSaving ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvando...</>
-              ) : (
-                <><Save className="mr-2 h-4 w-4" />Salvar Perfil</>
-              )}
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button onClick={handleSave} disabled={isSaving} className="bg-gradient-to-r from-primary to-accent">
+                {isSaving ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvando...</>
+                ) : (
+                  <><Save className="mr-2 h-4 w-4" />Salvar Perfil</>
+                )}
+              </Button>
+              
+              <Button 
+                onClick={() => signOut({ callbackUrl: '/' })} 
+                variant="outline"
+                className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </Button>
+            </div>
           </div>
         </div>
       </header>
