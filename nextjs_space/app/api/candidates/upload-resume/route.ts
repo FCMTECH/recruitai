@@ -1,17 +1,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { db } from '@/lib/db';
+import { uploadFile } from '@/lib/s3';
 
 export const dynamic = 'force-dynamic';
-
-// Configure S3 Client
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION || 'us-west-2',
-});
-
-const bucketName = process.env.AWS_BUCKET_NAME || '';
-const folderPrefix = process.env.AWS_FOLDER_PREFIX || '';
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,42 +39,29 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
 
     // Generate unique filename
-    const timestamp = Date.now();
     const sanitizedEmail = email.replace(/[^a-zA-Z0-9]/g, '_');
     const extension = file.name.split('.').pop();
-    const s3Key = `${folderPrefix}resumes/${sanitizedEmail}_${timestamp}.${extension}`;
+    const fileName = `${sanitizedEmail}_${Date.now()}.${extension}`;
 
-    // Upload to S3
-    const uploadParams = {
-      Bucket: bucketName,
-      Key: s3Key,
-      Body: buffer,
-      ContentType: file.type,
-      Metadata: {
-        originalName: file.name,
-        uploadedBy: email,
-        uploadedAt: new Date().toISOString(),
-      },
-    };
-
-    await s3Client.send(new PutObjectCommand(uploadParams));
+    // Upload to S3 using the centralized function
+    const cloud_storage_path = await uploadFile(buffer, fileName);
 
     // Update candidate profile with resume URL
     await db.candidateProfile.upsert({
       where: { email },
       update: {
-        resumeUrl: s3Key,
+        resumeUrl: cloud_storage_path,
       },
       create: {
         email,
         fullName: '',
-        resumeUrl: s3Key,
+        resumeUrl: cloud_storage_path,
       },
     });
 
     return NextResponse.json({
       message: 'Currículo enviado com sucesso',
-      resumeUrl: s3Key,
+      resumeUrl: cloud_storage_path,
     });
   } catch (error) {
     console.error('Erro ao fazer upload do currículo:', error);

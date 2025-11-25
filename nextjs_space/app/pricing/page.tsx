@@ -8,7 +8,11 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, Loader2, Zap, Brain, Crown, ArrowLeft } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Check, Sparkles, Loader2, Zap, Brain, Crown, ArrowLeft, Mail, Phone, User } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -38,6 +42,16 @@ export default function PricingPage() {
   const [currentSubscription, setCurrentSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  
+  // Custom plan request states
+  const [showContactDialog, setShowContactDialog] = useState(false);
+  const [contactFormData, setContactFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: '',
+  });
+  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
 
   useEffect(() => {
     fetchPlans();
@@ -74,14 +88,23 @@ export default function PricingPage() {
   };
 
   const handleSelectPlan = async (planId: string, planName: string) => {
-    if (sessionStatus !== 'authenticated') {
-      toast.error('Você precisa estar logado para assinar um plano');
-      router.push('/auth/signin?callbackUrl=/pricing');
+    if (planName === 'personalizado') {
+      // Preencher dados do usuário logado se disponível
+      if (sessionData?.user) {
+        setContactFormData({
+          name: sessionData.user.name || '',
+          email: sessionData.user.email || '',
+          phone: '',
+          message: '',
+        });
+      }
+      setShowContactDialog(true);
       return;
     }
 
-    if (planName === 'personalizado') {
-      toast.info('Entre em contato conosco para um plano personalizado');
+    if (sessionStatus !== 'authenticated') {
+      toast.error('Você precisa estar logado para assinar um plano');
+      router.push('/auth/signin?callbackUrl=/pricing');
       return;
     }
 
@@ -154,6 +177,48 @@ export default function PricingPage() {
       toast.error('Erro ao processar pagamento');
     } finally {
       setCheckoutLoading(null);
+    }
+  };
+
+  const handleSubmitContactForm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validação básica
+    if (!contactFormData.name || !contactFormData.email || !contactFormData.phone) {
+      toast.error('Por favor, preencha todos os campos obrigatórios');
+      return;
+    }
+
+    // Validação de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(contactFormData.email)) {
+      toast.error('Por favor, insira um e-mail válido');
+      return;
+    }
+
+    setIsSubmittingContact(true);
+
+    try {
+      const response = await fetch('/api/custom-plan-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contactFormData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(data.message || 'Solicitação enviada com sucesso!');
+        setShowContactDialog(false);
+        setContactFormData({ name: '', email: '', phone: '', message: '' });
+      } else {
+        toast.error(data.error || 'Erro ao enviar solicitação');
+      }
+    } catch (error) {
+      console.error('Erro ao enviar solicitação:', error);
+      toast.error('Erro ao enviar solicitação');
+    } finally {
+      setIsSubmittingContact(false);
     }
   };
 
@@ -409,6 +474,115 @@ export default function PricingPage() {
           </Card>
         </div>
       </div>
+
+      {/* Contact Dialog for Custom Plan */}
+      <Dialog open={showContactDialog} onOpenChange={setShowContactDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Solicitar Plano Personalizado
+            </DialogTitle>
+            <DialogDescription>
+              Preencha seus dados e entraremos em contato para entender melhor suas necessidades.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmitContactForm} className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">
+                Nome Completo <span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Seu nome completo"
+                  value={contactFormData.name}
+                  onChange={(e) => setContactFormData({ ...contactFormData, name: e.target.value })}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">
+                E-mail <span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={contactFormData.email}
+                  onChange={(e) => setContactFormData({ ...contactFormData, email: e.target.value })}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">
+                Telefone <span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="(00) 00000-0000"
+                  value={contactFormData.phone}
+                  onChange={(e) => setContactFormData({ ...contactFormData, phone: e.target.value })}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="message">
+                Mensagem (Opcional)
+              </Label>
+              <Textarea
+                id="message"
+                placeholder="Conte-nos um pouco sobre suas necessidades..."
+                value={contactFormData.message}
+                onChange={(e) => setContactFormData({ ...contactFormData, message: e.target.value })}
+                rows={4}
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowContactDialog(false)}
+                className="flex-1"
+                disabled={isSubmittingContact}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                disabled={isSubmittingContact}
+              >
+                {isSubmittingContact ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  'Enviar Solicitação'
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -147,13 +147,13 @@ async function main() {
     {
       name: 'personalizado',
       displayName: 'Personalizado',
-      price: 1500, // Preço base (pode ser ajustado conforme necessidade)
+      price: 0, // Plano de contato (sem preço exibido)
       jobLimit: 999,
-      memberLimit: 999, // Ilimitado
+      memberLimit: 999,
       features: [
-        'Vagas ilimitadas',
-        'Membros ilimitados',
-        'Grupos ilimitados',
+        'Vagas personalizadas',
+        'Membros personalizados',
+        'Grupos personalizados',
         'Permissões customizadas',
         'Todos os recursos dos planos anteriores',
         'Personalização completa',

@@ -539,3 +539,19 @@ model CompanyUserNotification {
   @@index([isRead])
   @@index([createdAt])
 }
+
+model CustomPlanRequest {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  message   String?  @db.Text
+  status    String   @default("pending") // pending, contacted, converted, rejected
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+}

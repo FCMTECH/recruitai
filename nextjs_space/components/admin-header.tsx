@@ -2,14 +2,37 @@
 
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { LogOut, Brain, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { LogOut, Brain, User, Bell } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 interface AdminHeaderProps {
   userName?: string | null;
 }
 
 export function AdminHeader({ userName }: AdminHeaderProps) {
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+
+  useEffect(() => {
+    fetchPendingRequests();
+    // Atualizar a cada 30 segundos
+    const interval = setInterval(fetchPendingRequests, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchPendingRequests = async () => {
+    try {
+      const response = await fetch('/api/custom-plan-requests?status=pending');
+      if (response.ok) {
+        const data = await response.json();
+        setPendingRequestsCount(data.stats?.pending || 0);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar solicitações pendentes:', error);
+    }
+  };
+
   return (
     <header className="border-b border-border/40 bg-background/95 backdrop-blur-xl sticky top-0 z-10 mb-8">
       <div className="container mx-auto px-4 py-4">
@@ -29,6 +52,20 @@ export function AdminHeader({ userName }: AdminHeaderProps) {
 
           {/* Ações do Header */}
           <div className="flex items-center gap-3">
+            {/* Notificações de Planos Personalizados */}
+            <Link href="/admin/custom-plan-requests">
+              <Button variant="outline" className="gap-2 relative">
+                <Bell className="h-4 w-4" />
+                {pendingRequestsCount > 0 && (
+                  <Badge 
+                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white text-xs"
+                  >
+                    {pendingRequestsCount}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
+
             {/* Botão de Perfil */}
             <Link href="/admin/profile">
               <Button variant="outline" className="gap-2">
