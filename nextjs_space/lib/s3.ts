@@ -2,11 +2,20 @@
 import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { createS3Client, getBucketConfig } from './aws-config';
+import type { S3Client } from '@aws-sdk/client-s3';
 
-const s3Client = createS3Client();
-const { bucketName, folderPrefix } = getBucketConfig();
+let s3ClientInstance: S3Client | null = null;
+
+function getS3Client(): S3Client {
+  if (!s3ClientInstance) {
+    s3ClientInstance = createS3Client();
+  }
+  return s3ClientInstance;
+}
 
 export async function uploadFile(buffer: Buffer, fileName: string): Promise<string> {
+  const { bucketName, folderPrefix } = getBucketConfig();
+  const s3Client = getS3Client();
   const key = `${folderPrefix}uploads/${Date.now()}-${fileName}`;
   
   const command = new PutObjectCommand({
@@ -21,6 +30,9 @@ export async function uploadFile(buffer: Buffer, fileName: string): Promise<stri
 }
 
 export async function downloadFile(key: string): Promise<string> {
+  const { bucketName } = getBucketConfig();
+  const s3Client = getS3Client();
+  
   const command = new GetObjectCommand({
     Bucket: bucketName,
     Key: key
@@ -31,6 +43,9 @@ export async function downloadFile(key: string): Promise<string> {
 }
 
 export async function deleteFile(key: string): Promise<void> {
+  const { bucketName } = getBucketConfig();
+  const s3Client = getS3Client();
+  
   const command = new DeleteObjectCommand({
     Bucket: bucketName,
     Key: key
