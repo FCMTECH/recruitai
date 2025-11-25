@@ -64,7 +64,8 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         name,
         companyName: role === "company" ? companyName : "",
-        role: role
+        role: role,
+        emailVerified: new Date() // Auto-verify email on signup
       }
     });
 

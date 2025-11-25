@@ -14,7 +14,8 @@ import {
   TrendingUp,
   ArrowRight,
   Shield,
-  CreditCard
+  CreditCard,
+  UserCheck
 } from "lucide-react";
 
 async function getAdminStats() {
@@ -146,6 +147,12 @@ export default async function AdminDashboard() {
             <Button variant="outline" className="w-full h-20 text-lg justify-start gap-3">
               <Shield className="h-6 w-6" />
               Gerenciar Administradores
+            </Button>
+          </Link>
+          <Link href="/admin/candidates">
+            <Button variant="outline" className="w-full h-20 text-lg justify-start gap-3">
+              <UserCheck className="h-6 w-6" />
+              Gerenciar Candidatos
             </Button>
           </Link>
           <Link href="/admin/jobs">

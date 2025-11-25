@@ -147,7 +147,7 @@ async function main() {
     {
       name: 'personalizado',
       displayName: 'Personalizado',
-      price: 0, // Preço personalizado
+      price: 1500, // Preço base (pode ser ajustado conforme necessidade)
       jobLimit: 999,
       memberLimit: 999, // Ilimitado
       features: [
