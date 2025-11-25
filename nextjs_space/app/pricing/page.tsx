@@ -85,6 +85,9 @@ export default function PricingPage() {
       return;
     }
 
+    // Verificar se é o email de teste
+    const isTestEmail = sessionData?.user?.email === 'teste@fcmtech.com.br';
+
     if (planName === 'free') {
       try {
         setCheckoutLoading(planId);
@@ -112,18 +115,39 @@ export default function PricingPage() {
 
     try {
       setCheckoutLoading(planId);
-      const response = await fetch('/api/checkout/create-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId })
-      });
+      
+      // Se for email de teste, usar rota especial
+      if (isTestEmail) {
+        const response = await fetch('/api/checkout/test-mode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planId })
+        });
 
-      if (response.ok) {
-        const { url } = await response.json();
-        window.location.href = url;
+        if (response.ok) {
+          const data = await response.json();
+          toast.success('Plano ativado em modo de teste! ✅');
+          router.push('/dashboard');
+          return;
+        } else {
+          const error = await response.json();
+          toast.error(error.message || 'Erro ao ativar plano de teste');
+        }
       } else {
-        const error = await response.json();
-        toast.error(error.message || 'Erro ao criar sessão de checkout');
+        // Fluxo normal com Stripe
+        const response = await fetch('/api/checkout/create-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planId })
+        });
+
+        if (response.ok) {
+          const { url } = await response.json();
+          window.location.href = url;
+        } else {
+          const error = await response.json();
+          toast.error(error.message || 'Erro ao criar sessão de checkout');
+        }
       }
     } catch (error) {
       console.error('Erro:', error);

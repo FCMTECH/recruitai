@@ -204,6 +204,15 @@ export default function SignInPage() {
                   </>
                 )}
               </Button>
+
+              <div className="text-center">
+                <Link 
+                  href="/auth/forgot-password"
+                  className="text-sm text-primary hover:text-accent transition-colors"
+                >
+                  Esqueceu sua senha?
+                </Link>
+              </div>
             </form>
 
             {/* OAuth - Only for candidates */}
