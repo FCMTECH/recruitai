@@ -3,6 +3,7 @@ import { requireSuperAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { AdminHeader } from "@/components/admin-header";
 import Link from "next/link";
 import { 
   Building2, 
@@ -105,7 +106,7 @@ async function getAdminStats() {
 }
 
 export default async function AdminDashboard() {
-  await requireSuperAdmin();
+  const session = await requireSuperAdmin();
   const data = await getAdminStats();
 
   if (!data) {
@@ -120,15 +121,9 @@ export default async function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <AdminHeader userName={session?.user?.name} />
+      
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-            Painel Administrativo
-          </h1>
-          <p className="text-gray-600">Visão global da plataforma ATS</p>
-        </div>
-
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           <Link href="/admin/companies">
