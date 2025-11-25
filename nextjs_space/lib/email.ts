@@ -1,8 +1,10 @@
 
 /**
  * Email utilities for RecruitAI
- * Using nodemailer for SMTP or can be easily replaced with Resend/SendGrid
+ * Using Nodemailer with Zoho Mail SMTP
  */
+
+import nodemailer from 'nodemailer';
 
 interface EmailParams {
   to: string;
@@ -11,22 +13,58 @@ interface EmailParams {
   text?: string;
 }
 
+// Create reusable transporter
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.zoho.com',
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    tls: {
+      rejectUnauthorized: false // For development/testing
+    }
+  });
+};
+
 export async function sendEmail({ to, subject, html, text }: EmailParams) {
   try {
-    // For now, just log emails to console
-    // In production, integrate with SMTP, Resend, or SendGrid
-    console.log('📧 EMAIL ENVIADO:');
+    // Check if SMTP credentials are configured
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.warn('⚠️ SMTP não configurado. Email não será enviado.');
+      console.log('📧 EMAIL (Mock):');
+      console.log('Para:', to);
+      console.log('Assunto:', subject);
+      return {
+        success: false,
+        error: 'SMTP credentials not configured'
+      };
+    }
+
+    const transporter = createTransporter();
+    
+    const mailOptions = {
+      from: `${process.env.SMTP_FROM_NAME || 'RecruitAI'} <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html,
+      text: text || subject
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    
+    console.log('✅ Email enviado com sucesso:', info.messageId);
     console.log('Para:', to);
     console.log('Assunto:', subject);
-    console.log('Conteúdo (HTML):', html);
     
-    // Simulate email sending
     return {
       success: true,
-      messageId: `mock-${Date.now()}`
+      messageId: info.messageId
     };
   } catch (error) {
-    console.error('Erro ao enviar email:', error);
+    console.error('❌ Erro ao enviar email:', error);
     return {
       success: false,
       error: String(error)
