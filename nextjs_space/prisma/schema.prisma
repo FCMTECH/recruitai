@@ -628,4 +628,41 @@ model MemberInvitation {
   @@index([email])
   @@index([token])
   @@index([status])
+
+
+// Convite para novas empresas com plano personalizado
+model CompanyInvitation {
+  id              String   @id @default(cuid())
+  email           String
+  companyName     String   // Razão Social
+  tradeName       String?  // Nome Fantasia
+  cnpj            String?
+  phone           String?
+  token           String   @unique
+  
+  // Plano Personalizado
+  customPlanName  String   @default("Plano Personalizado")
+  customJobLimit  Int      // Quantitativo de vagas customizado
+  customPrice     Float    // Valor mensal customizado
+  customFeatures  String[] // Features personalizadas
+  
+  // Stripe
+  stripeCustomerId     String?
+  stripeCheckoutUrl    String? // URL do checkout Stripe
+  
+  // Status
+  status          String   @default("pending") // pending, password_set, payment_pending, completed, expired
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+  
+  // Admin que criou
+  createdBy       String?  // ID do admin que criou o convite
+  notes           String?  // Notas internas
+  
+  @@index([email])
+  @@index([token])
+  @@index([status])
+  @@index([createdBy])
+}
 }
