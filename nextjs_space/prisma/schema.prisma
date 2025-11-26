@@ -40,6 +40,8 @@ model User {
   memberPermissions  MemberPermission[] @relation("CompanyPermissions")
   events             CalendarEvent[] @relation("UserEvents")
   tasks              Task[] @relation("UserTasks")
+  supportTickets     SupportTicket[] @relation("CompanySupportTickets")
+  memberInvitations  MemberInvitation[] @relation("CompanyMemberInvitations")
 }
 
 model Account {
@@ -331,11 +333,15 @@ model Plan {
   features    String[] // Lista de features
   isActive    Boolean  @default(true)
   stripePriceId String? // Stripe price ID for recurring billing
+  isCustom    Boolean  @default(false) // Se é um plano personalizado
+  customCompanyId String? // ID da empresa (só para planos personalizados)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   subscriptions Subscription[]
+  
+  @@index([customCompanyId])
 }
 
 model Subscription {
@@ -567,4 +573,59 @@ model MaintenanceLog {
   @@index([action])
   @@index([status])
   @@index([executedAt])
+}
+
+model SupportTicket {
+  id          String   @id @default(cuid())
+  companyId   String
+  userId      String   // Usuário da empresa que abriu o chamado
+  subject     String
+  status      String   @default("open") // open, in_progress, waiting_company, closed
+  priority    String   @default("medium") // low, medium, high
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  closedAt    DateTime?
+  
+  company     User     @relation("CompanySupportTickets", fields: [companyId], references: [id], onDelete: Cascade)
+  messages    SupportMessage[]
+  
+  @@index([companyId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([priority])
+}
+
+model SupportMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  userId    String   // Quem enviou (pode ser empresa ou admin)
+  message   String   @db.Text
+  isAdmin   Boolean  @default(false) // true se enviado por admin
+  createdAt DateTime @default(now())
+  
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  @@index([ticketId])
+  @@index([createdAt])
+}
+
+model MemberInvitation {
+  id          String   @id @default(cuid())
+  companyId   String
+  email       String
+  name        String
+  groupId     String?
+  permissionId String?
+  token       String   @unique
+  status      String   @default("pending") // pending, accepted, expired
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  acceptedAt  DateTime?
+  
+  company     User     @relation("CompanyMemberInvitations", fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@index([companyId])
+  @@index([email])
+  @@index([token])
+  @@index([status])
 }

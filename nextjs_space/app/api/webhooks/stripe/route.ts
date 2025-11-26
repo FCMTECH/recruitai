@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
 import { PrismaClient } from '@prisma/client';
 import Stripe from 'stripe';
+import { sendEmail } from '@/lib/email';
 
 const prisma = new PrismaClient();
 
@@ -98,7 +99,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }
 
   // Atualizar ou criar subscription no banco de dados
-  await prisma.subscription.upsert({
+  const updatedSubscription = await prisma.subscription.upsert({
     where: {
       stripeCustomerId: customerId
     },
@@ -118,8 +119,49 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       startDate: stripeSubscription.current_period_start ? new Date(stripeSubscription.current_period_start * 1000) : new Date(),
       endDate: stripeSubscription.current_period_end ? new Date(stripeSubscription.current_period_end * 1000) : new Date(),
       jobsCreatedThisMonth: 0
+    },
+    include: {
+      plan: true,
     }
   });
+
+  // Enviar e-mail de confirmação quando o pagamento for aprovado
+  if (subscriptionStatus === 'active') {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, companyName: true, name: true }
+      });
+
+      if (user?.email) {
+        const planName = updatedSubscription.plan.displayName;
+        const amount = (session.amount_total || 0) / 100;
+        
+        await sendEmail({
+          to: user.email,
+          subject: 'Confirmação de Pagamento - RecruitAI',
+          html: `
+            <h2>Pagamento Confirmado!</h2>
+            <p>Olá ${user.companyName || user.name},</p>
+            <p>Seu pagamento foi processado com sucesso!</p>
+            <hr>
+            <p><strong>Plano:</strong> ${planName}</p>
+            <p><strong>Valor:</strong> R$ ${amount.toFixed(2)}</p>
+            <p><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+            <hr>
+            <p>Sua assinatura está ativa e você já pode utilizar todos os recursos do seu plano.</p>
+            <p><strong>Nota Fiscal:</strong> A nota fiscal será enviada em breve para este e-mail.</p>
+            <p>Obrigado por escolher RecruitAI!</p>
+            <p><a href="${process.env.NEXTAUTH_URL}/dashboard" style="background: #3B82F6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Acessar Dashboard</a></p>
+          `,
+          text: `Pagamento confirmado! Plano: ${planName} - Valor: R$ ${amount.toFixed(2)}. A nota fiscal será enviada em breve.`,
+        });
+      }
+    } catch (emailError) {
+      console.error('Erro ao enviar e-mail de confirmação:', emailError);
+      // Não falhar a operação se o e-mail não for enviado
+    }
+  }
 
   console.log(`Subscription ${subscriptionStatus === 'active' ? 'activated' : 'created (pending payment)'} for user ${userId}`);
 }

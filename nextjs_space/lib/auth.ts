@@ -63,35 +63,63 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Tentar login como User normal
         const user = await db.user.findUnique({
           where: { email: credentials.email }
         });
 
-        if (!user || !user.password) {
-          return null;
+        if (user && user.password) {
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (isPasswordValid) {
+            // Check if email is verified (apenas para users normais)
+            if (!user.emailVerified) {
+              throw new Error("Por favor, verifique seu email antes de fazer login.");
+            }
+
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              companyName: user.companyName || "",
+              role: user.role,
+            };
+          }
         }
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
+        // Se não encontrou User, tentar login como CompanyUser (membro)
+        const companyUser = await db.companyUser.findUnique({
+          where: { email: credentials.email }
+        });
 
-        if (!isPasswordValid) {
-          return null;
+        if (companyUser && companyUser.password && companyUser.isActive) {
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            companyUser.password
+          );
+
+          if (isPasswordValid) {
+            // Buscar nome da empresa
+            const company = await db.user.findUnique({
+              where: { id: companyUser.companyId },
+              select: { companyName: true }
+            });
+
+            return {
+              id: companyUser.id,
+              email: companyUser.email,
+              name: companyUser.name,
+              companyName: company?.companyName || "",
+              role: "company_member", // Role especial para membros
+              companyId: companyUser.companyId,
+            };
+          }
         }
 
-        // Check if email is verified
-        if (!user.emailVerified) {
-          throw new Error("Por favor, verifique seu email antes de fazer login.");
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          companyName: user.companyName || "",
-          role: user.role,
-        };
+        return null;
       }
     })
   ],
@@ -171,6 +199,7 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role;
         token.companyName = user.companyName || "";
         token.logoUrl = (user as any).logoUrl || "";
+        token.companyId = (user as any).companyId || "";
       }
       // Support for updating session
       if (trigger === "update" && updateSession) {
@@ -184,6 +213,7 @@ export const authOptions: NextAuthOptions = {
         session.user.role = (token.role as string) || "";
         session.user.companyName = (token.companyName as string) || "";
         (session.user as any).logoUrl = (token.logoUrl as string) || "";
+        (session.user as any).companyId = (token.companyId as string) || "";
       }
       return session;
     }
