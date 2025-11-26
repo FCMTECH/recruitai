@@ -381,7 +381,54 @@ ABACUSAI_API_KEY
 # Se quiser nova key, obter em: apps.abacus.ai
 ```
 
-#### 6. OAuth (Opcional)
+#### 6. Email SMTP (Obrigatório)
+
+```env
+SMTP_HOST
+# Valor: smtp.zoho.com
+# Ou outro provedor SMTP
+
+SMTP_PORT
+# Valor: 587
+# Porta padrão STARTTLS
+
+SMTP_USER
+# Seu email de envio: noreply@seudominio.com
+
+SMTP_PASS
+# Senha do email ou App Password
+
+SMTP_FROM_NAME
+# Nome de exibição: RecruitAI
+```
+
+**Configurar Email:**
+1. Criar conta de email para envios (ex: noreply@)
+2. Habilitar autenticação de app se necessário
+3. Testar envio antes do deploy
+
+#### 7. API de Manutenção (Obrigatório)
+
+```env
+MAINTENANCE_SECRET
+# Token de segurança para API de manutenção
+# Gerar: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# Exemplo: 3977aa7046e9bf25ce7e91d535177b4c00794ec8fd29b98b5fc5a2697a455c1e
+```
+
+**⚠️ IMPORTANTE:** Guarde este token em local seguro! Ele permite acesso total à API de manutenção.
+
+#### 8. Sistema de Teste (Opcional)
+
+```env
+TEST_MODE_EMAIL
+# Email para testes de pagamento sem cobrança
+# Exemplo: teste@fcmtech.com.br
+```
+
+**Quando usar:** Para testar planos em produção sem processar pagamentos reais.
+
+#### 9. OAuth (Opcional)
 
 ```env
 GOOGLE_CLIENT_ID

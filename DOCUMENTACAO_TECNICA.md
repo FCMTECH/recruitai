@@ -4,9 +4,9 @@
 ## 🎯 Visão Geral do Sistema
 
 **Nome:** RecruitAI - Plataforma de Recrutamento e Seleção Inteligente  
-**Versão:** 1.0.0  
+**Versão:** 2.0.0  
 **Data de Criação:** Novembro 2025  
-**Última Atualização:** 19 de Novembro de 2025
+**Última Atualização:** 26 de Novembro de 2025
 
 ---
 
@@ -358,6 +358,130 @@ model TeamGroup {
 }
 ```
 
+#### 10. **SupportTicket** (Ticket de Suporte)
+```prisma
+model SupportTicket {
+  id          String   @id @default(cuid())
+  companyId   String
+  subject     String
+  status      String   @default("open") // open, in_progress, waiting_company, closed
+  priority    String   @default("medium") // low, medium, high
+  closedAt    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  company     User              @relation(fields: [companyId], references: [id])
+  messages    SupportMessage[]
+}
+```
+
+#### 11. **SupportMessage** (Mensagem de Suporte)
+```prisma
+model SupportMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  senderId  String
+  message   String   @db.Text
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id])
+  sender    User          @relation(fields: [senderId], references: [id])
+}
+```
+
+#### 12. **MemberInvitation** (Convite de Membro)
+```prisma
+model MemberInvitation {
+  id            String   @id @default(cuid())
+  companyId     String
+  email         String
+  name          String
+  groupId       String?
+  permissionId  String?
+  token         String   @unique
+  status        String   @default("pending") // pending, accepted, expired
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  acceptedAt    DateTime?
+  
+  company       User     @relation(fields: [companyId], references: [id])
+}
+```
+
+#### 13. **CompanyInvitation** (Convite de Empresa - Plano Personalizado)
+```prisma
+model CompanyInvitation {
+  id                  String   @id @default(cuid())
+  email               String
+  companyName         String   // Razão social
+  tradeName           String?  // Nome fantasia
+  cnpj                String?
+  phone               String?
+  token               String   @unique
+  
+  // Detalhes do Plano Personalizado
+  customPlanName      String
+  customJobLimit      Int
+  customPrice         Float
+  customFeatures      String[]
+  
+  // Stripe
+  stripeCustomerId    String?
+  stripeCheckoutUrl   String?
+  
+  // Status
+  status              String   @default("pending") // pending, password_set, payment_pending, completed, expired
+  expiresAt           DateTime
+  createdAt           DateTime @default(now())
+  completedAt         DateTime?
+  
+  // Admin
+  createdBy           String
+  notes               String?  @db.Text
+  
+  admin               User     @relation(fields: [createdBy], references: [id])
+}
+```
+
+#### 14. **MaintenanceLog** (Log de Manutenção)
+```prisma
+model MaintenanceLog {
+  id          String   @id @default(cuid())
+  action      String
+  params      Json?
+  result      Json?
+  status      String   // success, error
+  executedAt  DateTime @default(now())
+}
+```
+
+#### 15. **PasswordResetToken** (Token de Recuperação de Senha)
+```prisma
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+```
+
+#### 16. **CustomPlanRequest** (Solicitação de Plano Personalizado)
+```prisma
+model CustomPlanRequest {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  message   String?  @db.Text
+  status    String   @default("pending") // pending, contacted, converted, rejected
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+```
+
 ### Outras Entidades
 
 - **Account** - OAuth accounts (NextAuth)
@@ -373,7 +497,6 @@ model TeamGroup {
 - **Notification** - Notificações do sistema
 - **CalendarEvent** - Eventos do calendário
 - **Task** - Tarefas (to-do list)
-- **CompanyUserNotification** - Notificações de membros
 
 ---
 
@@ -704,6 +827,402 @@ PATCH /api/company-users/[id]
 
 ---
 
+## 🔑 SISTEMA DE RECUPERAÇÃO DE SENHA
+
+### Fluxo de Recuperação
+
+**Arquivos:** `lib/password-reset.ts`, `/api/auth/forgot-password`, `/api/auth/reset-password`
+
+#### Passo 1: Solicitar Recuperação
+
+```typescript
+POST /api/auth/forgot-password
+{
+  "email": "usuario@exemplo.com"
+}
+```
+
+- Gera token de recuperação com validade de 1 hora
+- Envia email com link de redefinição
+- Retorna sempre sucesso (anti-enumeração de emails)
+
+#### Passo 2: Redefinir Senha
+
+```typescript
+POST /api/auth/reset-password
+{
+  "token": "abc123...",
+  "password": "novaSenha123",
+  "confirmPassword": "novaSenha123"
+}
+```
+
+- Valida token e expiração
+- Hash da nova senha (bcrypt)
+- Atualiza senha no banco
+- Invalida token usado
+
+---
+
+## 🎫 SISTEMA DE SUPORTE
+
+### Para Empresas
+
+**Área de Acesso:** `/dashboard/support`
+
+#### Criar Ticket
+
+```typescript
+POST /api/support
+{
+  "subject": "Problema com upload de currículos",
+  "message": "Descrição detalhada do problema...",
+  "priority": "high" // low, medium, high
+}
+```
+
+#### Adicionar Mensagem ao Ticket
+
+```typescript
+POST /api/support/[ticketId]
+{
+  "message": "Nova informação sobre o problema..."
+}
+```
+
+### Para Superadmins
+
+**Área de Acesso:** `/admin/support`
+
+#### Listar Todos os Tickets
+
+```typescript
+GET /api/support
+// Retorna todos os tickets de todas as empresas
+```
+
+#### Responder Ticket
+
+```typescript
+POST /api/support/[ticketId]
+{
+  "message": "Resposta do suporte..."
+}
+// Marca automaticamente isAdmin: true
+```
+
+#### Atualizar Status/Prioridade
+
+```typescript
+PATCH /api/support/[ticketId]
+{
+  "status": "in_progress", // open, in_progress, waiting_company, closed
+  "priority": "high"
+}
+```
+
+### Notificações Automáticas
+
+- **Empresa cria ticket** → Notifica todos os admins
+- **Admin responde** → Notifica empresa (status muda para waiting_company)
+- **Empresa responde** → Notifica todos os admins
+- **Ticket fechado** → Registra data de fechamento
+
+---
+
+## 👥 SISTEMA DE CONVITES DE MEMBROS
+
+### Fluxo de Convite
+
+**API:** `/api/member-invitations`
+
+#### Passo 1: Empresa Convida Membro
+
+```typescript
+POST /api/member-invitations
+{
+  "email": "membro@empresa.com",
+  "name": "João Silva",
+  "groupId": "group_123",      // Opcional
+  "permissionId": "perm_456"   // Opcional
+}
+```
+
+**Validações Automáticas:**
+- ✅ Email deve ter o mesmo domínio da empresa
+- ✅ Email não pode já existir como usuário ou em outro convite pendente
+- ✅ Respeita limite de membros do plano da empresa
+
+**Ação:**
+- Gera token único
+- Define validade de 7 dias
+- Envia email com link de aceitação
+
+#### Passo 2: Membro Aceita Convite
+
+**Página:** `/member-invite/[token]`
+
+```typescript
+// Verificar convite
+GET /api/member-invitations/[token]
+// Retorna detalhes (email, nome, companyName)
+
+// Aceitar e criar senha
+POST /api/member-invitations/[token]
+{
+  "password": "senha123",
+  "confirmPassword": "senha123"
+}
+```
+
+**Ação:**
+- Cria conta `CompanyUser`
+- Marca convite como aceito
+- Notifica empresa
+- Redireciona para login
+
+---
+
+## 🏢 SISTEMA DE EMPRESAS COM PLANO PERSONALIZADO
+
+### Fluxo Completo (Superadmin → Empresa)
+
+#### Passo 1: Superadmin Cria Convite
+
+**Área:** `/admin/custom-companies`
+
+```typescript
+POST /api/admin/companies/create-with-custom-plan
+{
+  "email": "empresa@exemplo.com",
+  "companyName": "Empresa XYZ Ltda",
+  "tradeName": "XYZ Tech",           // Opcional
+  "cnpj": "12345678000190",          // Opcional
+  "phone": "+5511999999999",         // Opcional
+  
+  // Plano Personalizado
+  "customJobLimit": 150,
+  "customPrice": 1200.00,
+  "customFeatures": [
+    "150 vagas por mês",
+    "Membros ilimitados",
+    "Suporte prioritário 24/7",
+    "API dedicada"
+  ],
+  
+  "notes": "Cliente VIP - atender com prioridade"  // Interno
+}
+```
+
+**Ação:**
+- Cria `CompanyInvitation`
+- Gera token com validade de 7 dias
+- Envia email para empresa com detalhes do plano e link de configuração
+
+#### Passo 2: Empresa Configura Conta
+
+**Página:** `/company-setup/[token]`
+
+**2.1 - Criar Senha:**
+```typescript
+POST /api/company-setup/create-password
+{
+  "token": "abc123...",
+  "password": "senha123",
+  "confirmPassword": "senha123"
+}
+```
+
+**Ação:**
+- Cria usuário `company` no banco
+- Usa dados do convite (email, companyName, cnpj, phone, etc.)
+- Atualiza status do convite para `password_set`
+
+**2.2 - Realizar Pagamento:**
+```typescript
+POST /api/company-setup/create-checkout
+{
+  "token": "abc123..."
+}
+```
+
+**Ação:**
+- Cria/recupera Stripe Customer
+- Cria Checkout Session com plano personalizado
+- Atualiza convite com `stripeCheckoutUrl`
+- Status muda para `payment_pending`
+- Redireciona para Stripe
+
+#### Passo 3: Webhook Stripe Processa Pagamento
+
+**Endpoint:** `/api/webhooks/stripe`
+
+Quando `checkout.session.completed` é recebido:
+- Verifica se é plano personalizado (metadata)
+- **Cria novo `Plan` no banco** com dados do convite
+- Marca `plan.isCustom = true` e `plan.customCompanyId = userId`
+- Cria `Subscription` para a empresa usando o novo plano
+- Atualiza `CompanyInvitation` para status `completed`
+- Envia email de confirmação
+
+**Resultado Final:**
+- Empresa tem conta ativa
+- Plano personalizado exclusivo criado
+- Assinatura ativa por 30 dias
+- Pronta para usar a plataforma
+
+### Gestão de Convites (Superadmin)
+
+```typescript
+// Listar convites
+GET /api/admin/company-invitations?status=pending
+
+// Ver detalhes
+GET /api/admin/company-invitations/[id]
+
+// Atualizar notas/status
+PATCH /api/admin/company-invitations/[id]
+{
+  "notes": "Cliente pagou, liberar acesso",
+  "status": "completed"
+}
+
+// Deletar convite
+DELETE /api/admin/company-invitations/[id]
+```
+
+---
+
+## 🔧 API DE MANUTENÇÃO REMOTA
+
+### Visão Geral
+
+Permite que a equipe Abacus.AI realize manutenções sem acesso SSH ao servidor.
+
+**Documentação Completa:** `API_MANUTENCAO.md`
+
+### Autenticação
+
+Todas as requisições exigem:
+```bash
+Authorization: Bearer <MAINTENANCE_SECRET>
+```
+
+### Endpoints Principais
+
+#### 1. Status do Sistema
+```typescript
+GET /api/maintenance/status
+// Retorna: banco, servidor, memória, estatísticas
+```
+
+#### 2. Executar Ações
+```typescript
+POST /api/maintenance/execute
+{
+  "action": "restart_server" | "clear_cache" | "prisma_generate" | 
+            "prisma_push" | "run_seed" | "cleanup_orphans" | "get_logs",
+  "params": { ... }  // Opcional
+}
+```
+
+#### 3. Ver Histórico
+```typescript
+GET /api/maintenance/logs?limit=50&status=success
+// Retorna log de todas as manutenções executadas
+```
+
+### Ações Disponíveis
+
+| Ação | Descrição | Quando Usar |
+|------|-----------|-------------|
+| `restart_server` | Reinicia Next.js | Sistema travado |
+| `clear_cache` | Limpa .next e .build | Após mudanças |
+| `check_database` | Verifica conectividade | Diagnóstico |
+| `prisma_generate` | Gera Prisma Client | Erro de Prisma |
+| `prisma_push` | Aplica schema | Mudanças no schema |
+| `run_seed` | Popula banco | Inicialização |
+| `cleanup_orphans` | Remove órfãos | Limpeza |
+| `get_logs` | Obtém logs | Debug |
+
+### Cenário de Uso: Sistema Parou
+
+```bash
+# 1. Verificar status
+curl -X GET "https://app.com/api/maintenance/status" \
+  -H "Authorization: Bearer <TOKEN>"
+
+# 2. Ver logs
+curl -X POST "https://app.com/api/maintenance/execute" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "get_logs", "params": {"lines": 50}}'
+
+# 3. Reiniciar
+curl -X POST "https://app.com/api/maintenance/execute" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "restart_server"}'
+```
+
+---
+
+## 💌 SISTEMA DE EMAILS
+
+### Configuração SMTP
+
+**Arquivo:** `lib/email.ts`
+
+```env
+SMTP_HOST=smtp.zoho.com
+SMTP_PORT=587
+SMTP_USER=noreply@fcmtech.com.br
+SMTP_PASS=<senha_do_email>
+SMTP_FROM_NAME=RecruitAI
+```
+
+### Templates Disponíveis
+
+```typescript
+emailTemplates = {
+  // Candidato
+  applicationReceived: { subject, html, text },
+  applicationStatusUpdate: { subject, html, text },
+  interviewInvite: { subject, html, text },
+  
+  // Empresa
+  trialExpiry: { subject, html, text },
+  subscriptionConfirmed: { subject, html, text },
+  
+  // Verificação
+  emailVerification: { subject, html, text },
+  passwordReset: { subject, html, text },
+  
+  // Convites
+  memberInvitation: { subject, html, text },
+  companyInvitation: { subject, html, text },
+  
+  // Suporte
+  supportTicketCreated: { subject, html, text },
+  supportTicketReply: { subject, html, text }
+}
+```
+
+### Envio de Email
+
+```typescript
+import { sendEmail, emailTemplates } from '@/lib/email';
+
+await sendEmail({
+  to: user.email,
+  subject: emailTemplates.passwordReset.subject,
+  html: emailTemplates.passwordReset.html(resetUrl),
+  text: emailTemplates.passwordReset.text(resetUrl)
+});
+```
+
+---
+
 ## 📊 PAINEL ADMINISTRATIVO
 
 ### Recursos do Superadmin
@@ -772,32 +1291,42 @@ DATABASE_URL="postgresql://user:pass@host:5432/db"
 NEXTAUTH_SECRET="secret_forte_aqui"
 NEXTAUTH_URL="http://localhost:3000" # Produção: https://seudominio.com
 
-# Stripe
+# Stripe (Pagamentos)
 STRIPE_SECRET_KEY="sk_test_..."
 STRIPE_PUBLISHABLE_KEY="pk_test_..."
 STRIPE_WEBHOOK_SECRET="whsec_..."
 
-# AWS S3
+# AWS S3 (Armazenamento)
 AWS_REGION="us-west-2"
+AWS_S3_REGION="us-west-2"
 AWS_BUCKET_NAME="seu-bucket"
+AWS_S3_BUCKET_NAME="seu-bucket"
 AWS_FOLDER_PREFIX="resumes/"
-AWS_ACCESS_KEY_ID="..." # (Opcional)
-AWS_SECRET_ACCESS_KEY="..." # (Opcional)
+AWS_S3_FOLDER_PREFIX="resumes/"
+AWS_ACCESS_KEY_ID="..."        # Opcional se usar IAM
+AWS_SECRET_ACCESS_KEY="..."    # Opcional se usar IAM
 
 # Abacus.AI (IA)
 ABACUSAI_API_KEY="5bb8032f287b4b89bfcae4529b50a199"
+
+# Email SMTP (Obrigatório)
+SMTP_HOST="smtp.zoho.com"
+SMTP_PORT="587"
+SMTP_USER="noreply@fcmtech.com.br"
+SMTP_PASS="senha_do_email"
+SMTP_FROM_NAME="RecruitAI"
+
+# API de Manutenção (Obrigatório)
+MAINTENANCE_SECRET="3977aa7046e9bf25ce7e91d535177b4c00794ec8fd29b98b5fc5a2697a455c1e"
+
+# Sistema de Teste (Opcional)
+TEST_MODE_EMAIL="teste@fcmtech.com.br"
 
 # OAuth (Opcional)
 GOOGLE_CLIENT_ID="..."
 GOOGLE_CLIENT_SECRET="..."
 LINKEDIN_CLIENT_ID="..."
 LINKEDIN_CLIENT_SECRET="..."
-
-# Email (Se configurar SMTP)
-SMTP_HOST="smtp.sendgrid.net"
-SMTP_PORT="587"
-SMTP_USER="apikey"
-SMTP_PASS="SG.xxx"
 ```
 
 ---
@@ -866,6 +1395,9 @@ yarn tsx scripts/test_password.ts
 - ✅ Code splitting automático
 - ✅ Cache de queries (SWR)
 - ✅ Lazy loading de componentes
+- ✅ **Polling otimizado** - Notificações: 2 minutos (antes 30s)
+- ✅ **Emails assíncronos** - Não bloqueiam APIs
+- ✅ **Timeouts configurados** - 15s para operações críticas
 
 ### Código Limpo
 - ✅ TypeScript para type safety
