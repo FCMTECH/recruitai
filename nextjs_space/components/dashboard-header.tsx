@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Brain, Calendar, Users, LogOut, Briefcase, User, Home, Plus, UsersRound, Sparkles } from 'lucide-react';
+import { Brain, Calendar, Users, LogOut, Briefcase, User, Home, Plus, UsersRound, Sparkles, MessageCircle } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -113,6 +113,17 @@ export function DashboardHeader() {
                   <span className="absolute inset-0 bg-gradient-to-r from-accent/0 via-accent/5 to-accent/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                   <Users className="h-4 w-4 relative group-hover:scale-110 transition-transform" />
                   <span className="hidden lg:inline relative">Equipe</span>
+                </Button>
+              </Link>
+              <Link href="/dashboard/support">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-10 gap-2.5 px-4 text-sm font-semibold rounded-xl hover:bg-primary/10 hover:text-primary hover:scale-105 transition-all duration-200 relative group overflow-hidden"
+                >
+                  <span className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                  <MessageCircle className="h-4 w-4 relative group-hover:scale-110 transition-transform" />
+                  <span className="hidden lg:inline relative">Suporte</span>
                 </Button>
               </Link>
             </>

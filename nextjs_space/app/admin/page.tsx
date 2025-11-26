@@ -16,7 +16,8 @@ import {
   ArrowRight,
   Shield,
   CreditCard,
-  UserCheck
+  UserCheck,
+  MessageCircle
 } from "lucide-react";
 
 async function getAdminStats() {
@@ -160,6 +161,12 @@ export default async function AdminDashboard() {
             <Button variant="outline" className="w-full h-20 text-lg justify-start gap-3">
               <Users className="h-6 w-6" />
               Gerenciar Candidaturas
+            </Button>
+          </Link>
+          <Link href="/admin/support">
+            <Button variant="outline" className="w-full h-20 text-lg justify-start gap-3">
+              <MessageCircle className="h-6 w-6" />
+              Central de Suporte
             </Button>
           </Link>
         </div>

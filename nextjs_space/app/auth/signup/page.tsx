@@ -35,6 +35,11 @@ export default function SignUpPage() {
     password: "",
     confirmPassword: "",
     companyName: "",
+    cnpj: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
   });
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -91,6 +96,18 @@ export default function SignUpPage() {
       return;
     }
 
+    // Validate required fields for companies
+    if (userType === "company") {
+      if (!formData.companyName || !formData.cnpj || !formData.phone) {
+        toast({
+          title: "Erro",
+          description: "Por favor, preencha todos os campos obrigatórios: Razão Social, CNPJ e Telefone",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setIsLoading(true);
 
     try {
@@ -104,6 +121,11 @@ export default function SignUpPage() {
           email: formData.email,
           password: formData.password,
           companyName: userType === "company" ? formData.companyName : "",
+          cnpj: userType === "company" ? formData.cnpj : "",
+          phone: userType === "company" ? formData.phone : "",
+          address: userType === "company" ? formData.address : "",
+          city: userType === "company" ? formData.city : "",
+          state: userType === "company" ? formData.state : "",
           role: userType,
           planId: userType === "company" ? selectedPlan : undefined,
         }),
@@ -226,17 +248,89 @@ export default function SignUpPage() {
               {userType === "company" && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="companyName" className="text-slate-700 font-medium">Nome da Empresa</Label>
+                    <Label htmlFor="companyName" className="text-slate-700 font-medium">Razão Social *</Label>
                     <Input
                       id="companyName"
                       name="companyName"
                       type="text"
-                      placeholder="Sua Empresa Ltda"
+                      placeholder="Exemplo: Tech Solutions Ltda"
                       value={formData.companyName}
                       onChange={handleChange}
                       required
                       className="h-12 border-slate-300 focus:border-primary"
                     />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="cnpj" className="text-slate-700 font-medium">CNPJ *</Label>
+                      <Input
+                        id="cnpj"
+                        name="cnpj"
+                        type="text"
+                        placeholder="00.000.000/0000-00"
+                        value={formData.cnpj}
+                        onChange={handleChange}
+                        required
+                        className="h-12 border-slate-300 focus:border-primary"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-slate-700 font-medium">Telefone *</Label>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        placeholder="(11) 99999-9999"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        required
+                        className="h-12 border-slate-300 focus:border-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="address" className="text-slate-700 font-medium">Endereço</Label>
+                    <Input
+                      id="address"
+                      name="address"
+                      type="text"
+                      placeholder="Rua, número, complemento"
+                      value={formData.address}
+                      onChange={handleChange}
+                      className="h-12 border-slate-300 focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city" className="text-slate-700 font-medium">Cidade</Label>
+                      <Input
+                        id="city"
+                        name="city"
+                        type="text"
+                        placeholder="São Paulo"
+                        value={formData.city}
+                        onChange={handleChange}
+                        className="h-12 border-slate-300 focus:border-primary"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="state" className="text-slate-700 font-medium">Estado</Label>
+                      <Input
+                        id="state"
+                        name="state"
+                        type="text"
+                        placeholder="SP"
+                        value={formData.state}
+                        onChange={handleChange}
+                        maxLength={2}
+                        className="h-12 border-slate-300 focus:border-primary"
+                      />
+                    </div>
                   </div>
 
                   {/* Plan Selection */}

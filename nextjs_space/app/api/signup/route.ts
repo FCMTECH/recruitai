@@ -11,6 +11,11 @@ const signupSchema = z.object({
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   name: z.string().min(1, "Nome é obrigatório"),
   companyName: z.string().optional(),
+  cnpj: z.string().optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
   planId: z.string().optional(),
   role: z.any().transform((val) => {
     // If role is not provided or invalid, default to 'candidate'
@@ -24,12 +29,28 @@ const signupSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, name, companyName, role, planId } = signupSchema.parse(body);
+    const { email, password, name, companyName, cnpj, phone, address, city, state, role, planId } = signupSchema.parse(body);
 
     // Validate company name for companies
     if (role === "company" && !companyName) {
       return NextResponse.json(
-        { error: "Nome da empresa é obrigatório para empresas" },
+        { error: "Razão Social é obrigatória para empresas" },
+        { status: 400 }
+      );
+    }
+
+    // Validate CNPJ for companies
+    if (role === "company" && !cnpj) {
+      return NextResponse.json(
+        { error: "CNPJ é obrigatório para empresas" },
+        { status: 400 }
+      );
+    }
+
+    // Validate phone for companies
+    if (role === "company" && !phone) {
+      return NextResponse.json(
+        { error: "Telefone é obrigatório para empresas" },
         { status: 400 }
       );
     }
@@ -64,6 +85,11 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         name,
         companyName: role === "company" ? companyName : "",
+        cnpj: role === "company" && cnpj ? cnpj : null,
+        phone: role === "company" && phone ? phone : null,
+        address: role === "company" && address ? address : null,
+        city: role === "company" && city ? city : null,
+        state: role === "company" && state ? state : null,
         role: role,
         emailVerified: new Date() // Auto-verify email on signup
       }
@@ -110,29 +136,95 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Send verification email
+    // Send welcome email
     try {
-      const token = await generateVerificationToken(user.email);
-      const verificationUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${token}`;
+      const dashboardUrl = role === 'company' 
+        ? `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard`
+        : `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/candidate/dashboard`;
 
-      await sendEmail({
-        to: user.email,
-        subject: 'Verificação de Email - RecruitAI',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2563eb;">Bem-vindo ao RecruitAI!</h2>
-            <p>Por favor, clique no link abaixo para verificar seu email:</p>
-            <a href="${verificationUrl}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">
-              Verificar Email
-            </a>
-            <p>Este link expira em 24 horas.</p>
-            <p>Se você não criou uma conta no RecruitAI, ignore este email.</p>
-          </div>
-        `,
-        text: `Bem-vindo ao RecruitAI! Por favor, verifique seu email clicando neste link: ${verificationUrl}. Este link expira em 24 horas.`,
-      });
+      if (role === 'company') {
+        await sendEmail({
+          to: user.email,
+          subject: 'Bem-vindo ao RecruitAI - Conta Empresa Criada',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #3B82F6; text-align: center;">🎉 Bem-vindo ao RecruitAI!</h2>
+              <p>Olá <strong>${name || companyName}</strong>,</p>
+              <p>Sua conta foi criada com sucesso! Estamos felizes em tê-lo conosco.</p>
+              
+              <div style="background: #F3F4F6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #1F2937;">📋 Próximos Passos:</h3>
+                <ol style="color: #4B5563; line-height: 1.8;">
+                  <li>Complete seu perfil com informações da empresa</li>
+                  <li>Crie sua primeira vaga</li>
+                  <li>Convide membros da equipe</li>
+                  <li>Explore os recursos disponíveis</li>
+                </ol>
+              </div>
+
+              <div style="background: #DBEAFE; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0; color: #1E3A8A;"><strong>✨ Período de teste:</strong> Você tem 7 dias grátis para testar todas as funcionalidades!</p>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${dashboardUrl}" style="display: inline-block; padding: 12px 30px; background-color: #3B82F6; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                  Acessar Dashboard
+                </a>
+              </div>
+
+              <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 30px 0;">
+              
+              <p style="color: #6B7280; font-size: 14px;">
+                <strong>Precisa de ajuda?</strong><br>
+                Nossa equipe de suporte está sempre disponível. Acesse a seção de <strong>Suporte</strong> no seu dashboard.
+              </p>
+              
+              <p style="color: #6B7280; font-size: 14px; text-align: center; margin-top: 30px;">
+                Obrigado por escolher RecruitAI!<br>
+                Equipe RecruitAI
+              </p>
+            </div>
+          `,
+          text: `Bem-vindo ao RecruitAI, ${name || companyName}! Sua conta foi criada com sucesso. Acesse: ${dashboardUrl}`
+        });
+      } else {
+        // E-mail para candidatos
+        await sendEmail({
+          to: user.email,
+          subject: 'Bem-vindo ao RecruitAI - Conta Criada',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #3B82F6; text-align: center;">🎉 Bem-vindo ao RecruitAI!</h2>
+              <p>Olá <strong>${name}</strong>,</p>
+              <p>Sua conta foi criada com sucesso!</p>
+              
+              <div style="background: #F3F4F6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #1F2937;">📋 Próximos Passos:</h3>
+                <ol style="color: #4B5563; line-height: 1.8;">
+                  <li>Complete seu perfil profissional</li>
+                  <li>Faça upload do seu currículo</li>
+                  <li>Explore as vagas disponíveis</li>
+                  <li>Candidate-se às vagas de seu interesse</li>
+                </ol>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${dashboardUrl}" style="display: inline-block; padding: 12px 30px; background-color: #3B82F6; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                  Acessar Meu Perfil
+                </a>
+              </div>
+
+              <p style="color: #6B7280; font-size: 14px; text-align: center; margin-top: 30px;">
+                Obrigado por escolher RecruitAI!<br>
+                Equipe RecruitAI
+              </p>
+            </div>
+          `,
+          text: `Bem-vindo ao RecruitAI, ${name}! Sua conta foi criada com sucesso. Acesse: ${dashboardUrl}`
+        });
+      }
     } catch (emailError) {
-      console.error("Error sending verification email:", emailError);
+      console.error("Error sending welcome email:", emailError);
       // Continue even if email fails
     }
 
