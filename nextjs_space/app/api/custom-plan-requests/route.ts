@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
       // Send email notification to comercial@fcmtech.com.br
       try {
         await sendEmail({
-        to: "comercial@fcmtech.com.br",
-        subject: "Nova Solicitação de Plano Personalizado - RecruitAI",
-        html: `
+          to: "comercial@fcmtech.com.br",
+          subject: "Nova Solicitação de Plano Personalizado - RecruitAI",
+          html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #4F46E5;">Nova Solicitação de Plano Personalizado</h2>
             <p>Uma nova solicitação foi recebida:</p>
@@ -55,27 +55,27 @@ export async function POST(request: NextRequest) {
               Você pode visualizar e gerenciar esta solicitação no painel administrativo.
             </p>
           </div>
-        `,
-        text: `
+          `,
+          text: `
 Nova Solicitação de Plano Personalizado
 
 Nome: ${validatedData.name}
 E-mail: ${validatedData.email}
 Telefone: ${validatedData.phone}
 ${validatedData.message ? `Mensagem: ${validatedData.message}` : ''}
-        `,
-      });
+          `,
+        });
     } catch (emailError) {
       console.error("Erro ao enviar e-mail:", emailError);
       // Continue mesmo se o e-mail falhar
     }
 
-    // Send confirmation email to the requester
-    try {
-      await sendEmail({
-        to: validatedData.email,
-        subject: "Recebemos sua solicitação - RecruitAI",
-        html: `
+      // Send confirmation email to the requester
+      try {
+        await sendEmail({
+          to: validatedData.email,
+          subject: "Recebemos sua solicitação - RecruitAI",
+          html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #4F46E5;">Obrigado pelo seu interesse!</h2>
             <p>Olá ${validatedData.name},</p>
@@ -95,8 +95,8 @@ ${validatedData.message ? `Mensagem: ${validatedData.message}` : ''}
               Equipe RecruitAI
             </p>
           </div>
-        `,
-        text: `
+          `,
+          text: `
 Olá ${validatedData.name},
 
 Recebemos sua solicitação de contato para o Plano Personalizado do RecruitAI.
@@ -105,8 +105,8 @@ Nossa equipe comercial entrará em contato com você em breve.
 
 Atenciosamente,
 Equipe RecruitAI
-        `,
-      });
+          `,
+        });
       } catch (emailError) {
         console.error("Erro ao enviar e-mail de confirmação:", emailError);
       }
