@@ -555,3 +555,16 @@ model CustomPlanRequest {
   @@index([status])
   @@index([createdAt])
 }
+
+model MaintenanceLog {
+  id         String   @id @default(cuid())
+  action     String
+  params     String?  @db.Text
+  result     String?  @db.Text
+  status     String   // success, error
+  executedAt DateTime @default(now())
+
+  @@index([action])
+  @@index([status])
+  @@index([executedAt])
+}
