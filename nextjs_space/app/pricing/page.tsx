@@ -199,24 +199,41 @@ export default function PricingPage() {
     setIsSubmittingContact(true);
 
     try {
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
       const response = await fetch('/api/custom-plan-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(contactFormData),
+        signal: controller.signal,
       });
 
-      const data = await response.json();
+      clearTimeout(timeoutId);
 
-      if (response.ok) {
-        toast.success(data.message || 'Solicitação enviada com sucesso!');
-        setShowContactDialog(false);
-        setContactFormData({ name: '', email: '', phone: '', message: '' });
-      } else {
-        toast.error(data.error || 'Erro ao enviar solicitação');
+      if (!response.ok) {
+        const data = await response.json();
+        toast.error(data.error || 'Erro ao enviar solicitação. Tente novamente.');
+        return;
       }
-    } catch (error) {
+
+      const data = await response.json();
+      
+      toast.success(data.message || 'Solicitação enviada com sucesso!');
+      setShowContactDialog(false);
+      setContactFormData({ name: '', email: '', phone: '', message: '' });
+      
+    } catch (error: any) {
       console.error('Erro ao enviar solicitação:', error);
-      toast.error('Erro ao enviar solicitação');
+      
+      if (error.name === 'AbortError') {
+        toast.error('A solicitação demorou muito. Por favor, tente novamente.');
+      } else if (error.message?.includes('Failed to fetch')) {
+        toast.error('Erro de conexão. Verifique sua internet e tente novamente.');
+      } else {
+        toast.error('Erro ao enviar solicitação. Por favor, tente novamente.');
+      }
     } finally {
       setIsSubmittingContact(false);
     }

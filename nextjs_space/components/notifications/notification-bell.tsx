@@ -36,8 +36,8 @@ export function NotificationBell() {
     if (status === 'authenticated' && session?.user) {
       fetchNotifications();
       
-      // Atualizar notificações a cada 30 segundos
-      const interval = setInterval(fetchNotifications, 30000);
+      // Atualizar notificações a cada 2 minutos para melhor performance
+      const interval = setInterval(fetchNotifications, 120000);
       return () => clearInterval(interval);
     }
   }, [status, session]);

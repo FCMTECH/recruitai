@@ -16,8 +16,8 @@ export function AdminHeader({ userName }: AdminHeaderProps) {
 
   useEffect(() => {
     fetchPendingRequests();
-    // Atualizar a cada 30 segundos
-    const interval = setInterval(fetchPendingRequests, 30000);
+    // Atualizar a cada 2 minutos para melhor performance
+    const interval = setInterval(fetchPendingRequests, 120000);
     return () => clearInterval(interval);
   }, []);
 

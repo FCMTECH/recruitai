@@ -31,9 +31,12 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Send email notification to comercial@fcmtech.com.br
-    try {
-      await sendEmail({
+    // Send emails in background (non-blocking)
+    // This improves response time and user experience
+    setImmediate(async () => {
+      // Send email notification to comercial@fcmtech.com.br
+      try {
+        await sendEmail({
         to: "comercial@fcmtech.com.br",
         subject: "Nova Solicitação de Plano Personalizado - RecruitAI",
         html: `
@@ -104,10 +107,12 @@ Atenciosamente,
 Equipe RecruitAI
         `,
       });
-    } catch (emailError) {
-      console.error("Erro ao enviar e-mail de confirmação:", emailError);
-    }
+      } catch (emailError) {
+        console.error("Erro ao enviar e-mail de confirmação:", emailError);
+      }
+    }); // End of setImmediate
 
+    // Return success immediately without waiting for emails
     return NextResponse.json({
       success: true,
       message: "Solicitação enviada com sucesso! Entraremos em contato em breve.",
