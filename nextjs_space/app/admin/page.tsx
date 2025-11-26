@@ -133,6 +133,15 @@ export default async function AdminDashboard() {
               Gerenciar Empresas
             </Button>
           </Link>
+          <Link href="/admin/custom-companies">
+            <Button variant="outline" className="w-full h-20 text-lg justify-start gap-3 border-primary/50 hover:border-primary">
+              <Building2 className="h-6 w-6 text-primary" />
+              <div className="text-left">
+                <div className="font-semibold">Empresas Personalizadas</div>
+                <div className="text-xs text-muted-foreground">Planos customizados</div>
+              </div>
+            </Button>
+          </Link>
           <Link href="/admin/subscriptions">
             <Button variant="outline" className="w-full h-20 text-lg justify-start gap-3">
               <CreditCard className="h-6 w-6" />

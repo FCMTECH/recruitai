@@ -76,12 +76,8 @@ export async function POST(request: Request) {
 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId;
-  const planId = session.metadata?.planId;
-
-  if (!userId || !planId) {
-    console.error('Missing userId or planId in checkout session metadata');
-    return;
-  }
+  const isCustomPlan = session.metadata?.customPlan === 'true';
+  const invitationId = session.metadata?.invitationId;
 
   const stripeSubscriptionId = session.subscription as string;
   const customerId = session.customer as string;
@@ -91,11 +87,62 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   const stripeSubscription: any = await stripe.subscriptions.retrieve(stripeSubscriptionId);
 
   // Determinar status baseado no payment_status
-  // Se o pagamento foi confirmado (cartão), ativa imediatamente
-  // Se está pendente (boleto), mantém como pending até o invoice.paid
   let subscriptionStatus = 'pending';
   if (paymentStatus === 'paid') {
     subscriptionStatus = 'active';
+  }
+
+  // Se for plano personalizado, criar o plano primeiro
+  let planId: string;
+  
+  if (isCustomPlan && invitationId) {
+    const invitation = await prisma.companyInvitation.findUnique({
+      where: { id: invitationId },
+    });
+
+    if (!invitation) {
+      console.error('Invitation not found:', invitationId);
+      return;
+    }
+
+    // Criar plano personalizado para esta empresa
+    const customPlan = await prisma.plan.create({
+      data: {
+        name: `personalizado_${invitation.email.split('@')[0]}`,
+        displayName: invitation.customPlanName,
+        price: invitation.customPrice,
+        jobLimit: invitation.customJobLimit,
+        memberLimit: 9999, // Ilimitado
+        features: invitation.customFeatures,
+        isActive: true,
+        isCustom: true,
+        customCompanyId: userId,
+      },
+    });
+
+    planId = customPlan.id;
+
+    // Atualizar status do convite para completado
+    await prisma.companyInvitation.update({
+      where: { id: invitation.id },
+      data: {
+        status: 'completed',
+        completedAt: new Date(),
+      },
+    });
+  } else {
+    // Plano normal
+    planId = session.metadata?.planId || '';
+    
+    if (!planId) {
+      console.error('Missing planId in checkout session metadata');
+      return;
+    }
+  }
+
+  if (!userId) {
+    console.error('Missing userId in checkout session metadata');
+    return;
   }
 
   // Atualizar ou criar subscription no banco de dados

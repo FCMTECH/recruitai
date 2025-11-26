@@ -628,7 +628,7 @@ model MemberInvitation {
   @@index([email])
   @@index([token])
   @@index([status])
-
+}
 
 // Convite para novas empresas com plano personalizado
 model CompanyInvitation {
@@ -664,5 +664,4 @@ model CompanyInvitation {
   @@index([token])
   @@index([status])
   @@index([createdBy])
-}
 }
