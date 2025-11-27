@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
     const application = await db.application.create({
       data: {
         jobId,
+        candidateProfileId: candidateProfile.id,
         candidateName: candidateProfile.fullName || session.user.name || "Candidato",
         candidateEmail: session.user.email!,
         candidatePhone: candidateProfile.phone || "",
