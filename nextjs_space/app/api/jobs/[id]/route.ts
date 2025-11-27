@@ -30,6 +30,20 @@ export async function GET(
       include: {
         criteria: true,
         applications: {
+          include: {
+            candidateProfile: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+                phone: true,
+                profession: true,
+                city: true,
+                state: true
+              }
+            },
+            currentStage: true
+          },
           orderBy: [
             { compatibilityScore: "desc" },
             { createdAt: "desc" }

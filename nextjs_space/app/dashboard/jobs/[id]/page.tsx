@@ -38,7 +38,7 @@ interface Job {
 
 interface Application {
   id: string;
-  candidateId?: string;
+  candidateProfileId?: string;
   candidateName: string;
   candidateEmail: string;
   candidatePhone?: string;
@@ -51,6 +51,15 @@ interface Application {
   createdAt: string;
   aiAnalysis?: any;
   highlights?: string[];
+  candidateProfile?: {
+    id: string;
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    profession?: string;
+    city?: string;
+    state?: string;
+  };
 }
 
 export default function JobDetailPage({ params }: { params: { id: string } }) {
@@ -428,10 +437,26 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                         <div className="flex-1">
                           <div className="flex items-start justify-between mb-2">
                             <div>
-                              <h3 className="font-semibold text-lg">{app.candidateName}</h3>
-                              <p className="text-sm text-muted-foreground">{app.candidateEmail}</p>
-                              {app.candidatePhone && (
-                                <p className="text-sm text-muted-foreground">{app.candidatePhone}</p>
+                              <h3 className="font-semibold text-lg">
+                                {app.candidateProfile?.fullName || app.candidateName}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {app.candidateProfile?.email || app.candidateEmail}
+                              </p>
+                              {(app.candidateProfile?.phone || app.candidatePhone) && (
+                                <p className="text-sm text-muted-foreground">
+                                  {app.candidateProfile?.phone || app.candidatePhone}
+                                </p>
+                              )}
+                              {app.candidateProfile?.profession && (
+                                <p className="text-xs text-muted-foreground">
+                                  {app.candidateProfile.profession}
+                                </p>
+                              )}
+                              {(app.candidateProfile?.city || app.candidateProfile?.state) && (
+                                <p className="text-xs text-muted-foreground">
+                                  {app.candidateProfile.city}{app.candidateProfile.city && app.candidateProfile.state ? ', ' : ''}{app.candidateProfile.state}
+                                </p>
                               )}
                             </div>
                             {getStatusBadge(app.status)}
@@ -498,11 +523,11 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                           </Button>
                           
                           {/* Contact Button */}
-                          {app.candidateId && (
+                          {(app.candidateProfileId || app.candidateProfile?.id) && (
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => router.push(`/dashboard/talents/${app.candidateId}`)}
+                              onClick={() => router.push(`/dashboard/talents/${app.candidateProfileId || app.candidateProfile?.id}`)}
                               className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
                             >
                               <MessageCircle className="h-4 w-4 mr-2" />
@@ -568,17 +593,41 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
           >
             <CardHeader>
               <CardTitle>Detalhes da Candidatura</CardTitle>
-              <CardDescription>{selectedApplication.candidateName}</CardDescription>
+              <CardDescription>
+                {selectedApplication.candidateProfile?.fullName || selectedApplication.candidateName}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <p className="text-sm font-medium">Email</p>
-                <p className="text-sm text-muted-foreground">{selectedApplication.candidateEmail}</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedApplication.candidateProfile?.email || selectedApplication.candidateEmail}
+                </p>
               </div>
-              {selectedApplication.candidatePhone && (
+              {(selectedApplication.candidateProfile?.phone || selectedApplication.candidatePhone) && (
                 <div>
                   <p className="text-sm font-medium">Telefone</p>
-                  <p className="text-sm text-muted-foreground">{selectedApplication.candidatePhone}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedApplication.candidateProfile?.phone || selectedApplication.candidatePhone}
+                  </p>
+                </div>
+              )}
+              {selectedApplication.candidateProfile?.profession && (
+                <div>
+                  <p className="text-sm font-medium">Profissão</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedApplication.candidateProfile.profession}
+                  </p>
+                </div>
+              )}
+              {(selectedApplication.candidateProfile?.city || selectedApplication.candidateProfile?.state) && (
+                <div>
+                  <p className="text-sm font-medium">Localização</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedApplication.candidateProfile.city}
+                    {selectedApplication.candidateProfile.city && selectedApplication.candidateProfile.state ? ', ' : ''}
+                    {selectedApplication.candidateProfile.state}
+                  </p>
                 </div>
               )}
               
