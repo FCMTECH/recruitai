@@ -12,7 +12,7 @@ RecruitAI é uma plataforma completa de recrutamento e seleção com inteligênc
 - **Autenticação**: NextAuth.js
 - **Pagamentos**: Stripe
 - **Armazenamento**: AWS S3
-- **IA**: Abacus.AI / Google Gemini
+- **IA**: Abacus.AI (Seleção Automática Multi-Modelo)
 - **Email**: Zoho Mail SMTP
 
 ## 📋 Pré-requisitos

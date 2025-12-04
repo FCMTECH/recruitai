@@ -104,7 +104,7 @@ Responda com JSON limpo apenas. Não inclua blocos de código markdown.
       mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
     }
 
-    // Call AI API with streaming
+    // Call Abacus.AI API - Let Abacus decide the best model automatically
     const aiResponse = await fetch('https://apps.abacus.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -112,7 +112,8 @@ Responda com JSON limpo apenas. Não inclua blocos de código markdown.
         'Authorization': `Bearer ${process.env.ABACUSAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-mini',
+        // Omit 'model' parameter to let Abacus.AI automatically select the best model
+        // This enables intelligent routing to the optimal AI model for each task
         messages: [
           {
             role: "user",

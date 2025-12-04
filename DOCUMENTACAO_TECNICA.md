@@ -49,7 +49,7 @@
 - **Webhooks:** Configurados para todos os eventos de assinatura
 
 #### IA/ML
-- **Provider:** Abacus.AI (Gemini)
+- **Provider:** Abacus.AI (Seleção Automática de Modelo)
 - **Uso:** Análise automática de currículos e matching
 
 ---
@@ -682,10 +682,17 @@ if (companyDomain !== memberDomain) {
 
 #### Provider de IA
 
-**Atual:** Abacus.AI (Gemini 1.5)
-- Endpoint: API da Abacus.AI
-- Modelo: Gemini 1.5 Flash
-- API Key: Configurada em `.env`
+**Atual:** Abacus.AI (Seleção Automática Inteligente)
+- **Endpoint:** `https://apps.abacus.ai/v1/chat/completions`
+- **Roteamento Inteligente:** A Abacus.AI seleciona automaticamente o melhor modelo para cada tarefa
+- **Modelos Disponíveis:** GPT-4, Claude, Gemini, Llama e outros modelos de última geração
+- **Otimização:** Seleção baseada em custo-benefício, performance e tipo de tarefa
+- **API Key:** Configurada em `ABACUSAI_API_KEY` no `.env`
+- **Vantagens:**
+  - ✅ Sem necessidade de especificar modelo manualmente
+  - ✅ Sempre usa o modelo mais adequado para cada análise
+  - ✅ Otimização automática de custo e qualidade
+  - ✅ Acesso a múltiplos modelos de IA de última geração
 
 ---
 
