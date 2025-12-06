@@ -37,7 +37,7 @@ export async function GET() {
         const applicationCount = await db.application.count({
           where: {
             jobId: {
-              in: jobIds.map(j => j.id)
+              in: jobIds.map((j: { id: string }) => j.id)
             }
           }
         });

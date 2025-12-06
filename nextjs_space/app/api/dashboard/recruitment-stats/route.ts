@@ -87,7 +87,7 @@ export async function GET() {
     if (applications.length > 0) {
       const timesToHire = applications
         .filter(app => app.hiredAt)
-        .map(app => {
+        .map((app: { createdAt: Date; hiredAt: Date | null; invitedAt: Date | null; interviewDate: Date | null }) => {
           const created = new Date(app.createdAt).getTime();
           const hired = new Date(app.hiredAt!).getTime();
           return (hired - created) / (1000 * 60 * 60 * 24); // dias
@@ -95,7 +95,7 @@ export async function GET() {
 
       const timesToInterview = applications
         .filter(app => app.invitedAt)
-        .map(app => {
+        .map((app: { createdAt: Date; hiredAt: Date | null; invitedAt: Date | null; interviewDate: Date | null }) => {
           const created = new Date(app.createdAt).getTime();
           const invited = new Date(app.invitedAt!).getTime();
           return (invited - created) / (1000 * 60 * 60 * 24); // dias
@@ -155,7 +155,13 @@ export async function GET() {
       }
     });
 
-    const jobsWithStats = topJobs.map(job => ({
+    const jobsWithStats = topJobs.map((job: { 
+      id: string; 
+      title: string; 
+      status: string; 
+      _count: { applications: number }; 
+      applications: { id: string }[] 
+    }) => ({
       id: job.id,
       title: job.title,
       status: job.status,

@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
     }
 
     // IDs dos membros do grupo
-    const memberIds = group.members.map(m => m.id);
+    const memberIds = group.members.map((m: { id: string; name: string | null; email: string }) => m.id);
 
     // Por enquanto, retornamos todas as vagas da empresa
     // Futuramente podemos adicionar lógica para filtrar por grupo
@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
       select: { id: true, status: true }
     });
 
-    const groupJobIds = groupJobs.map(j => j.id);
+    const groupJobIds = groupJobs.map((j: { id: string; status: string }) => j.id);
 
     const totalJobs = groupJobs.length;
     const activeJobs = groupJobs.filter(j => j.status === "active").length;
@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
       take: 5
     });
 
-    const topJobsData = topJobs.map(job => ({
+    const topJobsData = topJobs.map((job: { id: string; title: string; _count: { applications: number } }) => ({
       id: job.id,
       title: job.title,
       applications: job._count.applications

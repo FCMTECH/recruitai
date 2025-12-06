@@ -255,7 +255,7 @@ export async function GET() {
       stateDistribution,
       dailyApplications,
       typeDistribution,
-      topJobs: topJobs.map(job => ({
+      topJobs: topJobs.map((job: { id: string; title: string; _count: { applications: number } }) => ({
         id: job.id,
         title: job.title,
         applications: job._count.applications
