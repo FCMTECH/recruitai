@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SessionProvider } from "@/components/session-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
+import SpeedInsightsWrapper from "./speed-insights";
 
 const inter = Inter({ subsets: ["latin"], display: 'swap' });
 
@@ -47,6 +48,7 @@ export default function RootLayout({
             <SonnerToaster position="top-right" richColors />
           </ThemeProvider>
         </SessionProvider>
+        <SpeedInsightsWrapper />
       </body>
     </html>
   );
