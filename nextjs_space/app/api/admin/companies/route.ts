@@ -28,7 +28,7 @@ export async function GET() {
 
     // Get job and application counts for each company
     const companiesWithStats = await Promise.all(
-      companies.map(async (company) => {
+      companies.map(async (company: { id: string; name: string | null; email: string; companyName: string | null; createdAt: Date; _count: { jobs: number } }) => {
         const jobIds = await db.job.findMany({
           where: { userId: company.id },
           select: { id: true }
