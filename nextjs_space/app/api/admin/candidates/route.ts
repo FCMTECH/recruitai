@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     // Get candidate profiles with additional info
     const candidatesWithProfiles = await Promise.all(
-      candidates.map(async (candidate) => {
+      candidates.map(async (candidate: { id: string; name: string | null; email: string; createdAt: Date; emailVerified: Date | null }) => {
         const profile = await db.candidateProfile.findUnique({
           where: { email: candidate.email },
           select: {
