@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 
     // Buscar dados do admin que criou cada convite
     const invitationsWithAdmin = await Promise.all(
-      invitations.map(async (inv: { id: string; email: string; companyName: string; tradeName: string | null; cnpj: string | null; phone: string | null; token: string; customPlanName: string; customJobLimit: number; customPrice: number; customFeatures: any; stripeCustomerId: string | null; stripeCheckoutUrl: string | null; status: string; expiresAt: Date; createdAt: Date; completedAt: Date | null; createdBy: string; notes: string | null }) => {
+      invitations.map(async (inv: { id: string; email: string; companyName: string; tradeName: string | null; cnpj: string | null; phone: string | null; token: string; customPlanName: string; customJobLimit: number; customPrice: number; customFeatures: any; stripeCustomerId: string | null; stripeCheckoutUrl: string | null; status: string; expiresAt: Date; createdAt: Date; completedAt: Date | null; createdBy: string | null; notes: string | null }) => {
         let createdByName = 'Desconhecido'
         if (inv.createdBy) {
           const admin = await db.user.findUnique({
