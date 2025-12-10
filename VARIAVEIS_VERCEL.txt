@@ -1,0 +1,68 @@
+# 🔐 VARIÁVEIS DE AMBIENTE PARA VERCEL
+# Copie e cole essas variáveis no painel da Vercel
+# Settings → Environment Variables
+
+# ========================================
+# 🗄️ DATABASE
+# ========================================
+DATABASE_URL=postgresql://postgres.jztrqlqrcgljpmxsbwfm:Fcm%402025@aws-1-sa-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+
+# ========================================
+# 🔐 NEXTAUTH
+# ========================================
+NEXTAUTH_SECRET=cUpDwUY6HSJtYDuZX7eGf1h0Xerdjwjm
+NEXTAUTH_URL=
+# ⚠️ DEIXE EM BRANCO! Você vai atualizar depois do primeiro deploy
+
+# ========================================
+# 💳 STRIPE
+# ========================================
+STRIPE_SECRET_KEY=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
+STRIPE_PUBLISHABLE_KEY=pk_live_51SVzwvDtZaVksYfabty7tFEb0LZSCuTv0cFlpAonZ2kw7MIZtMpsPnQtWpuHfJgx36teTdjn7xobCOLeRMVQbAUV00ZO5vWGVw
+STRIPE_WEBHOOK_SECRET=
+# ⚠️ DEIXE EM BRANCO! Você vai configurar o webhook depois do deploy
+
+# ========================================
+# 🪣 AWS S3 (Currículos)
+# ========================================
+AWS_ACCESS_KEY_ID=AKIARJI3AIFWJPOTWNMN
+AWS_SECRET_ACCESS_KEY=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
+AWS_S3_REGION=us-east-2
+AWS_S3_BUCKET_NAME=recruitai-resumes
+AWS_S3_FOLDER_PREFIX=resumes/
+
+# ========================================
+# 🤖 ABACUS.AI
+# ========================================
+ABACUSAI_API_KEY=5bb8032f287b4b89bfcae4529b50a199
+
+# ========================================
+# 📧 EMAIL (Zoho SMTP)
+# ========================================
+SMTP_HOST=smtp.zoho.com
+SMTP_PORT=587
+SMTP_USER=comercial@fcmtech.com.br
+SMTP_PASS=xG1PbdchhJYP
+SMTP_FROM_NAME=RecruitAI
+
+# ========================================
+# 🔑 OAUTH (Google e LinkedIn)
+# ========================================
+GOOGLE_CLIENT_ID=763701288798-lbf0ro2ofmccinig1uvn8e4m5e8m2l90.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+LINKEDIN_CLIENT_ID=77xhqamin9d70o
+LINKEDIN_CLIENT_SECRET=WPL_AP1.ByV6rRjDiQblfTMR.ktymVw==
+
+# ========================================
+# 🧪 TESTE E MANUTENÇÃO
+# ========================================
+TEST_MODE_EMAIL=teste@fcmtech.com.br
+MAINTENANCE_SECRET=3977aa7046e9bf25ce7e91d535177b4c00794ec8fd29b98b5fc5a2697a455c1e
+
+# ========================================
+# ⚠️ IMPORTANTE: NÃO adicione estas variáveis na Vercel:
+# ⛔ AWS_PROFILE (causará conflito)
+# ⛔ AWS_REGION (use AWS_S3_REGION)
+# ⛔ AWS_BUCKET_NAME (use AWS_S3_BUCKET_NAME)
+# ⛔ AWS_FOLDER_PREFIX (use AWS_S3_FOLDER_PREFIX)
+# ========================================

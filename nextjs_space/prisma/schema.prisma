@@ -1,0 +1,667 @@
+
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    output = "/home/ubuntu/ats_platform/nextjs_space/node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  role          String    @default("candidate") // candidate, company, superadmin
+  companyName   String?   // Razão social
+  tradeName     String?   // Nome fantasia
+  cnpj          String?   // CNPJ da empresa
+  phone         String?   // Telefone da empresa
+  address       String?   // Endereço da empresa
+  city          String?   // Cidade
+  state         String?   // Estado
+  logoUrl       String?   // Logo da empresa
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts           Account[]
+  sessions           Session[]
+  jobs               Job[]
+  subscriptions      Subscription[]
+  notifications      Notification[]
+  companyUsers       CompanyUser[] @relation("CompanyUsers")
+  teamGroups         TeamGroup[] @relation("CompanyTeamGroups")
+  memberPermissions  MemberPermission[] @relation("CompanyPermissions")
+  events             CalendarEvent[] @relation("UserEvents")
+  tasks              Task[] @relation("UserTasks")
+  supportTickets     SupportTicket[] @relation("CompanySupportTickets")
+  memberInvitations  MemberInvitation[] @relation("CompanyMemberInvitations")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  email      String
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+}
+
+model CandidateProfile {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  fullName    String?
+  phone       String?
+  dateOfBirth DateTime?
+  address     String?
+  street      String?      // Novo campo para logradouro
+  neighborhood String?    // Novo campo para bairro
+  city        String?
+  state       String?
+  country     String?
+  zipCode     String?
+  profession  String?      // Novo campo para profissão
+  photoUrl    String?
+  linkedinUrl String?
+  resumeUrl   String?      // S3 path
+  hasNoExperience Boolean @default(false) // Novo campo
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  education      Education[]
+  experiences    Experience[]
+  skills         Skill[]
+  courses        Course[]
+  certifications Certification[]
+  applications   Application[]
+
+  @@index([email])
+}
+
+model Education {
+  id           String    @id @default(cuid())
+  candidateId  String
+  institution  String
+  degree       String
+  courseName   String?   // Renomeado de fieldOfStudy
+  fieldOfStudy String?   // Mantido para compatibilidade
+  startDate    DateTime?
+  endDate      DateTime?
+  isCurrent    Boolean   @default(false)
+  description  String?   @db.Text
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model Experience {
+  id          String    @id @default(cuid())
+  candidateId String
+  company     String
+  position    String
+  jobType     String?   // Novo campo: tipo de cargo
+  location    String?
+  startDate   DateTime?
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  description String?   @db.Text
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model Skill {
+  id          String   @id @default(cuid())
+  candidateId String
+  name        String
+  level       String   // básico, intermediário, avançado
+  category    String?  // técnica, comportamental, idioma
+  
+  createdAt DateTime @default(now())
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model Course {
+  id           String   @id @default(cuid())
+  candidateId  String
+  name         String
+  institution  String?
+  completionDate DateTime?
+  hours        Int?
+  description  String?  @db.Text
+  
+  createdAt DateTime @default(now())
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model Certification {
+  id           String   @id @default(cuid())
+  candidateId  String
+  name         String
+  issuingOrg   String
+  issueDate    DateTime?
+  expiryDate   DateTime?
+  credentialId String?
+  
+  createdAt DateTime @default(now())
+
+  candidate CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+}
+
+model Job {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String
+  description  String   @db.Text
+  requirements String?  @db.Text
+  location     String?
+  country      String?
+  state        String?
+  city         String?
+  type         String?  // full-time, part-time, contract, etc.
+  workMode     String?  @default("presencial") // remoto, hibrido, presencial
+  status       String   @default("active") // active, paused, closed
+  
+  companyName  String   @default("Empresa")
+  
+  // Templates de divulgação
+  publicationTemplate String? @db.Text // Template para redes sociais
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications Application[]
+  criteria     JobCriteria[]
+  stages       JobStage[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model JobStage {
+  id          String   @id @default(cuid())
+  jobId       String
+  name        String
+  description String?  @db.Text
+  order       Int
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  job          Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@index([jobId])
+}
+
+model JobCriteria {
+  id          String @id @default(cuid())
+  jobId       String
+  criterion   String @default("Critério")
+  weight      Float  // Weight percentage (0-100)
+  description String? @db.Text
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+model Application {
+  id                String   @id @default(cuid())
+  jobId             String
+  candidateName     String
+  candidateEmail    String
+  candidatePhone    String?
+  resumeUrl         String   // S3 path
+  resumeFilename    String
+  
+  // AI Analysis Results
+  aiAnalysis        Json?    // Parsed resume data
+  compatibilityScore Float?   // 0-100 score
+  classification    String?  // "strong", "potential", "review", "incompatible"
+  scoreExplanation  String?  @db.Text // AI explanation
+  highlights        Json?    // Key experiences/skills
+  criteriaScores    Json?    // Score breakdown by criteria
+  
+  // Application Status
+  status            String   @default("pending") // pending, approved, rejected, hired
+  currentStageId    String?
+  notes             String?  @db.Text
+  reviewedAt        DateTime?
+  
+  // Interview Process
+  invitedForInterview Boolean  @default(false)
+  invitedAt           DateTime?
+  interviewLink       String?  // Link para agendamento (Calendly, Google Meet, etc.)
+  interviewNotes      String?  @db.Text // Notas pós-entrevista
+  interviewDate       DateTime?
+  attendedInterview   Boolean  @default(false)
+  
+  // Hiring Status
+  isHired           Boolean  @default(false)
+  hiredAt           DateTime?
+  hiredBy           String?  // User ID who marked as hired
+  hiringDocuments   Json?    // Array de documentos de contratação
+  admissionChecklist Json?   // Checklist de admissão
+  
+  // Candidate Profile
+  candidateProfileId String?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  currentStage JobStage? @relation(fields: [currentStageId], references: [id])
+  candidateProfile CandidateProfile? @relation(fields: [candidateProfileId], references: [id])
+
+  @@index([jobId])
+  @@index([status])
+  @@index([compatibilityScore])
+  @@index([currentStageId])
+  @@index([candidateProfileId])
+  @@index([candidateEmail])
+  @@index([invitedForInterview])
+  @@index([isHired])
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  name        String   @unique // "free", "bronze", "prata", "ouro", "personalizado"
+  displayName String   // "Grátis", "Bronze", "Prata", "Ouro", "Personalizado"
+  price       Float    // Em Reais (R$)
+  jobLimit    Int      // Número de vagas por mês
+  memberLimit Int      @default(1) // Limite de membros da equipe
+  features    String[] // Lista de features
+  isActive    Boolean  @default(true)
+  stripePriceId String? // Stripe price ID for recurring billing
+  isCustom    Boolean  @default(false) // Se é um plano personalizado
+  customCompanyId String? // ID da empresa (só para planos personalizados)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptions Subscription[]
+  
+  @@index([customCompanyId])
+}
+
+model Subscription {
+  id                    String    @id @default(cuid())
+  userId                String
+  planId                String
+  status                String    // trial, active, past_due, canceled, expired, grace_period, pending
+  startDate             DateTime  @default(now())
+  endDate               DateTime?
+  trialEndDate          DateTime? // For trial period
+  gracePeriodEndDate    DateTime? // Data limite do período de graça
+  gracePeriodDays       Int?      // Número de dias de graça concedidos
+  suspensionReason      String?   // Motivo da suspensão/problema
+  jobsCreatedThisMonth  Int       @default(0)
+  lastResetDate         DateTime  @default(now())
+  
+  // Stripe fields
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?   @unique
+  stripeCheckoutSessionId String? @unique
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan Plan @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+  @@index([planId])
+  @@index([status])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // 'application_update', 'stage_change', 'system', etc.
+  title       String
+  message     String
+  isRead      Boolean  @default(false)
+  link        String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model TeamGroup {
+  id          String   @id @default(cuid())
+  companyId   String   // ID do User com role "company"
+  name        String   // ex: "Tecnologia", "Administrativo"
+  description String?  @db.Text
+  color       String?  // Cor para visualização
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company     User          @relation("CompanyTeamGroups", fields: [companyId], references: [id], onDelete: Cascade)
+  members     CompanyUser[]
+
+  @@index([companyId])
+}
+
+model MemberPermission {
+  id                      String   @id @default(cuid())
+  companyId               String   // ID da empresa dona dessas permissões
+  name                    String   // Nome do perfil de permissão (ex: "Gerente", "Recrutador")
+  
+  // Permissões de visualização
+  canViewAllJobs          Boolean  @default(true)  // Ver todas as vagas
+  canViewOwnGroupJobs     Boolean  @default(false) // Ver apenas vagas do próprio grupo
+  canViewAllProfiles      Boolean  @default(true)  // Ver perfil de todos os candidatos
+  canViewAllApplications  Boolean  @default(true)  // Ver todas as candidaturas
+  canViewOwnApplications  Boolean  @default(false) // Ver apenas candidaturas das próprias vagas
+  canViewTeamMembers      Boolean  @default(true)  // Ver membros da equipe
+  canViewAllGroups        Boolean  @default(true)  // Ver todos os grupos
+  canViewOwnGroup         Boolean  @default(false) // Ver apenas o próprio grupo
+  
+  // Permissões de ação
+  canCreateJobs           Boolean  @default(false) // Criar vagas
+  canEditJobs             Boolean  @default(false) // Editar vagas
+  canDeleteJobs           Boolean  @default(false) // Deletar vagas
+  canManageApplications   Boolean  @default(false) // Gerenciar candidaturas (avançar fases, etc)
+  canHireCandidates       Boolean  @default(false) // Contratar candidatos
+  canInviteInterviews     Boolean  @default(false) // Convidar para entrevistas
+  canManageTeam           Boolean  @default(false) // Gerenciar membros da equipe
+  canManageGroups         Boolean  @default(false) // Gerenciar grupos
+  canAccessReports        Boolean  @default(false) // Acessar relatórios e dashboard
+  
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  
+  company                 User     @relation("CompanyPermissions", fields: [companyId], references: [id], onDelete: Cascade)
+  members                 CompanyUser[]
+  
+  @@index([companyId])
+}
+
+model CompanyUser {
+  id            String   @id @default(cuid())
+  companyId     String   // ID do User com role "company"
+  groupId       String?  // ID do TeamGroup (opcional)
+  permissionId  String?  // ID do MemberPermission (opcional)
+  name          String
+  email         String   @unique
+  password      String
+  role          String   @default("member") // admin, member
+  isActive      Boolean  @default(true)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  company       User      @relation("CompanyUsers", fields: [companyId], references: [id], onDelete: Cascade)
+  group         TeamGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  permission    MemberPermission? @relation(fields: [permissionId], references: [id], onDelete: SetNull)
+  events        CalendarEvent[]
+  tasks         Task[]
+  notifications CompanyUserNotification[]
+
+  @@index([companyId])
+  @@index([groupId])
+  @@index([email])
+  @@index([permissionId])
+}
+
+model CalendarEvent {
+  id            String   @id @default(cuid())
+  userId        String?  // Para User principal (empresa)
+  companyUserId String?  // Para CompanyUser
+  title         String
+  description   String?  @db.Text
+  eventType     String   @default("meeting") // meeting, interview, reminder
+  startDateTime DateTime
+  endDateTime   DateTime
+  location      String?  // Pode ser link de videochamada
+  attendees     String[] // Emails dos participantes
+  isAllDay      Boolean  @default(false)
+  reminderMinutes Int?   // Minutos antes para notificar
+  
+  // Relação com vaga/candidatura (opcional)
+  jobId         String?
+  applicationId String?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User?        @relation("UserEvents", fields: [userId], references: [id], onDelete: Cascade)
+  companyUser   CompanyUser? @relation(fields: [companyUserId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([companyUserId])
+  @@index([startDateTime])
+  @@index([jobId])
+  @@index([applicationId])
+}
+
+model Task {
+  id            String   @id @default(cuid())
+  userId        String?  // Para User principal (empresa)
+  companyUserId String?  // Para CompanyUser
+  title         String
+  description   String?  @db.Text
+  priority      String   @default("medium") // low, medium, high
+  status        String   @default("pending") // pending, in_progress, completed
+  dueDate       DateTime?
+  completedAt   DateTime?
+  
+  // Relação com vaga/candidatura (opcional)
+  jobId         String?
+  applicationId String?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User?        @relation("UserTasks", fields: [userId], references: [id], onDelete: Cascade)
+  companyUser   CompanyUser? @relation(fields: [companyUserId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([companyUserId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([jobId])
+  @@index([applicationId])
+}
+
+model CompanyUserNotification {
+  id            String   @id @default(cuid())
+  companyUserId String
+  type          String   // 'application_update', 'stage_change', 'system', etc.
+  title         String
+  message       String
+  isRead        Boolean  @default(false)
+  link          String?
+  createdAt     DateTime @default(now())
+
+  companyUser CompanyUser @relation(fields: [companyUserId], references: [id], onDelete: Cascade)
+
+  @@index([companyUserId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model CustomPlanRequest {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  message   String?  @db.Text
+  status    String   @default("pending") // pending, contacted, converted, rejected
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model MaintenanceLog {
+  id         String   @id @default(cuid())
+  action     String
+  params     String?  @db.Text
+  result     String?  @db.Text
+  status     String   // success, error
+  executedAt DateTime @default(now())
+
+  @@index([action])
+  @@index([status])
+  @@index([executedAt])
+}
+
+model SupportTicket {
+  id          String   @id @default(cuid())
+  companyId   String
+  userId      String   // Usuário da empresa que abriu o chamado
+  subject     String
+  status      String   @default("open") // open, in_progress, waiting_company, closed
+  priority    String   @default("medium") // low, medium, high
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  closedAt    DateTime?
+  
+  company     User     @relation("CompanySupportTickets", fields: [companyId], references: [id], onDelete: Cascade)
+  messages    SupportMessage[]
+  
+  @@index([companyId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([priority])
+}
+
+model SupportMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  userId    String   // Quem enviou (pode ser empresa ou admin)
+  message   String   @db.Text
+  isAdmin   Boolean  @default(false) // true se enviado por admin
+  createdAt DateTime @default(now())
+  
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  @@index([ticketId])
+  @@index([createdAt])
+}
+
+model MemberInvitation {
+  id          String   @id @default(cuid())
+  companyId   String
+  email       String
+  name        String
+  groupId     String?
+  permissionId String?
+  token       String   @unique
+  status      String   @default("pending") // pending, accepted, expired
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  acceptedAt  DateTime?
+  
+  company     User     @relation("CompanyMemberInvitations", fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@index([companyId])
+  @@index([email])
+  @@index([token])
+  @@index([status])
+}
+
+// Convite para novas empresas com plano personalizado
+model CompanyInvitation {
+  id              String   @id @default(cuid())
+  email           String
+  companyName     String   // Razão Social
+  tradeName       String?  // Nome Fantasia
+  cnpj            String?
+  phone           String?
+  token           String   @unique
+  
+  // Plano Personalizado
+  customPlanName  String   @default("Plano Personalizado")
+  customJobLimit  Int      // Quantitativo de vagas customizado
+  customPrice     Float    // Valor mensal customizado
+  customFeatures  String[] // Features personalizadas
+  
+  // Stripe
+  stripeCustomerId     String?
+  stripeCheckoutUrl    String? // URL do checkout Stripe
+  
+  // Status
+  status          String   @default("pending") // pending, password_set, payment_pending, completed, expired
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+  
+  // Admin que criou
+  createdBy       String?  // ID do admin que criou o convite
+  notes           String?  // Notas internas
+  
+  @@index([email])
+  @@index([token])
+  @@index([status])
+  @@index([createdBy])
+}
