@@ -27,9 +27,9 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { createdAt: "desc" },
-    });
+    }) as any[];
 
-    const formattedJobs = jobs.map((job: any) => ({
+    const formattedJobs = jobs.map(job => ({
       id: job.id,
       title: job.title,
       description: job.description,

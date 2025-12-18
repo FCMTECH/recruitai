@@ -36,7 +36,7 @@ function calculateMatch(profile: any, job: any): number {
   // Check relevant experience (25%)
   totalWeight += 25;
   if (profile.experiences && profile.experiences.length > 0) {
-    const hasRelevantExperience = profile.experiences.some((exp: any) => {
+    const hasRelevantExperience = (profile.experiences as any[]).some(exp => {
       const titleMatch = exp.jobTitle?.toLowerCase().includes(job.title.split(' ')[0].toLowerCase());
       const descMatch = exp.description?.toLowerCase().includes(job.title.split(' ')[0].toLowerCase());
       return titleMatch || descMatch;
@@ -52,14 +52,14 @@ function calculateMatch(profile: any, job: any): number {
   // Check skills match (25%)
   totalWeight += 25;
   if (job.criteria && job.criteria.length > 0 && profile.skills && profile.skills.length > 0) {
-    const profileSkills = profile.skills.map((s: any) => s.skillName.toLowerCase());
-    const jobSkills = job.criteria
-      .filter((c: any) => c.category === "Habilidades Técnicas" || c.category === "Habilidades")
-      .map((c: any) => c.name.toLowerCase());
+    const profileSkills = (profile.skills as any[]).map(s => s.skillName.toLowerCase());
+    const jobSkills = (job.criteria as any[])
+      .filter(c => c.category === "Habilidades Técnicas" || c.category === "Habilidades")
+      .map(c => c.name.toLowerCase());
     
     if (jobSkills.length > 0) {
-      const matchingSkills = jobSkills.filter((js: string) => 
-        profileSkills.some((ps: string) => ps.includes(js) || js.includes(ps))
+      const matchingSkills = jobSkills.filter(js => 
+        profileSkills.some(ps => ps.includes(js) || js.includes(ps))
       );
       const skillMatch = (matchingSkills.length / jobSkills.length) * 25;
       matchScore += skillMatch;
@@ -141,10 +141,10 @@ export async function GET(request: NextRequest) {
       orderBy: {
         createdAt: "desc",
       },
-    });
+    }) as any[];
 
     // Calculate match for each job
-    const jobsWithMatch = jobs.map((job) => {
+    const jobsWithMatch = jobs.map(job => {
       const matchPercentage = calculateMatch(profile, job);
       
       return {
