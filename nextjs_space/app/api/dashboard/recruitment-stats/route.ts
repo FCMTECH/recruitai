@@ -199,9 +199,9 @@ export async function GET() {
         isHired: true,
         invitedForInterview: true,
       }
-    });
+    }) as any[];
 
-    allApplicationsLast6Months.forEach((app: { createdAt: Date; isHired: boolean | null; attendedInterview: boolean | null }) => {
+    allApplicationsLast6Months.forEach(app => {
       const month = new Date(app.createdAt).toLocaleDateString('pt-BR', { year: 'numeric', month: 'short' });
       if (!monthlyData[month]) {
         monthlyData[month] = { applications: 0, hired: 0, interviewed: 0 };
