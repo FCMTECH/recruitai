@@ -64,3 +64,12 @@ logs/
 # Temporary files
 tmp/
 temp/
+
+# Yarn (forçar NPM)
+yarn.lock
+.yarn/
+.yarnrc
+.yarnrc.yml
+.yarnrc.yml.bak
+.yarn.bak/
+.pnp.*
