@@ -1,329 +1,356 @@
-# 📦 Configuração do GitHub e Deploy na Vercel
+# 🔗 Configuração de Integração GitHub → Vercel (Auto-Deploy)
 
-## 🎯 Passo 1: Preparar o Projeto
+## 🎯 **Objetivo**
 
-### 1.1. Verificar Arquivos Criados
+Configurar a integração automática entre o repositório GitHub e a Vercel para que:
+- ✅ Cada commit na branch `main` dispare um deploy automático
+- ✅ Não seja necessário fazer deploy manual
+- ✅ Todos os commits tenham o autor correto configurado
 
-Os seguintes arquivos foram criados:
-- ✅ `.gitignore` - Ignora arquivos sensíveis
-- ✅ `README.md` - Documentação do projeto
-- ✅ `.env.example` - Exemplo de variáveis de ambiente
+---
 
-### 1.2. Inicializar Git (se ainda não foi feito)
+## 📝 **1. Configuração do Git (Local)**
+
+### **1.1 - Configurar Autor Global**
+
+No seu computador, execute estes comandos **UMA ÚNICA VEZ**:
 
 ```bash
-cd /home/ubuntu/ats_platform/nextjs_space
-
-# Inicializar repositório Git
-git init
-
-# Adicionar todos os arquivos
-git add .
-
-# Primeiro commit
-git commit -m "Initial commit: RecruitAI Platform"
+git config --global user.name "FCMTECH"
+git config --global user.email "comercial.fcmtech@gmail.com"
 ```
 
----
-
-## 🌐 Passo 2: Criar Repositório no GitHub
-
-### 2.1. Via GitHub Web (Recomendado)
-
-1. Acesse: https://github.com/new
-2. **Repository name**: `recruitai` (ou o nome que preferir)
-3. **Visibility**: Escolha `Private` (recomendado) ou `Public`
-4. **NÃO marque** "Add a README file"
-5. **NÃO marque** "Add .gitignore"
-6. Clique em **"Create repository"**
-
-### 2.2. Conectar Repositório Local ao GitHub
-
-Após criar o repositório, o GitHub mostrará comandos. Use:
+### **1.2 - Verificar Configuração**
 
 ```bash
-# Adicionar remote do GitHub
-git remote add origin https://github.com/SEU_USUARIO/recruitai.git
-
-# Renomear branch para main (se necessário)
-git branch -M main
-
-# Fazer push para o GitHub
-git push -u origin main
+git config --global --list | grep -E "(user.name|user.email)"
 ```
 
-**Substitua `SEU_USUARIO` pelo seu nome de usuário do GitHub!**
-
----
-
-## 🚀 Passo 3: Deploy na Vercel
-
-### 3.1. Preparação
-
-1. **Crie uma conta na Vercel**: https://vercel.com/signup
-2. **Conecte sua conta do GitHub** à Vercel
-
-### 3.2. Importar Projeto
-
-1. Acesse o dashboard da Vercel: https://vercel.com/dashboard
-2. Clique em **"Add New..."** → **"Project"**
-3. Selecione o repositório **`recruitai`** do GitHub
-4. Clique em **"Import"**
-
-### 3.3. Configurações do Projeto
-
-#### Framework Preset
-- A Vercel detectará automaticamente **Next.js**
-
-#### Root Directory
-- Configure como: **`nextjs_space`** (muito importante!)
-
-#### Build and Output Settings
-- Deixe os padrões:
-  - Build Command: `yarn build` ou `npm run build`
-  - Output Directory: `.next`
-  - Install Command: `yarn install` ou `npm install`
-
----
-
-## 🔐 Passo 4: Configurar Variáveis de Ambiente
-
-### 4.1. Na Interface da Vercel
-
-Antes de fazer o deploy, clique em **"Environment Variables"** e adicione:
-
-```env
-# Database
-DATABASE_URL=postgresql://postgres.jztrqlqrcgljpmxsbwfm:Fcm%402025@aws-1-sa-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
-
-# NextAuth
-NEXTAUTH_SECRET=gere_uma_string_aleatoria_de_32_caracteres
-NEXTAUTH_URL=https://SEU_DOMINIO.vercel.app
-
-# Stripe
-STRIPE_SECRET_KEY=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
-STRIPE_PUBLISHABLE_KEY=pk_live_51SVzwvDtZaVksYfabty7tFEb0LZSCuTv0cFlpAonZ2kw7MIZtMpsPnQtWpuHfJgx36teTdjn7xobCOLeRMVQbAUV00ZO5vWGVw
-STRIPE_WEBHOOK_SECRET=whsec_SEU_NOVO_WEBHOOK_SECRET_DA_VERCEL
-
-# AWS S3
-AWS_ACCESS_KEY_ID=AKIARJI3AIFWJPOTWNMN
-AWS_SECRET_ACCESS_KEY=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
-AWS_S3_REGION=us-east-2
-AWS_S3_BUCKET_NAME=recruitai-resumes
-AWS_S3_FOLDER_PREFIX=resumes/
-
-# Abacus.AI
-ABACUSAI_API_KEY=5bb8032f287b4b89bfcae4529b50a199
-
-# Email SMTP
-SMTP_HOST=smtp.zoho.com
-SMTP_PORT=587
-SMTP_USER=comercial@fcmtech.com.br
-SMTP_PASS=xG1PbdchhJYP
-SMTP_FROM_NAME=RecruitAI
-
-# OAuth - Google
-GOOGLE_CLIENT_ID=763701288798-lbf0ro2ofmccinig1uvn8e4m5e8m2l90.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
-
-# OAuth - LinkedIn
-LINKEDIN_CLIENT_ID=77xhqamin9d70o
-LINKEDIN_CLIENT_SECRET=WPL_AP1.ByV6rRjDiQblfTMR.ktymVw==
-
-# Teste
-TEST_MODE_EMAIL=teste@fcmtech.com.br
-
-# Manutenção
-MAINTENANCE_SECRET=gere_um_token_aleatorio_para_manutencao
+**Resultado esperado:**
+```
+user.name=FCMTECH
+user.email=comercial.fcmtech@gmail.com
 ```
 
-**IMPORTANTE:**
-- Para `NEXTAUTH_SECRET`, gere uma string aleatória em: https://generate-secret.vercel.app/32
-- Para `NEXTAUTH_URL`, use o domínio que a Vercel fornecerá (ex: `https://recruitai.vercel.app`)
-- Para `MAINTENANCE_SECRET`, gere outro token aleatório
+### **1.3 - Verificar Email no GitHub**
 
-### 4.2. Configurar Stripe Webhook
-
-Após o primeiro deploy:
-
-1. Acesse: https://dashboard.stripe.com/webhooks
-2. Clique em **"Add endpoint"**
-3. **Endpoint URL**: `https://SEU_DOMINIO.vercel.app/api/webhooks/stripe`
-4. **Events to send**:
-   - `checkout.session.completed`
-   - `customer.subscription.created`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-   - `invoice.paid`
-   - `invoice.payment_failed`
-5. Copie o **Signing secret** (`whsec_...`)
-6. Volte à Vercel → Environment Variables → Atualize `STRIPE_WEBHOOK_SECRET`
-7. **Redeploy** o projeto na Vercel
+1. Acesse: `https://github.com/settings/emails`
+2. Confirme que `comercial.fcmtech@gmail.com` está **verificado**
+3. Se não estiver, clique em **"Verify email address"** e confirme
 
 ---
 
-## 📊 Passo 5: Configurar Banco de Dados (Primeira Vez)
+## 🔗 **2. Integração GitHub → Vercel**
 
-### 5.1. Aplicar Schema do Prisma
+### **2.1 - Verificar Conexão Existente**
 
-Na sua máquina local ou no Vercel:
+1. Vá em: `https://vercel.com/fcm-techs-projects/recruitai/settings/git`
 
+2. Você deve ver:
+```
+Connected Git Repository:
+FCMTECH/recruitai
+```
+
+### **2.2 - Se NÃO Estiver Conectado**
+
+1. Vá em: `https://vercel.com/fcm-techs-projects/recruitai/settings/git`
+
+2. Clique em **"Connect Git Repository"**
+
+3. Selecione: **"GitHub"**
+
+4. Autorize a Vercel a acessar sua conta GitHub
+
+5. Selecione o repositório: **`FCMTECH/recruitai`**
+
+6. Confirme a conexão
+
+### **2.3 - Configurar Branch de Deploy**
+
+1. Vá em: `https://vercel.com/fcm-techs-projects/recruitai/settings/git`
+
+2. Em **"Production Branch"**, confirme que está: **`main`**
+
+3. Se estiver diferente, altere para **`main`**
+
+4. Clique em **"Save"**
+
+---
+
+## ⚙️ **3. Configurações Específicas da Vercel**
+
+### **3.1 - Root Directory**
+
+1. Vá em: `https://vercel.com/fcm-techs-projects/recruitai/settings/general`
+
+2. Em **"Root Directory"**, confirme que está: **`nextjs_space`**
+
+3. Se estiver diferente, altere para **`nextjs_space`**
+
+4. Clique em **"Save"**
+
+### **3.2 - Build & Development Settings**
+
+1. Vá em: `https://vercel.com/fcm-techs-projects/recruitai/settings/general`
+
+2. Confirme estas configurações:
+
+```
+Framework Preset: Next.js
+Build Command: (deixe vazio, usará vercel.json)
+Install Command: (deixe vazio, usará vercel.json)
+Output Directory: (deixe vazio)
+```
+
+---
+
+## 🔔 **4. Webhook Automático GitHub → Vercel**
+
+### **4.1 - Verificar Webhook Existente**
+
+1. Vá em: `https://github.com/FCMTECH/recruitai/settings/hooks`
+
+2. Você deve ver um webhook da Vercel:
+```
+https://api.vercel.com/v1/integrations/deploy/...
+```
+
+3. Clique no webhook para ver detalhes
+
+4. Verifique se está: **✅ Active**
+
+### **4.2 - Se NÃO Houver Webhook (Criar Manualmente)**
+
+Se por algum motivo o webhook não existir:
+
+1. Vá em: `https://github.com/FCMTECH/recruitai/settings/hooks`
+
+2. Clique em **"Add webhook"**
+
+3. Configure:
+```
+Payload URL: (obtenha da Vercel em Settings > Git)
+Content type: application/json
+Secret: (deixe vazio)
+SSL verification: Enable SSL verification
+```
+
+4. Em **"Which events would you like to trigger this webhook?"**:
+   - Selecione: **"Just the push event"**
+
+5. Marque: **✅ Active**
+
+6. Clique em **"Add webhook"**
+
+### **4.3 - Recriar Webhook (Se Estiver Com Problemas)**
+
+Se o webhook estiver com falhas:
+
+1. Vá em: `https://vercel.com/fcm-techs-projects/recruitai/settings/git`
+
+2. Clique em **"Disconnect"** (remover repositório)
+
+3. Clique em **"Connect Git Repository"** novamente
+
+4. Selecione: **`FCMTECH/recruitai`**
+
+5. Isso vai recriar o webhook automaticamente
+
+---
+
+## 📦 **5. Testar Integração Automática**
+
+### **5.1 - Fazer um Commit de Teste**
+
+```bash
+cd /caminho/do/seu/projeto
+git commit --allow-empty -m "Test: Trigger automatic Vercel deployment"
+git push origin main
+```
+
+### **5.2 - Verificar Deploy Automático**
+
+1. Vá em: `https://vercel.com/fcm-techs-projects/recruitai/deployments`
+
+2. Você deve ver um **novo deploy** iniciando em **1-2 minutos**
+
+3. O status deve mudar de:
+   - 🟠 **Building** → 🟢 **Ready**
+
+4. Nos logs, você deve ver:
+```
+Cloning github.com/FCMTECH/recruitai (Branch: main, Commit: [hash])
+```
+
+---
+
+## 📊 **6. Verificação de Status**
+
+### **6.1 - GitHub Webhook Logs**
+
+1. Vá em: `https://github.com/FCMTECH/recruitai/settings/hooks`
+
+2. Clique no webhook da Vercel
+
+3. Clique na aba **"Recent Deliveries"**
+
+4. Você deve ver entregas **recentes** com:
+   - ✅ Status: **200 OK**
+
+### **6.2 - Vercel Deployment Status**
+
+1. Vá em: `https://vercel.com/fcm-techs-projects/recruitai/deployments`
+
+2. Cada commit na branch `main` deve ter um deploy correspondente
+
+3. Verifique se o **hash do commit** nos logs da Vercel corresponde ao **hash no GitHub**
+
+---
+
+## ⚠️ **7. Solução de Problemas**
+
+### **Problema 1: Deploy Não Inicia Após Commit**
+
+**Causa:** Webhook não está funcionando
+
+**Solução:**
+1. Vá em: `https://github.com/FCMTECH/recruitai/settings/hooks`
+2. Clique no webhook da Vercel
+3. Clique em **"Redeliver"** em uma entrega recente
+4. Se falhar, recrie a conexão GitHub → Vercel (passo 4.3)
+
+### **Problema 2: Erro "A commit author is required"**
+
+**Causa:** Commits sem autor configurado
+
+**Solução:**
+1. Configure o autor globalmente (passo 1.1)
+2. Verifique com: `git log -1 --format="%an <%ae>"`
+3. Resultado esperado: `FCMTECH <comercial.fcmtech@gmail.com>`
+
+### **Problema 3: Deploy Usa Commit Antigo**
+
+**Causa:** Cache do webhook ou branch errada
+
+**Solução:**
+1. Verifique se a branch está em `main` (passo 2.3)
+2. Force um novo push:
+```bash
+git commit --allow-empty -m "Force deploy"
+git push origin main --force
+```
+3. Recrie a conexão GitHub → Vercel (passo 4.3)
+
+### **Problema 4: Build Falha na Vercel**
+
+**Causa:** Erros de TypeScript ou dependências
+
+**Solução:**
+1. Teste o build localmente:
 ```bash
 cd nextjs_space
-
-# Aplicar schema ao banco de produção
-yarn prisma db push
-
-# Popular com dados iniciais
-yarn tsx --require dotenv/config scripts/seed.ts
+yarn build
 ```
+2. Corrija os erros que aparecerem
+3. Commit e push das correções
 
-**OU** use a API de Manutenção (após deploy):
+---
 
+## ✅ **8. Checklist de Validação**
+
+Confirme que todos estes itens estão **✅**:
+
+- [ ] Git configurado com autor: `FCMTECH <comercial.fcmtech@gmail.com>`
+- [ ] Email verificado no GitHub
+- [ ] Repositório conectado à Vercel: `FCMTECH/recruitai`
+- [ ] Branch de produção: `main`
+- [ ] Root Directory: `nextjs_space`
+- [ ] Webhook do GitHub ativo e funcionando
+- [ ] Commit de teste disparou deploy automático
+- [ ] Deploy completado com sucesso
+- [ ] Site acessível em: `https://www.recruitai.com.br`
+
+---
+
+## 🚀 **9. Fluxo de Trabalho Ideal**
+
+Após a configuração, o fluxo deve ser:
+
+1. **Desenvolver localmente:**
 ```bash
-curl -X POST https://SEU_DOMINIO.vercel.app/api/maintenance/execute \
-  -H "Authorization: Bearer SEU_MAINTENANCE_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{"action": "prisma_push"}'
-
-curl -X POST https://SEU_DOMINIO.vercel.app/api/maintenance/execute \
-  -H "Authorization: Bearer SEU_MAINTENANCE_SECRET" \
-  -H "Content-Type: application/json" \
-  -d '{"action": "run_seed"}'
+cd /caminho/do/projeto/nextjs_space
+# ... fazer alterações no código ...
+yarn build  # Testar build local
 ```
 
----
-
-## 🌐 Passo 6: Configurar Domínio Personalizado (Opcional)
-
-### 6.1. Adicionar Domínio na Vercel
-
-1. No projeto na Vercel, vá em **Settings** → **Domains**
-2. Adicione: `www.recruitai.com.br`
-3. A Vercel fornecerá registros DNS
-
-### 6.2. Configurar DNS no Registro.br
-
-**Tipo CNAME:**
-```
-www.recruitai.com.br  →  cname.vercel-dns.com
-```
-
-**Tipo A (se preferir):**
-```
-www.recruitai.com.br  →  76.76.21.21
-```
-
-### 6.3. Atualizar NEXTAUTH_URL
-
-Após configurar o domínio:
-
-1. Vercel → Settings → Environment Variables
-2. Atualize `NEXTAUTH_URL` para: `https://www.recruitai.com.br`
-3. Redeploy
-
----
-
-## ✅ Passo 7: Verificação Final
-
-### 7.1. Checklist
-
-- [ ] Repositório GitHub criado e código enviado
-- [ ] Projeto importado na Vercel
-- [ ] Todas as variáveis de ambiente configuradas
-- [ ] Primeiro deploy concluído com sucesso
-- [ ] Stripe webhook configurado
-- [ ] Schema do banco aplicado (`prisma db push`)
-- [ ] Dados iniciais populados (`seed.ts`)
-- [ ] Domínio personalizado configurado (se aplicável)
-- [ ] Login funciona (testar com usuário admin)
-- [ ] Upload de arquivos funciona (testar S3)
-- [ ] Pagamento funciona (testar modo teste do Stripe)
-
-### 7.2. Testes Importantes
-
-1. **Autenticação**:
-   - Login: `admin@recruitai.com.br` / `admin123`
-   - Criar novo usuário
-
-2. **Upload de Currículos**:
-   - Fazer upload de um PDF
-   - Verificar se está no S3
-
-3. **Pagamentos**:
-   - Usar cartão de teste: `4242 4242 4242 4242`
-   - Verificar webhook no Stripe Dashboard
-
-4. **Email**:
-   - Criar nova conta
-   - Verificar se recebeu email de boas-vindas
-
----
-
-## 🔄 Atualizações Futuras
-
-### Quando Fizer Mudanças no Código:
-
+2. **Commit e Push:**
 ```bash
-# Adicionar mudanças
+cd ..
 git add .
-
-# Commit
-git commit -m "Descrição da mudança"
-
-# Push para GitHub
+git commit -m "Descrição das alterações"
 git push origin main
 ```
 
-**A Vercel fará deploy automático!** 🎉
+3. **Deploy Automático:**
+   - A Vercel detecta o push (webhook)
+   - Inicia o build automaticamente
+   - Deploy completa em 5-7 minutos
+   - Site atualizado em: `https://www.recruitai.com.br`
 
-### Se Mudar o Schema do Prisma:
-
-```bash
-# Aplicar mudanças
-yarn prisma db push
-
-# Regerar cliente Prisma
-yarn prisma generate
-
-# Commit e push
-git add .
-git commit -m "Update: Prisma schema"
-git push origin main
-```
+4. **NÃO É NECESSÁRIO:**
+   - Acessar painel da Vercel manualmente
+   - Clicar em "Deploy" manualmente
+   - Fazer nenhuma ação adicional
 
 ---
 
-## 🆘 Troubleshooting
+## 📊 **10. Monitoramento**
 
-### Erro: "Root directory is not found"
-- Verifique se configurou `Root Directory` como `nextjs_space`
+### **10.1 - GitHub Actions (Opcional)**
 
-### Erro: "Module not found"
-- Certifique-se que `node_modules` não está no Git (`.gitignore`)
-- Vercel instalará automaticamente
+Para monitorar os deploys pelo GitHub:
 
-### Erro: "Database connection failed"
-- Verifique `DATABASE_URL` na Vercel
-- Teste conexão localmente primeiro
+1. Vá em: `https://github.com/FCMTECH/recruitai/actions`
+2. Você verá os workflows de CI/CD (se configurados)
 
-### Erro: "NEXTAUTH_URL is not defined"
-- Adicione `NEXTAUTH_URL` nas env vars da Vercel
-- Formato: `https://seu-dominio.vercel.app`
+### **10.2 - Vercel Dashboard**
 
----
+1. Vá em: `https://vercel.com/fcm-techs-projects/recruitai/deployments`
+2. Monitore os deploys em tempo real
+3. Clique em um deploy para ver logs completos
 
-## 📚 Documentação Adicional
+### **10.3 - Notificações**
 
-- [Documentação Vercel](https://vercel.com/docs)
-- [Deploy Next.js na Vercel](https://vercel.com/docs/frameworks/nextjs)
-- [Environment Variables na Vercel](https://vercel.com/docs/projects/environment-variables)
-- [Custom Domains na Vercel](https://vercel.com/docs/custom-domains)
+Configure notificações de deploy:
+
+1. Vá em: `https://vercel.com/fcm-techs-projects/recruitai/settings/notifications`
+2. Ative: **"Deployment Ready"** e **"Deployment Failed"**
+3. Escolha: Email ou Slack
 
 ---
 
-## ✨ Status
+## 📖 **11. Documentação Adicional**
 
-🎉 **Projeto Pronto para Deploy!**
+- **Vercel Git Integration:** https://vercel.com/docs/deployments/git
+- **GitHub Webhooks:** https://docs.github.com/en/webhooks
+- **Next.js Deployment:** https://nextjs.org/docs/deployment
 
-Todos os arquivos necessários foram criados. Siga os passos acima para fazer o deploy na Vercel.
+---
+
+## 📝 **Resumo**
+
+| Item | Status | Ação |
+|------|--------|-------|
+| **Git Autor** | ✅ | `FCMTECH <comercial.fcmtech@gmail.com>` |
+| **Repositório** | ✅ | `FCMTECH/recruitai` |
+| **Branch** | ✅ | `main` |
+| **Root Directory** | ✅ | `nextjs_space` |
+| **Webhook** | ✅ | Ativo e funcionando |
+| **Deploy Automático** | ✅ | Configurado e testado |
+
+---
+
+**Data:** 10/12/2025 - 04:10
+**Status:** ✅ Configuração completa e testada
+**Próximo Deploy:** Automático no próximo push para `main`
