@@ -49,7 +49,7 @@ async function main() {
   
   if (job.applications.length > 0) {
     console.log('\n📋 Candidaturas:');
-    job.applications.forEach((app, index) => {
+    job.applications.forEach((app: any, index: number) => {
       console.log(`\n  ${index + 1}. ${app.candidateName}`);
       console.log('     Email:', app.candidateEmail);
       console.log('     candidateProfileId:', app.candidateProfileId);
