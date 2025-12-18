@@ -1,6 +1,4 @@
 {
-  "version": 2,
-  "buildCommand": "cd nextjs_space && chmod +x build.sh && ./build.sh",
-  "installCommand": "npm install --legacy-peer-deps",
-  "outputDirectory": "nextjs_space/.next"
+  "buildCommand": "cd nextjs_space && npm run build",
+  "installCommand": "cd nextjs_space && npm install"
 }
