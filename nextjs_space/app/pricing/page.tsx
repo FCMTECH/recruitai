@@ -349,7 +349,7 @@ export default function PricingPage() {
 
         {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12">
-          {plans.filter(p => p.isActive).map((plan) => (
+          {plans.filter((p: any) => p.isActive).map((plan: any) => (
             <Card
               key={plan.id}
               className={`relative transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 border-2 ${
@@ -404,7 +404,7 @@ export default function PricingPage() {
                 </div>
 
                 <div className="space-y-3 mb-6">
-                  {plan.features.map((feature, index) => (
+                  {plan.features.map((feature: string, index: number) => (
                     <div key={index} className="flex items-start gap-3">
                       <div className="mt-0.5 p-1 rounded-full bg-green-50">
                         <Check className="h-4 w-4 text-green-600" />

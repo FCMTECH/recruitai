@@ -219,7 +219,7 @@ export default function AgendaPage() {
             </TabsTrigger>
             <TabsTrigger value="tasks" onClick={() => {}}>
               <CheckCircle2 className="mr-2 h-4 w-4" />
-              Tarefas{tasks.filter(t => t.status !== 'completed').length > 0 ? ` (${tasks.filter(t => t.status !== 'completed').length})` : ''}
+              Tarefas{tasks.filter((t: any) => t.status !== 'completed').length > 0 ? ` (${tasks.filter((t: any) => t.status !== 'completed').length})` : ''}
             </TabsTrigger>
           </TabsList>
 

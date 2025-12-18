@@ -63,7 +63,7 @@ export function NotificationBell() {
 
       if (res.ok) {
         setNotifications(prev =>
-          prev.map(n => (n.id === id ? { ...n, isRead: true } : n))
+          prev.map((n: any) => (n.id === id ? { ...n, isRead: true } : n))
         );
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
@@ -80,7 +80,7 @@ export function NotificationBell() {
       });
 
       if (res.ok) {
-        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        setNotifications(prev => prev.map((n: any) => ({ ...n, isRead: true })));
         setUnreadCount(0);
         toast.success('Todas as notificações foram marcadas como lidas');
       }

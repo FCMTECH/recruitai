@@ -158,7 +158,7 @@ export default function AdminCandidatesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-green-600">
-                {candidates.filter(c => c.profile?.resumeUrl).length}
+                {candidates.filter((c: any) => c.profile?.resumeUrl).length}
               </div>
             </CardContent>
           </Card>
@@ -169,7 +169,7 @@ export default function AdminCandidatesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-accent">
-                {candidates.reduce((sum, c) => sum + c.applicationsCount, 0)}
+                {candidates.reduce((sum: number, c: any) => sum + c.applicationsCount, 0)}
               </div>
             </CardContent>
           </Card>

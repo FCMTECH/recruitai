@@ -103,13 +103,13 @@ export default function CustomCompaniesPage() {
     let filtered = invitations
 
     if (filterStatus !== 'all') {
-      filtered = filtered.filter(inv => inv.status === filterStatus)
+      filtered = filtered.filter((inv: any) => inv.status === filterStatus)
     }
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
       filtered = filtered.filter(
-        inv =>
+        (inv: any) =>
           inv.email.toLowerCase().includes(term) ||
           inv.companyName.toLowerCase().includes(term) ||
           inv.phone?.toLowerCase().includes(term)

@@ -122,7 +122,7 @@ export default function CandidateProfilePage() {
       const fields = highlightParam.split(',');
       const errors: {[key: string]: boolean} = {};
       
-      fields.forEach(field => {
+      fields.forEach((field: string) => {
         const fieldKey = field.toLowerCase().replace(/\s+/g, '');
         if (fieldKey.includes('currículo')) errors['resumeUrl'] = true;
         if (fieldKey.includes('nome')) errors['fullName'] = true;
@@ -294,35 +294,35 @@ export default function CandidateProfilePage() {
 
       // Save all sections...
       await Promise.all([
-        ...education.map(edu => 
+        ...education.map((edu: any) => 
           fetch("/api/candidates/profile/education", {
             method: edu.id ? "PATCH" : "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...edu, candidateId }),
           })
         ),
-        ...experiences.map(exp => 
+        ...experiences.map((exp: any) => 
           fetch("/api/candidates/profile/experience", {
             method: exp.id ? "PATCH" : "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...exp, candidateId }),
           })
         ),
-        ...skills.map(skill => 
+        ...skills.map((skill: any) => 
           fetch("/api/candidates/profile/skills", {
             method: skill.id ? "PATCH" : "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...skill, candidateId }),
           })
         ),
-        ...courses.map(course => 
+        ...courses.map((course: any) => 
           fetch("/api/candidates/profile/courses", {
             method: course.id ? "PATCH" : "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...course, candidateId }),
           })
         ),
-        ...certifications.map(cert => 
+        ...certifications.map((cert: any) => 
           fetch("/api/candidates/profile/certifications", {
             method: cert.id ? "PATCH" : "POST",
             headers: { "Content-Type": "application/json" },
@@ -594,9 +594,9 @@ export default function CandidateProfilePage() {
                   {showProfessionSuggestions && (
                     <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
                       {professions
-                        .filter(p => p.toLowerCase().includes((professionSearch || profile.profession).toLowerCase()))
+                        .filter((p: string) => p.toLowerCase().includes((professionSearch || profile.profession).toLowerCase()))
                         .slice(0, 10)
-                        .map((profession, index) => (
+                        .map((profession: string, index: number) => (
                           <div
                             key={index}
                             className="px-3 py-2 hover:bg-muted cursor-pointer"

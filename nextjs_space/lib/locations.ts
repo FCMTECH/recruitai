@@ -140,7 +140,7 @@ export function getStates(countryCode: string): { code: string; name: string }[]
   if (countryCode === 'BR') {
     return brazilianStates;
   } else if (internationalStates[countryCode]) {
-    return internationalStates[countryCode].map(state => ({ code: state, name: state }));
+    return internationalStates[countryCode].map((state: string) => ({ code: state, name: state }));
   }
   return [];
 }

@@ -310,11 +310,11 @@ export default function TeamPage() {
   }
 
   // Agrupar usuários por grupo
-  const usersWithoutGroup = users.filter(u => !u.groupId);
+  const usersWithoutGroup = users.filter((u: any) => !u.groupId);
   const usersByGroup: Record<string, CompanyUser[]> = {};
   
-  groups.forEach(group => {
-    usersByGroup[group.id] = users.filter(u => u.groupId === group.id);
+  groups.forEach((group: any) => {
+    usersByGroup[group.id] = users.filter((u: any) => u.groupId === group.id);
   });
 
   return (

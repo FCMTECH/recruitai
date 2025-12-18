@@ -8,14 +8,14 @@ async function main() {
     }
   });
   
-  const orphanJobs = jobs.filter(job => !job.user);
+  const orphanJobs = jobs.filter((job: any) => !job.user);
   
   console.log('Total jobs:', jobs.length);
   console.log('Orphan jobs (without user):', orphanJobs.length);
   
   if (orphanJobs.length > 0) {
     console.log('\nOrphan jobs details:');
-    orphanJobs.forEach(job => {
+    orphanJobs.forEach((job: any) => {
       console.log(`- Job ID: ${job.id}, Title: ${job.title}, UserID: ${job.userId}`);
     });
     

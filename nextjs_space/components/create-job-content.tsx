@@ -244,7 +244,7 @@ export default function CreateJobContent() {
       return false;
     }
 
-    const totalWeight = criteria.reduce((sum, c) => sum + c.weight, 0);
+    const totalWeight = criteria.reduce((sum: number, c: any) => sum + c.weight, 0);
     if (totalWeight !== 100) {
       toast({
         title: "Erro de validação",
@@ -337,7 +337,7 @@ export default function CreateJobContent() {
     }
   };
 
-  const totalWeight = criteria.reduce((sum, c) => sum + c.weight, 0);
+  const totalWeight = criteria.reduce((sum: number, c: any) => sum + c.weight, 0);
 
   if (!mounted || status === "loading" || status === "unauthenticated") {
     return (

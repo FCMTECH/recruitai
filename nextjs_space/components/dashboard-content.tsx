@@ -230,10 +230,10 @@ export default function DashboardContent() {
   };
 
   const dailyLabels = Object.keys(stats.dailyApplications || {}).sort();
-  const dailyValues = dailyLabels.map(date => (stats.dailyApplications || {})[date] || 0);
+  const dailyValues = dailyLabels.map((date: string) => (stats.dailyApplications || {})[date] || 0);
 
   const dailyData = {
-    labels: dailyLabels.map(date => {
+    labels: dailyLabels.map((date: string) => {
       const d = new Date(date);
       return `${d.getDate()}/${d.getMonth() + 1}`;
     }),
