@@ -9,6 +9,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Brain, Eye, EyeOff, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface MemberInvitation {
+  id: string;
+  name: string;
+  email: string;
+  companyName: string;
+  expiresAt: string;
+  status: string;
+}
+
 export default function AcceptInvitePage() {
   const router = useRouter();
   const params = useParams();
@@ -16,7 +25,7 @@ export default function AcceptInvitePage() {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [invitation, setInvitation] = useState<any>(null);
+  const [invitation, setInvitation] = useState<MemberInvitation | null>(null);
   const [error, setError] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -195,7 +204,7 @@ export default function AcceptInvitePage() {
           </form>
 
           <div className="mt-4 text-center text-sm text-muted-foreground">
-            Convite expira em: {new Date(invitation?.expiresAt).toLocaleDateString('pt-BR')}
+            Convite expira em: {invitation?.expiresAt ? new Date(invitation.expiresAt).toLocaleDateString('pt-BR') : 'N/A'}
           </div>
         </CardContent>
       </Card>

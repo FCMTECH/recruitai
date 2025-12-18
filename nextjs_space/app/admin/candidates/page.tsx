@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Brain, ArrowLeft, Search, Users, Mail, Phone, MapPin, Briefcase, FileText, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import Link from "next/link";
 
 interface Candidate {
   id: string;

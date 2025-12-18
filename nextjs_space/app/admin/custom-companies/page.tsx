@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowLeft, Plus, Building2, Loader2, Mail, Phone, CheckCircle, Clock, XCircle, ExternalLink, Edit, Trash2 } from 'lucide-react'
+import { ArrowLeft, Plus, Building2, Loader2, Mail, Phone, CheckCircle, Clock, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface CompanyInvitation {

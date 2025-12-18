@@ -9,13 +9,28 @@ import { Brain, Loader2, CheckCircle, ArrowLeft, FileText, User, MapPin, Briefca
 import { toast } from "sonner";
 import Link from "next/link";
 
+interface Job {
+  id: string;
+  title: string;
+  companyName: string;
+  location?: string;
+}
+
+interface CandidateProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  resumeUrl?: string;
+}
+
 export default function ApplyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession() || {};
   
-  const [selectedJob, setSelectedJob] = useState<any>(null);
-  const [candidateProfile, setCandidateProfile] = useState<any>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [candidateProfile, setCandidateProfile] = useState<CandidateProfile | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);

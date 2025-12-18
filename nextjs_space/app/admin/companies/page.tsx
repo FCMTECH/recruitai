@@ -9,7 +9,6 @@ import {
   Building2, 
   Search, 
   Trash2, 
-  Edit,
   Briefcase,
   Users,
   ArrowLeft

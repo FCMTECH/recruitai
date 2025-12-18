@@ -37,6 +37,17 @@ interface Task {
   dueDate?: string;
 }
 
+interface FormData {
+  title?: string;
+  description?: string;
+  eventType?: string;
+  startDateTime?: string;
+  endDateTime?: string;
+  location?: string;
+  priority?: string;
+  dueDate?: string;
+}
+
 export default function AgendaPage() {
   const { data: session, status } = useSession() || {};
   const router = useRouter();
@@ -45,7 +56,7 @@ export default function AgendaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<'event' | 'task'>('event');
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<FormData>({});
 
   useEffect(() => {
     if (status === 'unauthenticated') {
