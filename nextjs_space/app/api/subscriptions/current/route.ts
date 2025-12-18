@@ -2,9 +2,8 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 
-const prisma = new PrismaClient();
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +18,7 @@ export async function GET() {
       );
     }
 
-    const subscription = await prisma.subscription.findFirst({
+    const subscription = await db.subscription.findFirst({
       where: {
         userId: session.user.id,
         status: {

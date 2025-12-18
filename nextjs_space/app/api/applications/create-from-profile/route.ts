@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
         applicationId: application.id,
         jobId: application.jobId,
       }),
-    }).catch((err: unknown) => console.error("AI analysis trigger error:", err));
+    }).catch(err => console.error("AI analysis trigger error:", err));
 
     return NextResponse.json({
       message: "Candidatura enviada com sucesso",

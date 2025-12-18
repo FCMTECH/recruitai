@@ -2,11 +2,10 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { stripe } from '@/lib/stripe';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 import Stripe from 'stripe';
 import { sendEmail } from '@/lib/email';
 
-const prisma = new PrismaClient();
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -96,7 +95,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   let planId: string;
   
   if (isCustomPlan && invitationId) {
-    const invitation = await prisma.companyInvitation.findUnique({
+    const invitation = await db.companyInvitation.findUnique({
       where: { id: invitationId },
     });
 
@@ -106,7 +105,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     }
 
     // Criar plano personalizado para esta empresa
-    const customPlan = await prisma.plan.create({
+    const customPlan = await db.plan.create({
       data: {
         name: `personalizado_${invitation.email.split('@')[0]}`,
         displayName: invitation.customPlanName,
@@ -123,7 +122,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     planId = customPlan.id;
 
     // Atualizar status do convite para completado
-    await prisma.companyInvitation.update({
+    await db.companyInvitation.update({
       where: { id: invitation.id },
       data: {
         status: 'completed',
@@ -146,7 +145,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }
 
   // Atualizar ou criar subscription no banco de dados
-  const updatedSubscription = await prisma.subscription.upsert({
+  const updatedSubscription = await db.subscription.upsert({
     where: {
       stripeCustomerId: customerId
     },
@@ -175,7 +174,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   // Enviar e-mail de confirmação quando o pagamento for aprovado
   if (subscriptionStatus === 'active') {
     try {
-      const user = await prisma.user.findUnique({
+      const user = await db.user.findUnique({
         where: { id: userId },
         select: { email: true, companyName: true, name: true }
       });
@@ -214,7 +213,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 }
 
 async function handleSubscriptionUpdate(stripeSubscription: Stripe.Subscription) {
-  const subscription = await prisma.subscription.findUnique({
+  const subscription = await db.subscription.findUnique({
     where: {
       stripeSubscriptionId: stripeSubscription.id
     }
@@ -237,7 +236,7 @@ async function handleSubscriptionUpdate(stripeSubscription: Stripe.Subscription)
     status = 'trial';
   }
 
-  await prisma.subscription.update({
+  await db.subscription.update({
     where: {
       id: subscription.id
     },
@@ -252,7 +251,7 @@ async function handleSubscriptionUpdate(stripeSubscription: Stripe.Subscription)
 }
 
 async function handleSubscriptionDeleted(stripeSubscription: Stripe.Subscription) {
-  const subscription = await prisma.subscription.findUnique({
+  const subscription = await db.subscription.findUnique({
     where: {
       stripeSubscriptionId: stripeSubscription.id
     }
@@ -263,7 +262,7 @@ async function handleSubscriptionDeleted(stripeSubscription: Stripe.Subscription
     return;
   }
 
-  await prisma.subscription.update({
+  await db.subscription.update({
     where: {
       id: subscription.id
     },
@@ -282,7 +281,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   
   if (!subscriptionId) return;
 
-  const subscription = await prisma.subscription.findUnique({
+  const subscription = await db.subscription.findUnique({
     where: {
       stripeSubscriptionId: subscriptionId
     }
@@ -295,7 +294,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   const lastReset = subscription.lastResetDate;
   
   if (!lastReset || now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()) {
-    await prisma.subscription.update({
+    await db.subscription.update({
       where: {
         id: subscription.id
       },
@@ -316,7 +315,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   
   if (!subscriptionId) return;
 
-  const subscription = await prisma.subscription.findUnique({
+  const subscription = await db.subscription.findUnique({
     where: {
       stripeSubscriptionId: subscriptionId
     }
@@ -324,7 +323,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
 
   if (!subscription) return;
 
-  await prisma.subscription.update({
+  await db.subscription.update({
     where: {
       id: subscription.id
     },

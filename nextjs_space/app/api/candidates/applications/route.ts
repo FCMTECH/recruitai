@@ -44,10 +44,10 @@ export async function GET() {
       orderBy: {
         createdAt: "desc",
       },
-    }) as any[];
+    });
 
     // Transform applications to include AI analysis and correct structure
-    const transformedApplications = applications.map((app: any) => ({
+    const transformedApplications = applications.map((app) => ({
       ...app,
       appliedAt: app.createdAt,
       job: {
@@ -67,9 +67,9 @@ export async function GET() {
     // Calculate stats
     const stats = {
       total: transformedApplications.length,
-      pending: transformedApplications.filter((app: any) => app.status === "pending").length,
-      approved: transformedApplications.filter((app: any) => app.status === "approved").length,
-      rejected: transformedApplications.filter((app: any) => app.status === "rejected").length,
+      pending: transformedApplications.filter((app) => app.status === "pending").length,
+      approved: transformedApplications.filter((app) => app.status === "approved").length,
+      rejected: transformedApplications.filter((app) => app.status === "rejected").length,
     };
 
     return NextResponse.json({ applications: transformedApplications, stats });

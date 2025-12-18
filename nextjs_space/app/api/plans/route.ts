@@ -1,14 +1,13 @@
 
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 
-const prisma = new PrismaClient();
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const plans = await prisma.plan.findMany({
+    const plans = await db.plan.findMany({
       where: {
         isActive: true
       },

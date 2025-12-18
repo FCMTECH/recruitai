@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { createdAt: "desc" },
-    }) as any[];
+    });
 
     const formattedJobs = jobs.map((job: any) => ({
       id: job.id,

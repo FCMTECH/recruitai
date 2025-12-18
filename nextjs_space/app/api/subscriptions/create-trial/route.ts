@@ -2,9 +2,8 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 
-const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +19,7 @@ export async function POST(request: Request) {
     const { planId } = await request.json();
 
     // Verificar se o usuário já tem uma assinatura ativa
-    const existingSubscription = await prisma.subscription.findFirst({
+    const existingSubscription = await db.subscription.findFirst({
       where: {
         userId: session.user.id,
         status: {
@@ -37,7 +36,7 @@ export async function POST(request: Request) {
     }
 
     // Verificar se o plano é realmente o plano free
-    const plan = await prisma.plan.findUnique({
+    const plan = await db.plan.findUnique({
       where: { id: planId }
     });
 
@@ -52,7 +51,7 @@ export async function POST(request: Request) {
     const trialEndDate = new Date();
     trialEndDate.setDate(trialEndDate.getDate() + 7); // 1 semana
 
-    const subscription = await prisma.subscription.create({
+    const subscription = await db.subscription.create({
       data: {
         userId: session.user.id,
         planId: plan.id,

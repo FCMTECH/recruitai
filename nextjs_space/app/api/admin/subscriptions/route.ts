@@ -56,17 +56,17 @@ export async function GET(req: NextRequest) {
       orderBy: {
         createdAt: 'desc'
       }
-    }) as { status: string }[];
+    });
 
     // Calcular estatísticas
     const stats = {
       total: subscriptions.length,
-      active: subscriptions.filter((s: any) => s.status === 'active').length,
-      trial: subscriptions.filter((s: any) => s.status === 'trial').length,
-      past_due: subscriptions.filter((s: any) => s.status === 'past_due').length,
-      canceled: subscriptions.filter((s: any) => s.status === 'canceled').length,
-      grace_period: subscriptions.filter((s: any) => s.status === 'grace_period').length,
-      expired: subscriptions.filter((s: any) => s.status === 'expired').length
+      active: subscriptions.filter(s => s.status === 'active').length,
+      trial: subscriptions.filter(s => s.status === 'trial').length,
+      past_due: subscriptions.filter(s => s.status === 'past_due').length,
+      canceled: subscriptions.filter(s => s.status === 'canceled').length,
+      grace_period: subscriptions.filter(s => s.status === 'grace_period').length,
+      expired: subscriptions.filter(s => s.status === 'expired').length
     };
 
     return NextResponse.json({

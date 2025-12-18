@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
         status: result.success ? "success" : "error",
         executedAt: new Date(),
       },
-    }).catch((err: unknown) => {
+    }).catch(err => {
       console.error("Erro ao registrar log de manutenção:", err);
     });
 

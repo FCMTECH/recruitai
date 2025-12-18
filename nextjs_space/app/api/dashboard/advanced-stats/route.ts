@@ -95,7 +95,7 @@ export async function GET() {
 
     // Agregar por estado
     const stateDistribution: Record<string, number> = {};
-    jobs.forEach((job: { id: string; state: string | null; city: string | null; _count: { applications: number } }) => {
+    jobs.forEach(job => {
       const state = job.state || 'Não especificado';
       stateDistribution[state] = (stateDistribution[state] || 0) + job._count.applications;
     });
@@ -167,7 +167,7 @@ export async function GET() {
 
     // Processar dados por dia
     const dailyApplications: Record<string, number> = {};
-    applicationsByDay.forEach((app: { createdAt: Date; _count: number }) => {
+    applicationsByDay.forEach(app => {
       const date = new Date(app.createdAt).toISOString().split('T')[0];
       dailyApplications[date] = (dailyApplications[date] || 0) + app._count;
     });
@@ -180,7 +180,7 @@ export async function GET() {
     });
 
     const typeDistribution: Record<string, number> = {};
-    jobsByType.forEach((job: { type: string | null; _count: number }) => {
+    jobsByType.forEach(job => {
       const typeLabels: Record<string, string> = {
         'full-time': 'Tempo Integral',
         'part-time': 'Meio Período',
@@ -225,7 +225,7 @@ export async function GET() {
 
     let avgApprovalTime = 0;
     if (approvedApps.length > 0) {
-      const totalDays = approvedApps.reduce((sum: number, app: { createdAt: Date; updatedAt: Date }) => {
+      const totalDays = approvedApps.reduce((sum, app) => {
         const diffTime = Math.abs(app.updatedAt.getTime() - app.createdAt.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         return sum + diffDays;

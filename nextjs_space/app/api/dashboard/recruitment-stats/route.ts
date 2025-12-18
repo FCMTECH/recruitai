@@ -86,7 +86,7 @@ export async function GET() {
 
     if (applications.length > 0) {
       const timesToHire = applications
-        .filter((app: any) => app.hiredAt)
+        .filter(app => app.hiredAt)
         .map((app: { createdAt: Date; hiredAt: Date | null; invitedAt: Date | null; interviewDate: Date | null }) => {
           const created = new Date(app.createdAt).getTime();
           const hired = new Date(app.hiredAt!).getTime();
@@ -94,7 +94,7 @@ export async function GET() {
         });
 
       const timesToInterview = applications
-        .filter((app: any) => app.invitedAt)
+        .filter(app => app.invitedAt)
         .map((app: { createdAt: Date; hiredAt: Date | null; invitedAt: Date | null; interviewDate: Date | null }) => {
           const created = new Date(app.createdAt).getTime();
           const invited = new Date(app.invitedAt!).getTime();
@@ -102,11 +102,11 @@ export async function GET() {
         });
 
       if (timesToHire.length > 0) {
-        avgTimeToHire = parseFloat((timesToHire.reduce((a: number, b: number) => a + b, 0) / timesToHire.length).toFixed(1));
+        avgTimeToHire = parseFloat((timesToHire.reduce((a, b) => a + b, 0) / timesToHire.length).toFixed(1));
       }
 
       if (timesToInterview.length > 0) {
-        avgTimeToInterview = parseFloat((timesToInterview.reduce((a: number, b: number) => a + b, 0) / timesToInterview.length).toFixed(1));
+        avgTimeToInterview = parseFloat((timesToInterview.reduce((a, b) => a + b, 0) / timesToInterview.length).toFixed(1));
       }
     }
 
@@ -199,9 +199,9 @@ export async function GET() {
         isHired: true,
         invitedForInterview: true,
       }
-    }) as any[];
+    });
 
-    allApplicationsLast6Months.forEach((app: any) => {
+    allApplicationsLast6Months.forEach(app => {
       const month = new Date(app.createdAt).toLocaleDateString('pt-BR', { year: 'numeric', month: 'short' });
       if (!monthlyData[month]) {
         monthlyData[month] = { applications: 0, hired: 0, interviewed: 0 };
@@ -235,7 +235,7 @@ export async function GET() {
       },
       funnel: conversionFunnel,
       topJobs: jobsWithStats,
-      monthlyData: Object.entries(monthlyData).map(([month, data]: [string, { applications: number; hired: number; interviewed: number }]) => ({
+      monthlyData: Object.entries(monthlyData).map(([month, data]) => ({
         month,
         ...data
       })),

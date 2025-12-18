@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { PrismaClient } from '@prisma/client';
+import { db } from '@/lib/db';
 
-const prisma = new PrismaClient();
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +29,7 @@ export async function POST(request: Request) {
     const { planId } = await request.json();
 
     // Buscar o plano
-    const plan = await prisma.plan.findUnique({
+    const plan = await db.plan.findUnique({
       where: { id: planId }
     });
 
@@ -42,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     // Verificar se já existe uma subscription ativa
-    const existingSubscription = await prisma.subscription.findFirst({
+    const existingSubscription = await db.subscription.findFirst({
       where: {
         userId: session.user.id,
         status: { in: ['active', 'trial'] }
@@ -51,7 +50,7 @@ export async function POST(request: Request) {
 
     if (existingSubscription) {
       // Atualizar subscription existente
-      await prisma.subscription.update({
+      await db.subscription.update({
         where: { id: existingSubscription.id },
         data: {
           planId: plan.id,
@@ -64,7 +63,7 @@ export async function POST(request: Request) {
       });
     } else {
       // Criar nova subscription
-      await prisma.subscription.create({
+      await db.subscription.create({
         data: {
           userId: session.user.id,
           planId: plan.id,

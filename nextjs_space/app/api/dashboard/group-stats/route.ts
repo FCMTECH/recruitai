@@ -101,14 +101,14 @@ export async function GET(request: NextRequest) {
           }
         }
       }
-    }) as any;
+    });
 
     if (!group) {
       return NextResponse.json({ error: "Group not found" }, { status: 404 });
     }
 
     // IDs dos membros do grupo
-    const memberIds = (group.members as any[]).map((m: any) => m.id);
+    const memberIds = group.members.map((m: { id: string; name: string | null; email: string }) => m.id);
 
     // Por enquanto, retornamos todas as vagas da empresa
     // Futuramente podemos adicionar lógica para filtrar por grupo
@@ -117,12 +117,12 @@ export async function GET(request: NextRequest) {
         userId: session.user.id
       },
       select: { id: true, status: true }
-    }) as { id: string; status: string }[];
+    });
 
-    const groupJobIds = groupJobs.map((j: any) => j.id);
+    const groupJobIds = groupJobs.map((j: { id: string; status: string }) => j.id);
 
     const totalJobs = groupJobs.length;
-    const activeJobs = groupJobs.filter((j: any) => j.status === "active").length;
+    const activeJobs = groupJobs.filter(j => j.status === "active").length;
 
     const totalApplications = await db.application.count({
       where: {
