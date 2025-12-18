@@ -18,7 +18,7 @@ Descrição: ${job.description}
 Requisitos: ${job.requirements || "Não especificado"}
 
 CRITÉRIOS DE AVALIAÇÃO (com pesos):
-${(job.criteria as any[]).map(c => 
+${(job.criteria as any[]).map((c: any) => 
   `- ${c.name} (${c.weight}%): ${c.description} ${c.required ? "(OBRIGATÓRIO)" : "(DESEJÁVEL)"}`
 ).join('\n')}
 

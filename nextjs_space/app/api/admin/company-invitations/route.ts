@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 
     // Buscar dados do admin que criou cada convite
     const invitationsWithAdmin = await Promise.all(
-      invitations.map(async inv => {
+      invitations.map(async (inv: any) => {
         let createdByName = 'Desconhecido'
         if (inv.createdBy) {
           const admin = await db.user.findUnique({

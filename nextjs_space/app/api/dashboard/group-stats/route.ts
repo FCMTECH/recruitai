@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
     }
 
     // IDs dos membros do grupo
-    const memberIds = (group.members as any[]).map(m => m.id);
+    const memberIds = (group.members as any[]).map((m: any) => m.id);
 
     // Por enquanto, retornamos todas as vagas da empresa
     // Futuramente podemos adicionar lógica para filtrar por grupo
@@ -119,10 +119,10 @@ export async function GET(request: NextRequest) {
       select: { id: true, status: true }
     }) as { id: string; status: string }[];
 
-    const groupJobIds = groupJobs.map(j => j.id);
+    const groupJobIds = groupJobs.map((j: any) => j.id);
 
     const totalJobs = groupJobs.length;
-    const activeJobs = groupJobs.filter(j => j.status === "active").length;
+    const activeJobs = groupJobs.filter((j: any) => j.status === "active").length;
 
     const totalApplications = await db.application.count({
       where: {
