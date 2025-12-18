@@ -54,7 +54,7 @@ export default function AdminCandidatesPage() {
     if (searchTerm === "") {
       setFilteredCandidates(candidates);
     } else {
-      const filtered = candidates.filter((candidate) =>
+      const filtered = candidates.filter((candidate: Candidate) =>
         candidate.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (candidate.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
         (candidate.profile?.fullName?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||

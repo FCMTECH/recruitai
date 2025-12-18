@@ -432,7 +432,7 @@ export default function CreateJobContent() {
                     }}
                   >
                     <option value="">Selecione um país</option>
-                    {countries.map((country) => (
+                    {countries.map((country: any) => (
                       <option key={country.code} value={country.name}>
                         {country.name}
                       </option>
@@ -455,7 +455,7 @@ export default function CreateJobContent() {
                       disabled={!formData.country || states.length === 0}
                     >
                       <option value="">Selecione um estado</option>
-                      {states.map((state) => (
+                      {states.map((state: any) => (
                         <option key={state.code} value={state.name}>
                           {state.name}
                         </option>
@@ -474,7 +474,7 @@ export default function CreateJobContent() {
                       disabled={!formData.state || cities.length === 0}
                     >
                       <option value="">Selecione uma cidade</option>
-                      {cities.map((city) => (
+                      {cities.map((city: string) => (
                         <option key={city} value={city}>
                           {city}
                         </option>

@@ -70,12 +70,12 @@ export default function ApplicationsPage() {
     let filtered = applications;
 
     if (statusFilter !== "all") {
-      filtered = filtered.filter((app) => app.status === statusFilter);
+      filtered = filtered.filter((app: Application) => app.status === statusFilter);
     }
 
     if (searchTerm) {
       filtered = filtered.filter(
-        (app) =>
+        (app: Application) =>
           app.candidateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           app.candidateEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
           app.job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

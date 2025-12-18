@@ -249,7 +249,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
     );
   };
 
-  const filteredApplications = applications.filter((app) => {
+  const filteredApplications = applications.filter((app: Application) => {
     if (filter !== "all" && app.status !== filter) return false;
     if (stageFilter !== "all") {
       if (stageFilter === "none" && app.currentStageId) return false;

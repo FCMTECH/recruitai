@@ -177,7 +177,7 @@ export default function JobsContent() {
           </Card>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {jobs.map((job) => (
+            {jobs.map((job: Job) => (
               <Card
                 key={job.id}
                 className="border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"

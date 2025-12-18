@@ -90,7 +90,7 @@ export default function PublicJobsPage() {
     }
 
     if (typeFilter && typeFilter !== "all") {
-      filtered = filtered.filter((job) => job.type === typeFilter);
+      filtered = filtered.filter((job: Job) => job.type === typeFilter);
     }
 
     setFilteredJobs(filtered);

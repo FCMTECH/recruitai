@@ -293,7 +293,7 @@ export default function DashboardContent() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos os Grupos</SelectItem>
-                    {groups.map((group) => (
+                    {groups.map((group: TeamGroup) => (
                       <SelectItem key={group.id} value={group.id}>
                         <div className="flex items-center gap-2">
                           {group.color && (

@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
     const groupJobIds = groupJobs.map((j: { id: string; status: string }) => j.id);
 
     const totalJobs = groupJobs.length;
-    const activeJobs = groupJobs.filter(j => j.status === "active").length;
+    const activeJobs = groupJobs.filter((j: { id: string; status: string }) => j.status === "active").length;
 
     const totalApplications = await db.application.count({
       where: {

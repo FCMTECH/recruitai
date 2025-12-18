@@ -102,11 +102,11 @@ export async function GET() {
         });
 
       if (timesToHire.length > 0) {
-        avgTimeToHire = parseFloat((timesToHire.reduce((a, b) => a + b, 0) / timesToHire.length).toFixed(1));
+        avgTimeToHire = parseFloat((timesToHire.reduce((a: number, b: number) => a + b, 0) / timesToHire.length).toFixed(1));
       }
 
       if (timesToInterview.length > 0) {
-        avgTimeToInterview = parseFloat((timesToInterview.reduce((a, b) => a + b, 0) / timesToInterview.length).toFixed(1));
+        avgTimeToInterview = parseFloat((timesToInterview.reduce((a: number, b: number) => a + b, 0) / timesToInterview.length).toFixed(1));
       }
     }
 
@@ -201,7 +201,7 @@ export async function GET() {
       }
     });
 
-    allApplicationsLast6Months.forEach(app => {
+    allApplicationsLast6Months.forEach((app: { createdAt: Date; isHired: boolean | null; attendedInterview: boolean | null }) => {
       const month = new Date(app.createdAt).toLocaleDateString('pt-BR', { year: 'numeric', month: 'short' });
       if (!monthlyData[month]) {
         monthlyData[month] = { applications: 0, hired: 0, interviewed: 0 };
@@ -235,7 +235,7 @@ export async function GET() {
       },
       funnel: conversionFunnel,
       topJobs: jobsWithStats,
-      monthlyData: Object.entries(monthlyData).map(([month, data]) => ({
+      monthlyData: Object.entries(monthlyData).map(([month, data]: [string, { applications: number; hired: number; interviewed: number }]) => ({
         month,
         ...data
       })),

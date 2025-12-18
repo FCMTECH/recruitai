@@ -189,7 +189,7 @@ export default function AdminSupportPage() {
     return <Badge className={config.className}>{config.label}</Badge>;
   }
 
-  const filteredTickets = tickets.filter((ticket) => {
+  const filteredTickets = tickets.filter((ticket: SupportTicket) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (

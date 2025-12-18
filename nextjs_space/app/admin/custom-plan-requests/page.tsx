@@ -149,7 +149,7 @@ export default function CustomPlanRequestsPage() {
     }
   };
 
-  const filteredRequests = requests.filter((request) =>
+  const filteredRequests = requests.filter((request: CustomPlanRequest) =>
     request.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     request.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     request.phone.includes(searchTerm)
