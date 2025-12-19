@@ -2,7 +2,29 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
-import type { CompanyInvitation } from '@prisma/client'
+
+// Interface local para evitar problemas de importação do Prisma
+interface CompanyInvitation {
+  id: string
+  email: string
+  companyName: string
+  tradeName: string | null
+  cnpj: string | null
+  phone: string | null
+  token: string
+  customPlanName: string
+  customJobLimit: number
+  customPrice: number
+  customFeatures: string[]
+  stripeCustomerId: string | null
+  stripeCheckoutUrl: string | null
+  status: string
+  expiresAt: Date
+  createdAt: Date
+  completedAt: Date | null
+  createdBy: string | null
+  notes: string | null
+}
 
 export const dynamic = 'force-dynamic'
 
