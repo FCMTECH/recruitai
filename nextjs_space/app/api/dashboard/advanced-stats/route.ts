@@ -95,7 +95,7 @@ export async function GET() {
 
     // Agregar por estado
     const stateDistribution: Record<string, number> = {};
-    jobs.forEach(job => {
+    jobs.forEach((job: { state: string | null; _count: { applications: number } }) => {
       const state = job.state || 'Não especificado';
       stateDistribution[state] = (stateDistribution[state] || 0) + job._count.applications;
     });
