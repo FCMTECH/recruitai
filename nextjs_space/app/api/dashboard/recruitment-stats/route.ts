@@ -102,11 +102,11 @@ export async function GET() {
         });
 
       if (timesToHire.length > 0) {
-        avgTimeToHire = parseFloat((timesToHire.reduce((a, b) => a + b, 0) / timesToHire.length).toFixed(1));
+        avgTimeToHire = parseFloat((timesToHire.reduce((a: number, b: number) => a + b, 0) / timesToHire.length).toFixed(1));
       }
 
       if (timesToInterview.length > 0) {
-        avgTimeToInterview = parseFloat((timesToInterview.reduce((a, b) => a + b, 0) / timesToInterview.length).toFixed(1));
+        avgTimeToInterview = parseFloat((timesToInterview.reduce((a: number, b: number) => a + b, 0) / timesToInterview.length).toFixed(1));
       }
     }
 

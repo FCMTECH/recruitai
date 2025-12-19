@@ -225,7 +225,7 @@ export async function GET() {
 
     let avgApprovalTime = 0;
     if (approvedApps.length > 0) {
-      const totalDays = approvedApps.reduce((sum, app) => {
+      const totalDays = approvedApps.reduce((sum: number, app: { createdAt: Date; updatedAt: Date }) => {
         const diffTime = Math.abs(app.updatedAt.getTime() - app.createdAt.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         return sum + diffDays;
