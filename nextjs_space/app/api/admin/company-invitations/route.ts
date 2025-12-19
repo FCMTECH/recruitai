@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import type { CompanyInvitation } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,7 +34,7 @@ export async function GET(req: NextRequest) {
 
     // Buscar dados do admin que criou cada convite
     const invitationsWithAdmin = await Promise.all(
-      invitations.map(async (inv) => {
+      invitations.map(async (inv: CompanyInvitation) => {
         let createdByName = 'Desconhecido'
         if (inv.createdBy) {
           const admin = await db.user.findUnique({
