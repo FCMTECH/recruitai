@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
               <p><strong>Quantitativo de Vagas:</strong> ${data.customJobLimit} vagas/mês</p>
               <p><strong>Valor Mensal:</strong> R$ ${data.customPrice.toFixed(2)}</p>
               <h4 style="margin-bottom: 10px;">✨ Recursos Incluídos:</h4>
-              ${(data.customFeatures || defaultFeatures).map(feature => 
+              ${(data.customFeatures || defaultFeatures).map((feature: string) => 
                 `<div class="feature">✅ ${feature}</div>`
               ).join('')}
             </div>

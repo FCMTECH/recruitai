@@ -86,7 +86,7 @@ export async function GET() {
 
     if (applications.length > 0) {
       const timesToHire = applications
-        .filter(app => app.hiredAt)
+        .filter((app: { hiredAt: Date | null }) => app.hiredAt)
         .map((app: { createdAt: Date; hiredAt: Date | null; invitedAt: Date | null; interviewDate: Date | null }) => {
           const created = new Date(app.createdAt).getTime();
           const hired = new Date(app.hiredAt!).getTime();
@@ -94,7 +94,7 @@ export async function GET() {
         });
 
       const timesToInterview = applications
-        .filter(app => app.invitedAt)
+        .filter((app: { invitedAt: Date | null }) => app.invitedAt)
         .map((app: { createdAt: Date; hiredAt: Date | null; invitedAt: Date | null; interviewDate: Date | null }) => {
           const created = new Date(app.createdAt).getTime();
           const invited = new Date(app.invitedAt!).getTime();

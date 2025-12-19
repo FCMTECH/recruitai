@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     const { title, description, requirements, location, country, state, city, type, workMode, criteria } = jobSchema.parse(body);
 
     // Validate criteria weights sum to 100
-    const totalWeight = criteria.reduce((sum, c) => sum + c.weight, 0);
+    const totalWeight = criteria.reduce((sum: number, c: { weight: number }) => sum + c.weight, 0);
     if (totalWeight !== 100) {
       return NextResponse.json(
         { error: `A soma dos pesos deve ser 100%. Atual: ${totalWeight}%` },
