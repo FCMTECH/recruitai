@@ -166,7 +166,7 @@ async function main() {
 
   console.log('📋 Creating plans...');
   
-  const createdPlans = [];
+  const createdPlans: any[] = [];
   for (const planData of plans) {
     const plan = await prisma.plan.upsert({
       where: { name: planData.name },
