@@ -167,7 +167,7 @@ export async function GET() {
 
     // Processar dados por dia
     const dailyApplications: Record<string, number> = {};
-    applicationsByDay.forEach(app => {
+    applicationsByDay.forEach((app: { createdAt: Date; _count: number }) => {
       const date = new Date(app.createdAt).toISOString().split('T')[0];
       dailyApplications[date] = (dailyApplications[date] || 0) + app._count;
     });
@@ -180,7 +180,7 @@ export async function GET() {
     });
 
     const typeDistribution: Record<string, number> = {};
-    jobsByType.forEach(job => {
+    jobsByType.forEach((job: { type: string | null; _count: number }) => {
       const typeLabels: Record<string, string> = {
         'full-time': 'Tempo Integral',
         'part-time': 'Meio Período',
