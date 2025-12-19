@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Calculate match for each job
-    const jobsWithMatch = jobs.map((job) => {
+    const jobsWithMatch = jobs.map((job: any) => {
       const matchPercentage = calculateMatch(profile, job);
       
       return {

@@ -47,7 +47,7 @@ export async function GET() {
     });
 
     // Transform applications to include AI analysis and correct structure
-    const transformedApplications = applications.map((app) => ({
+    const transformedApplications = applications.map((app: any) => ({
       ...app,
       appliedAt: app.createdAt,
       job: {
