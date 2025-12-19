@@ -201,7 +201,7 @@ export async function GET() {
       }
     });
 
-    allApplicationsLast6Months.forEach(app => {
+    allApplicationsLast6Months.forEach((app: { createdAt: Date; isHired: boolean; invitedForInterview: boolean }) => {
       const month = new Date(app.createdAt).toLocaleDateString('pt-BR', { year: 'numeric', month: 'short' });
       if (!monthlyData[month]) {
         monthlyData[month] = { applications: 0, hired: 0, interviewed: 0 };
@@ -235,7 +235,7 @@ export async function GET() {
       },
       funnel: conversionFunnel,
       topJobs: jobsWithStats,
-      monthlyData: Object.entries(monthlyData).map(([month, data]) => ({
+      monthlyData: Object.entries(monthlyData).map(([month, data]: [string, { applications: number; hired: number; interviewed: number }]) => ({
         month,
         ...data
       })),
