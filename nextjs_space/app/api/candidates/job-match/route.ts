@@ -164,7 +164,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Sort by match percentage
-    jobsWithMatch.sort((a, b) => b.matchPercentage - a.matchPercentage);
+    jobsWithMatch.sort((a: { matchPercentage: number }, b: { matchPercentage: number }) => b.matchPercentage - a.matchPercentage);
 
     return NextResponse.json({
       jobs: jobsWithMatch,

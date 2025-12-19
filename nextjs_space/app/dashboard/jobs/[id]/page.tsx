@@ -159,7 +159,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
     }
 
     // Sort stages by order
-    const sortedStages = [...job.stages].sort((a, b) => a.order - b.order);
+    const sortedStages = [...job.stages].sort((a: { order: number }, b: { order: number }) => a.order - b.order);
     
     let nextStageId: string | null = null;
     
