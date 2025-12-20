@@ -156,6 +156,7 @@ export const authOptions: NextAuthOptions = {
               companyName: "",
               role: "candidate",
               image: user.image,
+              emailVerified: new Date(), // OAuth users are pre-verified
             }
           });
 

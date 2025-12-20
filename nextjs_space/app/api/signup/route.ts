@@ -138,9 +138,14 @@ export async function POST(request: NextRequest) {
 
     // Send welcome email
     try {
+      // Get base URL from request headers
+      const host = request.headers.get('host') || 'localhost:3000';
+      const protocol = request.headers.get('x-forwarded-proto') || 'http';
+      const baseUrl = process.env.NEXTAUTH_URL || `${protocol}://${host}`;
+      
       const dashboardUrl = role === 'company' 
-        ? `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard`
-        : `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/candidate/dashboard`;
+        ? `${baseUrl}/dashboard`
+        : `${baseUrl}/candidate/dashboard`;
 
       if (role === 'company') {
         await sendEmail({

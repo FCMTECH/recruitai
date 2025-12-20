@@ -20,7 +20,12 @@ export async function POST(request: NextRequest) {
     }
 
     const token = await generatePasswordResetToken(email);
-    const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/reset-password?token=${token}`;
+    
+    // Get base URL from request headers
+    const host = request.headers.get('host') || 'localhost:3000';
+    const protocol = request.headers.get('x-forwarded-proto') || 'http';
+    const baseUrl = process.env.NEXTAUTH_URL || `${protocol}://${host}`;
+    const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
 
     await sendEmail({
       to: email,
