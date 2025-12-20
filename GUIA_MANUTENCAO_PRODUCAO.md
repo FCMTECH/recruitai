@@ -36,15 +36,18 @@ Invoke-RestMethod -Uri "https://www.recruitai.com.br/api/maintenance/ensure-supe
 **Resposta Esperada:**
 ```json
 {
+  "success": true,
   "message": "Superadmin criado com sucesso",
   "admin": {
+    "id": "...",
     "email": "admin@recruitai.com.br",
-    "name": "Administrador"
+    "name": "Administrador RecruitAI",
+    "emailVerified": true
   },
   "credentials": {
     "email": "admin@recruitai.com.br",
     "password": "Admin@2025",
-    "warning": "Altere a senha após o primeiro login!"
+    "warning": "⚠️ ALTERE A SENHA APÓS O PRIMEIRO LOGIN!"
   }
 }
 ```
@@ -52,10 +55,13 @@ Invoke-RestMethod -Uri "https://www.recruitai.com.br/api/maintenance/ensure-supe
 OU (se já existir):
 ```json
 {
+  "success": true,
   "message": "Superadmin já existe",
   "admin": {
+    "id": "...",
     "email": "admin@recruitai.com.br",
-    "name": "Administrador"
+    "name": "Administrador RecruitAI",
+    "emailVerified": true
   }
 }
 ```
@@ -79,23 +85,47 @@ Invoke-RestMethod -Uri "https://www.recruitai.com.br/api/maintenance/ensure-plan
 **Resposta Esperada:**
 ```json
 {
-  "message": "Planos criados com sucesso",
-  "count": 4,
+  "success": true,
+  "message": "4 planos sincronizados com sucesso",
+  "totalActive": 4,
   "plans": [
-    { "name": "free", "displayName": "Plano Gratuito", "price": 0 },
-    { "name": "starter", "displayName": "Plano Inicial", "price": 99.9 },
-    { "name": "professional", "displayName": "Plano Profissional", "price": 299.9 },
-    { "name": "enterprise", "displayName": "Plano Empresarial", "price": 799.9 }
+    {
+      "id": "...",
+      "name": "free",
+      "displayName": "Gratuito",
+      "price": 0,
+      "jobLimit": 1,
+      "memberLimit": 1,
+      "features": ["1 vaga ativa", "Análise básica de candidatos", "Suporte por email"]
+    },
+    {
+      "id": "...",
+      "name": "starter",
+      "displayName": "Starter",
+      "price": 99.9,
+      "jobLimit": 5,
+      "memberLimit": 3,
+      "features": [...]
+    },
+    {
+      "id": "...",
+      "name": "professional",
+      "displayName": "Professional",
+      "price": 299.9,
+      "jobLimit": 20,
+      "memberLimit": 10,
+      "features": [...]
+    },
+    {
+      "id": "...",
+      "name": "enterprise",
+      "displayName": "Enterprise",
+      "price": 799.9,
+      "jobLimit": 100,
+      "memberLimit": 50,
+      "features": [...]
+    }
   ]
-}
-```
-
-OU (se já existirem):
-```json
-{
-  "message": "Planos já existem",
-  "count": 4,
-  "plans": [...]
 }
 ```
 
