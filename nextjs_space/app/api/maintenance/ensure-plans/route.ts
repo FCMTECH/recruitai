@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 const defaultPlans = [
   {
     name: 'free',
-    displayName: 'Plano Gratuito',
+    displayName: 'Gratuito',
     price: 0,
     jobLimit: 1,
     memberLimit: 1,
@@ -15,12 +15,13 @@ const defaultPlans = [
       'Análise básica de candidatos',
       'Suporte por email'
     ],
+    stripePriceId: null,
     isActive: true,
     isCustom: false
   },
   {
     name: 'starter',
-    displayName: 'Plano Inicial',
+    displayName: 'Starter',
     price: 99.90,
     jobLimit: 5,
     memberLimit: 3,
@@ -36,7 +37,7 @@ const defaultPlans = [
   },
   {
     name: 'professional',
-    displayName: 'Plano Profissional',
+    displayName: 'Professional',
     price: 299.90,
     jobLimit: 20,
     memberLimit: 10,
@@ -54,7 +55,7 @@ const defaultPlans = [
   },
   {
     name: 'enterprise',
-    displayName: 'Plano Empresarial',
+    displayName: 'Enterprise',
     price: 799.90,
     jobLimit: 100,
     memberLimit: 50,
@@ -84,38 +85,65 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existingPlans = await db.plan.findMany({
-      where: { isActive: true }
+    console.log('🔧 Iniciando sincronização de planos...');
+
+    const upsertedPlans: any[] = [];
+    
+    for (const planData of defaultPlans) {
+      try {
+        const plan = await db.plan.upsert({
+          where: { name: planData.name },
+          update: {
+            displayName: planData.displayName,
+            price: planData.price,
+            jobLimit: planData.jobLimit,
+            memberLimit: planData.memberLimit,
+            features: planData.features,
+            stripePriceId: planData.stripePriceId,
+            isActive: planData.isActive,
+            isCustom: planData.isCustom
+          },
+          create: planData
+        });
+        
+        console.log(`✅ Plano ${plan.name} (${plan.displayName}) sincronizado`);
+        upsertedPlans.push(plan);
+      } catch (planError) {
+        console.error(`❌ Erro ao processar plano ${planData.name}:`, planError);
+      }
+    }
+
+    // Verificar planos ativos após sincronização
+    const activePlans = await db.plan.findMany({
+      where: { isActive: true, isCustom: false },
+      orderBy: { price: 'asc' }
     });
 
-    if (existingPlans.length > 0) {
-      return NextResponse.json({
-        message: 'Planos já existem',
-        count: existingPlans.length,
-        plans: existingPlans.map(p => ({ name: p.name, displayName: p.displayName, price: p.price }))
-      });
-    }
-
-    const createdPlans: any[] = [];
-    for (const planData of defaultPlans) {
-      const plan = await db.plan.upsert({
-        where: { name: planData.name },
-        update: planData,
-        create: planData
-      });
-      createdPlans.push(plan);
-    }
+    console.log(`✅ Total de planos ativos: ${activePlans.length}`);
 
     return NextResponse.json({
-      message: 'Planos criados com sucesso',
-      count: createdPlans.length,
-      plans: createdPlans.map(p => ({ name: p.name, displayName: p.displayName, price: p.price }))
+      success: true,
+      message: `${upsertedPlans.length} planos sincronizados com sucesso`,
+      totalActive: activePlans.length,
+      plans: activePlans.map(p => ({
+        id: p.id,
+        name: p.name,
+        displayName: p.displayName,
+        price: p.price,
+        jobLimit: p.jobLimit,
+        memberLimit: p.memberLimit,
+        features: p.features
+      }))
     });
 
   } catch (error) {
-    console.error('Erro ao garantir planos:', error);
+    console.error('❌ Erro ao sincronizar planos:', error);
     return NextResponse.json(
-      { error: 'Erro ao processar solicitação' },
+      { 
+        success: false,
+        error: 'Erro ao processar solicitação',
+        details: error instanceof Error ? error.message : 'Erro desconhecido'
+      },
       { status: 500 }
     );
   }
