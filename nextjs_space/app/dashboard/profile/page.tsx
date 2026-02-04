@@ -9,7 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Brain, ArrowLeft, Save, Loader2, User, Mail, Building, CreditCard, CheckCircle2, Upload, Image as ImageIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Brain, ArrowLeft, Save, Loader2, User, Mail, Building, CreditCard, CheckCircle2, Upload, Image as ImageIcon, Phone, X } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 
@@ -52,6 +54,14 @@ export default function CompanyProfilePage() {
   });
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [availablePlans, setAvailablePlans] = useState<Plan[]>([]);
+  const [showCustomPlanModal, setShowCustomPlanModal] = useState(false);
+  const [isSubmittingCustomPlan, setIsSubmittingCustomPlan] = useState(false);
+  const [customPlanForm, setCustomPlanForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -223,7 +233,19 @@ export default function CompanyProfilePage() {
     }
   };
 
-  const handleChangePlan = async (planId: string) => {
+  const handleChangePlan = async (planId: string, planName: string) => {
+    // Se for plano personalizado, abre o modal
+    if (planName === "personalizado" || planName === "Personalizado") {
+      setCustomPlanForm({
+        name: profile.name || profile.companyName || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        message: "",
+      });
+      setShowCustomPlanModal(true);
+      return;
+    }
+
     setIsChangingPlan(true);
     try {
       const response = await fetch("/api/checkout/create-session", {
@@ -236,12 +258,49 @@ export default function CompanyProfilePage() {
         const { url } = await response.json();
         window.location.href = url;
       } else {
-        throw new Error("Erro ao iniciar checkout");
+        const data = await response.json();
+        throw new Error(data.message || "Erro ao iniciar checkout");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error changing plan:", error);
-      toast.error("Erro ao alterar plano");
+      toast.error(error.message || "Erro ao alterar plano");
       setIsChangingPlan(false);
+    }
+  };
+
+  const handleSubmitCustomPlan = async () => {
+    if (!customPlanForm.name || !customPlanForm.email || !customPlanForm.phone) {
+      toast.error("Por favor, preencha todos os campos obrigatórios");
+      return;
+    }
+
+    setIsSubmittingCustomPlan(true);
+    try {
+      const response = await fetch("/api/custom-plan-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: customPlanForm.name,
+          email: customPlanForm.email,
+          phone: customPlanForm.phone,
+          message: customPlanForm.message,
+          companyName: profile.companyName,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success("Solicitação enviada com sucesso! Entraremos em contato em breve.");
+        setShowCustomPlanModal(false);
+        setCustomPlanForm({ name: "", email: "", phone: "", message: "" });
+      } else {
+        const data = await response.json();
+        throw new Error(data.message || "Erro ao enviar solicitação");
+      }
+    } catch (error: any) {
+      console.error("Error submitting custom plan request:", error);
+      toast.error(error.message || "Erro ao enviar solicitação");
+    } finally {
+      setIsSubmittingCustomPlan(false);
     }
   };
 
@@ -548,7 +607,7 @@ export default function CompanyProfilePage() {
                         Até {plan.jobLimit || 0} vagas/mês
                       </p>
                       <Button
-                        onClick={() => handleChangePlan(plan.id)}
+                        onClick={() => handleChangePlan(plan.id, plan.name)}
                         disabled={isChangingPlan}
                         className="w-full"
                         variant="outline"
@@ -566,6 +625,101 @@ export default function CompanyProfilePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de Solicitação de Plano Personalizado */}
+      <Dialog open={showCustomPlanModal} onOpenChange={setShowCustomPlanModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Solicitar Plano Personalizado
+            </DialogTitle>
+            <DialogDescription>
+              Preencha seus dados e entraremos em contato para entender melhor suas necessidades.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="custom-name" className="text-sm font-medium">
+                Nome Completo <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="custom-name"
+                  placeholder="Seu nome completo"
+                  value={customPlanForm.name}
+                  onChange={(e) => setCustomPlanForm({ ...customPlanForm, name: e.target.value })}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="custom-email" className="text-sm font-medium">
+                E-mail <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="custom-email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={customPlanForm.email}
+                  onChange={(e) => setCustomPlanForm({ ...customPlanForm, email: e.target.value })}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="custom-phone" className="text-sm font-medium">
+                Telefone <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="custom-phone"
+                  placeholder="(00) 00000-0000"
+                  value={customPlanForm.phone}
+                  onChange={(e) => setCustomPlanForm({ ...customPlanForm, phone: e.target.value })}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="custom-message" className="text-sm font-medium">
+                Mensagem (Opcional)
+              </Label>
+              <Textarea
+                id="custom-message"
+                placeholder="Conte-nos um pouco sobre suas necessidades..."
+                value={customPlanForm.message}
+                onChange={(e) => setCustomPlanForm({ ...customPlanForm, message: e.target.value })}
+                rows={3}
+              />
+            </div>
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowCustomPlanModal(false)}
+              className="flex-1"
+              disabled={isSubmittingCustomPlan}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSubmitCustomPlan}
+              disabled={isSubmittingCustomPlan}
+              className="flex-1 bg-gradient-to-r from-primary to-accent"
+            >
+              {isSubmittingCustomPlan ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enviando...</>
+              ) : (
+                "Enviar Solicitação"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
