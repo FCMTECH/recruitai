@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { stripe } from '@/lib/stripe';
 import { db } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
@@ -38,6 +39,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Verificar se o plano tem stripePriceId configurado
+    if (!plan.stripePriceId) {
+      return NextResponse.json(
+        { message: 'Plano não configurado corretamente. Entre em contato com o suporte.' },
+        { status: 400 }
+      );
+    }
+
     // Verificar se já existe um Stripe Customer para este usuário
     let customerId: string | undefined;
     
@@ -63,26 +72,16 @@ export async function POST(request: Request) {
     }
 
     // Obter a origin do request para URLs de redirect
-    const origin = request.headers.get('origin') || 'http://localhost:3000';
+    const origin = request.headers.get('origin') || process.env.NEXTAUTH_URL || 'https://www.recruitai.com.br';
 
-    // Criar sessão de checkout do Stripe
+    // Criar sessão de checkout do Stripe usando o stripePriceId
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card', 'boleto'],
       line_items: [
         {
-          price_data: {
-            currency: 'brl',
-            product_data: {
-              name: `Plano ${plan.displayName}`,
-              description: `Até ${plan.jobLimit} vagas por mês`,
-            },
-            unit_amount: Math.round(plan.price * 100), // Converter para centavos
-            recurring: {
-              interval: 'month',
-            },
-          },
+          price: plan.stripePriceId,
           quantity: 1,
         },
       ],
@@ -108,23 +107,34 @@ export async function POST(request: Request) {
       }
     });
 
-    // Salvar informação temporária da sessão de checkout
-    await db.subscription.upsert({
-      where: {
-        stripeCustomerId: customerId
-      },
-      update: {
-        stripeCheckoutSessionId: checkoutSession.id,
-      },
-      create: {
-        userId: session.user.id,
-        planId: plan.id,
-        stripeCustomerId: customerId,
-        stripeCheckoutSessionId: checkoutSession.id,
-        status: 'pending',
-        jobsCreatedThisMonth: 0
-      }
+    // Verificar se já existe subscription para este usuário
+    const userSubscription = await db.subscription.findFirst({
+      where: { userId: session.user.id }
     });
+
+    if (userSubscription) {
+      // Atualizar subscription existente
+      await db.subscription.update({
+        where: { id: userSubscription.id },
+        data: {
+          stripeCustomerId: customerId,
+          stripeCheckoutSessionId: checkoutSession.id,
+          planId: plan.id,
+        }
+      });
+    } else {
+      // Criar nova subscription
+      await db.subscription.create({
+        data: {
+          userId: session.user.id,
+          planId: plan.id,
+          stripeCustomerId: customerId,
+          stripeCheckoutSessionId: checkoutSession.id,
+          status: 'pending',
+          jobsCreatedThisMonth: 0
+        }
+      });
+    }
 
     return NextResponse.json({ 
       url: checkoutSession.url,

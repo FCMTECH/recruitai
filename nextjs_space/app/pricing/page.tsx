@@ -87,7 +87,10 @@ export default function PricingPage() {
     }
   };
 
-  const handleSelectPlan = async (planId: string, planName: string) => {
+  const handleSelectPlan = async (e: React.MouseEvent, planId: string, planName: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (planName === 'personalizado') {
       // Preencher dados do usuário logado se disponível
       if (sessionData?.user) {
@@ -435,7 +438,7 @@ export default function PricingPage() {
                   }`}
                   variant={plan.name === 'ouro' || plan.name === 'free' ? 'default' : 'outline'}
                   disabled={isCurrentPlan(plan.id) || checkoutLoading === plan.id}
-                  onClick={() => handleSelectPlan(plan.id, plan.name)}
+                  onClick={(e) => handleSelectPlan(e, plan.id, plan.name)}
                 >
                   {checkoutLoading === plan.id ? (
                     <>
