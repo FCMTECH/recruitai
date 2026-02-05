@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Loader2, Clock, Ban, CheckCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Loader2, Clock, Ban, CheckCircle, AlertTriangle, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { requireSuperAdmin } from '@/lib/admin';
 
@@ -62,12 +62,20 @@ export default function AdminSubscriptionsPage() {
   const [isGraceDialog, setIsGraceDialog] = useState(false);
   const [isSuspendDialog, setIsSuspendDialog] = useState(false);
   const [isReactivateDialog, setIsReactivateDialog] = useState(false);
+  const [isCustomPlanDialog, setIsCustomPlanDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
   // Form data
   const [graceDays, setGraceDays] = useState('5');
   const [graceReason, setGraceReason] = useState('');
   const [suspendReason, setSuspendReason] = useState('');
+  
+  // Custom plan form data
+  const [customPlanName, setCustomPlanName] = useState('');
+  const [customPrice, setCustomPrice] = useState('');
+  const [customJobLimit, setCustomJobLimit] = useState('');
+  const [customMemberLimit, setCustomMemberLimit] = useState('');
+  const [customFeatures, setCustomFeatures] = useState('');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -189,6 +197,63 @@ export default function AdminSubscriptionsPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleCustomizePlan = async () => {
+    if (!selectedSubscription) return;
+    
+    if (!customPlanName || !customPrice || !customJobLimit || !customMemberLimit) {
+      toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const res = await fetch(`/api/admin/subscriptions/${selectedSubscription.id}/customize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planName: customPlanName,
+          price: parseFloat(customPrice),
+          jobLimit: parseInt(customJobLimit),
+          memberLimit: parseInt(customMemberLimit),
+          features: customFeatures,
+        }),
+      });
+
+      if (res.ok) {
+        toast.success('Plano personalizado aplicado com sucesso!');
+        setIsCustomPlanDialog(false);
+        resetCustomPlanForm();
+        loadSubscriptions();
+      } else {
+        const error = await res.json();
+        toast.error(error.error || 'Erro ao personalizar plano');
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      toast.error('Erro ao personalizar plano');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const resetCustomPlanForm = () => {
+    setCustomPlanName('');
+    setCustomPrice('');
+    setCustomJobLimit('');
+    setCustomMemberLimit('');
+    setCustomFeatures('');
+  };
+
+  const openCustomPlanDialog = (subscription: Subscription) => {
+    setSelectedSubscription(subscription);
+    // Pré-preencher com os valores atuais do plano
+    setCustomPlanName(subscription.plan.displayName + ' (Personalizado)');
+    setCustomPrice(subscription.plan.price.toString());
+    setCustomJobLimit(subscription.plan.jobLimit.toString());
+    setCustomMemberLimit(subscription.plan.memberLimit.toString());
+    setIsCustomPlanDialog(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -348,7 +413,16 @@ export default function AdminSubscriptionsPage() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => openCustomPlanDialog(subscription)}
+                      className="rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 hover:from-primary/20 hover:to-accent/20"
+                    >
+                      <Settings2 className="h-4 w-4 mr-2" />
+                      Personalizar Plano
+                    </Button>
                     {subscription.status !== 'canceled' && subscription.status !== 'expired' && (
                       <>
                         <Button
@@ -540,6 +614,110 @@ export default function AdminSubscriptionsPage() {
             <Button onClick={handleReactivate} disabled={isSaving} className="rounded-xl">
               {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Reativar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Personalizar Plano */}
+      <Dialog open={isCustomPlanDialog} onOpenChange={(open) => {
+        setIsCustomPlanDialog(open);
+        if (!open) resetCustomPlanForm();
+      }}>
+        <DialogContent className="rounded-2xl max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings2 className="h-5 w-5 text-primary" />
+              Personalizar Plano
+            </DialogTitle>
+            <DialogDescription>
+              {selectedSubscription && (
+                <span>
+                  Personalize o plano para <strong>{selectedSubscription.user.companyName || selectedSubscription.user.name}</strong>
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div>
+              <Label htmlFor="customPlanName">Nome do Plano *</Label>
+              <Input
+                id="customPlanName"
+                value={customPlanName}
+                onChange={(e) => setCustomPlanName(e.target.value)}
+                placeholder="Ex: Plano Empresarial Premium"
+                className="rounded-xl mt-2"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="customPrice">Preço Mensal (R$) *</Label>
+                <Input
+                  id="customPrice"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={customPrice}
+                  onChange={(e) => setCustomPrice(e.target.value)}
+                  placeholder="0.00"
+                  className="rounded-xl mt-2"
+                />
+              </div>
+              <div>
+                <Label htmlFor="customJobLimit">Limite de Vagas/Mês *</Label>
+                <Input
+                  id="customJobLimit"
+                  type="number"
+                  min="1"
+                  value={customJobLimit}
+                  onChange={(e) => setCustomJobLimit(e.target.value)}
+                  placeholder="10"
+                  className="rounded-xl mt-2"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="customMemberLimit">Limite de Membros *</Label>
+              <Input
+                id="customMemberLimit"
+                type="number"
+                min="1"
+                value={customMemberLimit}
+                onChange={(e) => setCustomMemberLimit(e.target.value)}
+                placeholder="5"
+                className="rounded-xl mt-2"
+              />
+            </div>
+            <div>
+              <Label htmlFor="customFeatures">Funcionalidades (separadas por vírgula)</Label>
+              <Textarea
+                id="customFeatures"
+                value={customFeatures}
+                onChange={(e) => setCustomFeatures(e.target.value)}
+                placeholder="Ex: Análise de IA avançada, Suporte prioritário, Relatórios personalizados"
+                className="rounded-xl mt-2"
+                rows={3}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-6">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsCustomPlanDialog(false);
+                resetCustomPlanForm();
+              }} 
+              className="rounded-xl"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleCustomizePlan} 
+              disabled={isSaving}
+              className="rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90"
+            >
+              {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Aplicar Plano Personalizado
             </Button>
           </div>
         </DialogContent>
