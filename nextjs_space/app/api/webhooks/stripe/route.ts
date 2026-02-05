@@ -75,12 +75,74 @@ export async function POST(request: Request) {
 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId;
-  const isCustomPlan = session.metadata?.customPlan === 'true';
+  const isCustomPlan = session.metadata?.isCustomPlan === 'true' || session.metadata?.customPlan === 'true';
   const invitationId = session.metadata?.invitationId;
+  const subscriptionId = session.metadata?.subscriptionId;
 
-  const stripeSubscriptionId = session.subscription as string;
   const customerId = session.customer as string;
   const paymentStatus = session.payment_status;
+
+  if (!userId) {
+    console.error('Missing userId in checkout session metadata');
+    return;
+  }
+
+  // Verificar se é um pagamento único (plano personalizado via admin)
+  if (session.mode === 'payment' && isCustomPlan && subscriptionId) {
+    // Pagamento único para plano personalizado
+    if (paymentStatus === 'paid') {
+      const updatedSubscription = await db.subscription.update({
+        where: { id: subscriptionId },
+        data: {
+          status: 'active',
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 ano
+          stripeCustomerId: customerId,
+        },
+        include: { plan: true, user: true }
+      });
+
+      // Enviar e-mail de confirmação
+      try {
+        if (updatedSubscription.user?.email) {
+          const amount = (session.amount_total || 0) / 100;
+          
+          await sendEmail({
+            to: updatedSubscription.user.email,
+            subject: 'Pagamento Confirmado - Plano Personalizado RecruitAI',
+            html: `
+              <h2>🎉 Pagamento Confirmado!</h2>
+              <p>Olá ${updatedSubscription.user.companyName || updatedSubscription.user.name},</p>
+              <p>Seu pagamento foi processado com sucesso!</p>
+              <hr>
+              <p><strong>Plano:</strong> ${updatedSubscription.plan.displayName}</p>
+              <p><strong>Valor:</strong> R$ ${amount.toFixed(2)}</p>
+              <p><strong>Vagas/mês:</strong> ${updatedSubscription.plan.jobLimit}</p>
+              <p><strong>Válido até:</strong> ${new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR')}</p>
+              <hr>
+              <p>Sua assinatura está ativa e você já pode utilizar todos os recursos do seu plano personalizado.</p>
+              <p>Obrigado por escolher RecruitAI!</p>
+              <p><a href="${process.env.NEXTAUTH_URL}/dashboard" style="background: #3B82F6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Acessar Dashboard</a></p>
+            `,
+            text: `Pagamento confirmado! Plano: ${updatedSubscription.plan.displayName} - Valor: R$ ${amount.toFixed(2)}.`,
+          });
+        }
+      } catch (emailError) {
+        console.error('Erro ao enviar e-mail de confirmação:', emailError);
+      }
+
+      console.log(`Custom plan payment completed for user ${userId}`);
+    }
+    return;
+  }
+
+  // Fluxo normal de subscription (assinatura recorrente)
+  const stripeSubscriptionId = session.subscription as string;
+  
+  if (!stripeSubscriptionId) {
+    console.error('No subscription ID in checkout session');
+    return;
+  }
 
   // Buscar a subscription do Stripe para obter detalhes completos
   const stripeSubscription: any = await stripe.subscriptions.retrieve(stripeSubscriptionId);
@@ -91,7 +153,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     subscriptionStatus = 'active';
   }
 
-  // Se for plano personalizado, criar o plano primeiro
+  // Se for plano personalizado via convite, criar o plano primeiro
   let planId: string;
   
   if (isCustomPlan && invitationId) {
@@ -137,11 +199,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       console.error('Missing planId in checkout session metadata');
       return;
     }
-  }
-
-  if (!userId) {
-    console.error('Missing userId in checkout session metadata');
-    return;
   }
 
   // Atualizar ou criar subscription no banco de dados

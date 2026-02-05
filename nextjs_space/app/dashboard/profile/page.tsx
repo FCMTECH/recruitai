@@ -304,15 +304,42 @@ export default function CompanyProfilePage() {
     }
   };
 
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
       trial: { label: "Período de Teste", variant: "secondary" },
       active: { label: "Ativo", variant: "default" },
       past_due: { label: "Pagamento Pendente", variant: "destructive" },
+      pending_payment: { label: "Aguardando Pagamento", variant: "destructive" },
       canceled: { label: "Cancelado", variant: "outline" },
       expired: { label: "Expirado", variant: "outline" },
     };
     return statusMap[status] || { label: status, variant: "outline" };
+  };
+
+  const handlePayCustomPlan = async () => {
+    if (!subscription || !subscription.plan) return;
+    
+    setIsProcessingPayment(true);
+    try {
+      const response = await fetch("/api/checkout/create-custom-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.ok) {
+        const { url } = await response.json();
+        window.location.href = url;
+      } else {
+        const data = await response.json();
+        throw new Error(data.message || "Erro ao iniciar pagamento");
+      }
+    } catch (error: any) {
+      console.error("Error processing payment:", error);
+      toast.error(error.message || "Erro ao processar pagamento");
+      setIsProcessingPayment(false);
+    }
   };
 
   if (isLoading || status === "loading") {
@@ -546,6 +573,35 @@ export default function CompanyProfilePage() {
               <CardDescription>Informações sobre seu plano de assinatura</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Alerta de Pagamento Pendente */}
+              {subscription.status === 'pending_payment' && (
+                <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <CreditCard className="h-5 w-5 text-destructive mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-destructive">Pagamento Pendente</h4>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Seu plano personalizado foi aprovado! Complete o pagamento para ativar todos os recursos.
+                      </p>
+                      <Button
+                        onClick={handlePayCustomPlan}
+                        disabled={isProcessingPayment}
+                        className="mt-3 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                      >
+                        {isProcessingPayment ? (
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processando...</>
+                        ) : (
+                          <><CreditCard className="mr-2 h-4 w-4" />Realizar Pagamento</>
+                        )}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Aceita: Cartão de Crédito, PIX e Boleto
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
@@ -566,6 +622,21 @@ export default function CompanyProfilePage() {
                     )}
                   </div>
                 </div>
+                {/* Botão de Pagamento (também visível fora do alerta) */}
+                {subscription.status === 'pending_payment' && (
+                  <Button
+                    onClick={handlePayCustomPlan}
+                    disabled={isProcessingPayment}
+                    size="lg"
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                  >
+                    {isProcessingPayment ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processando...</>
+                    ) : (
+                      <><CreditCard className="mr-2 h-4 w-4" />Pagar Agora</>
+                    )}
+                  </Button>
+                )}
               </div>
 
               <div className="space-y-2">

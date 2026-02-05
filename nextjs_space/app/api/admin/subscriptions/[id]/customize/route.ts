@@ -89,12 +89,13 @@ export async function POST(
     }
 
     // Atualizar a subscription para usar o plano personalizado
+    // Status 'pending_payment' para que o cliente pague pelo plano
     const updatedSubscription = await db.subscription.update({
       where: { id: subscriptionId },
       data: {
         planId: customPlan.id,
-        status: 'active',
-        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 ano
+        status: customPlan.price > 0 ? 'pending_payment' : 'active', // Se gratuito, ativa direto
+        endDate: null, // Será definido após pagamento
         updatedAt: new Date(),
       },
       include: {
@@ -105,7 +106,9 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: 'Plano personalizado aplicado com sucesso',
+      message: customPlan.price > 0 
+        ? 'Plano personalizado aplicado. O cliente precisa realizar o pagamento.'
+        : 'Plano personalizado gratuito aplicado com sucesso',
       subscription: updatedSubscription,
     });
   } catch (error) {
