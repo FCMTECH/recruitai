@@ -1,60 +1,28 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { AppHeader } from "@/components/ui/app-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DashboardHeader } from "@/components/dashboard-header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Briefcase,
   Users,
   Clock,
   CheckCircle,
-  XCircle,
   TrendingUp,
-  MapPin,
-  BarChart3,
-  PieChart,
-  Activity,
+  Plus,
+  ArrowRight,
   Target,
   Award,
-  Calendar,
-  LogOut
+  Zap,
 } from "lucide-react";
-import { Bar, Line, Pie, Doughnut } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
-// Registrar componentes do Chart.js
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-  ChartDataLabels
-);
-
-interface AdvancedStats {
+interface Stats {
   overview: {
     totalJobs: number;
     activeJobs: number;
@@ -65,7 +33,6 @@ interface AdvancedStats {
     approvalRate: number;
     conversionRate: number;
     avgCompatibilityScore: number;
-    avgApprovalTime: number;
   };
   classification: {
     strong: number;
@@ -73,25 +40,66 @@ interface AdvancedStats {
     review: number;
     incompatible: number;
   };
-  stateDistribution: Record<string, number>;
-  dailyApplications: Record<string, number>;
-  typeDistribution: Record<string, number>;
   topJobs: Array<{ id: string; title: string; applications: number }>;
 }
 
-interface TeamGroup {
-  id: string;
-  name: string;
-  color?: string;
+function StatCard({ title, value, icon: Icon, trend, className }: {
+  title: string;
+  value: string | number;
+  icon: any;
+  trend?: string;
+  className?: string;
+}) {
+  return (
+    <Card className={cn("relative overflow-hidden transition-all duration-300 hover:shadow-md", className)}>
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <p className="text-xs sm:text-sm font-medium text-stone-500">{title}</p>
+            <p className="text-2xl sm:text-3xl font-semibold text-stone-900">{value}</p>
+            {trend && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" />
+                {trend}
+              </p>
+            )}
+          </div>
+          <div className="p-2 sm:p-3 rounded-xl bg-stone-100">
+            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-stone-600" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="min-h-screen bg-cream">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-28 sm:h-32 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid lg:grid-cols-2 gap-4">
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function DashboardContent() {
   const { data: session, status } = useSession() || {};
   const router = useRouter();
-  const [stats, setStats] = useState<AdvancedStats | null>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [groups, setGroups] = useState<TeamGroup[]>([]);
-  const [selectedGroupId, setSelectedGroupId] = useState<string>("all");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -100,596 +108,236 @@ export default function DashboardContent() {
     }
 
     if (status === "authenticated") {
-      fetchGroups();
-      fetchStats();
+      loadStats();
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      fetchStats();
-    }
-  }, [selectedGroupId]);
-
-  const fetchGroups = async () => {
-    try {
-      const res = await fetch("/api/team-groups");
-      if (res.ok) {
-        const data = await res.json();
-        setGroups(data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching groups:", error);
-    }
-  };
-
-  const fetchStats = async () => {
+  const loadStats = async () => {
     try {
       const res = await fetch("/api/dashboard/advanced-stats");
-      const data = await res.json();
-      
-      // Validar se a resposta contém os dados esperados
-      if (data.error || !data.overview || !data.classification) {
-        console.error("Error in API response:", data.error || "Invalid data structure");
-        setStats(null);
-        return;
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
       }
-      
-      setStats(data);
     } catch (error) {
-      console.error("Error fetching stats:", error);
-      setStats(null);
+      console.error("Error loading stats:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = async () => {
-    await signOut({ redirect: false });
-    router.push("/");
-  };
+  const userName = session?.user?.name || "Usuário";
+  const companyName = (session?.user as any)?.companyName || "";
+
+  const classificationData = useMemo(() => {
+    if (!stats) return [];
+    const { classification } = stats;
+    const total = classification.strong + classification.potential + classification.review + classification.incompatible;
+    if (total === 0) return [];
+    return [
+      { label: "Fortes", value: classification.strong, color: "bg-emerald-500", percent: Math.round((classification.strong / total) * 100) },
+      { label: "Potenciais", value: classification.potential, color: "bg-amber-500", percent: Math.round((classification.potential / total) * 100) },
+      { label: "Revisar", value: classification.review, color: "bg-blue-500", percent: Math.round((classification.review / total) * 100) },
+      { label: "Incomp.", value: classification.incompatible, color: "bg-stone-400", percent: Math.round((classification.incompatible / total) * 100) },
+    ];
+  }, [stats]);
 
   if (status === "loading" || loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
-        <div className="animate-pulse text-lg text-muted-foreground">Carregando...</div>
-      </div>
-    );
+    return <LoadingSkeleton />;
   }
-
-  if (!stats) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
-        <div className="text-lg text-muted-foreground">Erro ao carregar estatísticas</div>
-      </div>
-    );
-  }
-
-  // Dados para gráficos
-  const classificationData = {
-    labels: ['Forte', 'Potencial', 'Revisar', 'Incompatível'],
-    datasets: [{
-      label: 'Candidatos por Classificação',
-      data: [
-        stats.classification?.strong || 0,
-        stats.classification?.potential || 0,
-        stats.classification?.review || 0,
-        stats.classification?.incompatible || 0
-      ],
-      backgroundColor: [
-        'rgba(34, 197, 94, 0.8)',
-        'rgba(59, 130, 246, 0.8)',
-        'rgba(251, 191, 36, 0.8)',
-        'rgba(239, 68, 68, 0.8)'
-      ],
-      borderColor: [
-        'rgb(34, 197, 94)',
-        'rgb(59, 130, 246)',
-        'rgb(251, 191, 36)',
-        'rgb(239, 68, 68)'
-      ],
-      borderWidth: 2
-    }]
-  };
-
-  const statusData = {
-    labels: ['Pendentes', 'Aprovados', 'Rejeitados'],
-    datasets: [{
-      label: 'Status das Candidaturas',
-      data: [
-        stats.overview?.pendingApplications || 0,
-        stats.overview?.approvedApplications || 0,
-        stats.overview?.rejectedApplications || 0
-      ],
-      backgroundColor: [
-        'rgba(251, 191, 36, 0.8)',
-        'rgba(34, 197, 94, 0.8)',
-        'rgba(239, 68, 68, 0.8)'
-      ],
-      borderColor: [
-        'rgb(251, 191, 36)',
-        'rgb(34, 197, 94)',
-        'rgb(239, 68, 68)'
-      ],
-      borderWidth: 2
-    }]
-  };
-
-  const stateLabels = Object.keys(stats.stateDistribution || {});
-  const stateValues = Object.values(stats.stateDistribution || {});
-  
-  const stateData = {
-    labels: stateLabels,
-    datasets: [{
-      label: 'Candidaturas por Estado',
-      data: stateValues,
-      backgroundColor: 'rgba(59, 130, 246, 0.7)',
-      borderColor: 'rgb(59, 130, 246)',
-      borderWidth: 2
-    }]
-  };
-
-  const dailyLabels = Object.keys(stats.dailyApplications || {}).sort();
-  const dailyValues = dailyLabels.map((date: string) => (stats.dailyApplications || {})[date] || 0);
-
-  const dailyData = {
-    labels: dailyLabels.map((date: string) => {
-      const d = new Date(date);
-      return `${d.getDate()}/${d.getMonth() + 1}`;
-    }),
-    datasets: [{
-      label: 'Candidaturas por Dia',
-      data: dailyValues,
-      fill: true,
-      backgroundColor: 'rgba(59, 130, 246, 0.2)',
-      borderColor: 'rgb(59, 130, 246)',
-      borderWidth: 2,
-      tension: 0.4
-    }]
-  };
-
-  const typeLabels = Object.keys(stats.typeDistribution || {});
-  const typeValues = Object.values(stats.typeDistribution || {});
-
-  const typeData = {
-    labels: typeLabels,
-    datasets: [{
-      label: 'Vagas por Tipo',
-      data: typeValues,
-      backgroundColor: [
-        'rgba(168, 85, 247, 0.8)',
-        'rgba(236, 72, 153, 0.8)',
-        'rgba(251, 146, 60, 0.8)'
-      ],
-      borderColor: [
-        'rgb(168, 85, 247)',
-        'rgb(236, 72, 153)',
-        'rgb(251, 146, 60)'
-      ],
-      borderWidth: 2
-    }]
-  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
-      <DashboardHeader />
+    <div className="min-h-screen bg-cream">
+      <AppHeader />
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 animate-fade-in">
+        {/* Welcome Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-semibold text-stone-900">
+              Olá, {userName.split(" ")[0]}!
+            </h1>
+            {companyName && (
+              <p className="text-sm text-stone-500">{companyName}</p>
+            )}
+          </div>
+          <Link href="/dashboard/jobs/create">
+            <Button className="bg-stone-900 hover:bg-stone-800 w-full sm:w-auto">
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Vaga
+            </Button>
+          </Link>
+        </div>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Filtro de Grupo */}
-        <div className="mb-6">
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                Filtrar Análise por Grupo
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+          <StatCard
+            title="Vagas Ativas"
+            value={stats?.overview.activeJobs || 0}
+            icon={Briefcase}
+          />
+          <StatCard
+            title="Candidaturas"
+            value={stats?.overview.totalApplications || 0}
+            icon={Users}
+          />
+          <StatCard
+            title="Pendentes"
+            value={stats?.overview.pendingApplications || 0}
+            icon={Clock}
+          />
+          <StatCard
+            title="Aprovados"
+            value={stats?.overview.approvedApplications || 0}
+            icon={CheckCircle}
+          />
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
+          {/* AI Classification */}
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <Zap className="w-5 h-5 text-amber-500" />
+                Classificação IA
               </CardTitle>
-              <CardDescription>Visualize o desempenho de grupos específicos da sua equipe</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
-                  <SelectTrigger className="w-[300px]">
-                    <SelectValue placeholder="Selecione um grupo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Grupos</SelectItem>
-                    {groups.map((group: TeamGroup) => (
-                      <SelectItem key={group.id} value={group.id}>
-                        <div className="flex items-center gap-2">
-                          {group.color && (
-                            <div 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: group.color }}
-                            />
-                          )}
-                          {group.name}
-                        </div>
-                      </SelectItem>
+            <CardContent className="space-y-4">
+              {classificationData.length > 0 ? (
+                <>
+                  <div className="flex h-3 rounded-full overflow-hidden bg-stone-100">
+                    {classificationData.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className={cn(item.color, "transition-all duration-500")}
+                        style={{ width: `${item.percent}%` }}
+                      />
                     ))}
-                  </SelectContent>
-                </Select>
-                {selectedGroupId !== "all" && (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setSelectedGroupId("all")}
-                  >
-                    Limpar Filtro
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* KPIs Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total de Vagas</CardTitle>
-              <Briefcase className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.overview?.totalJobs || 0}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {stats.overview?.activeJobs || 0} ativas
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Candidaturas</CardTitle>
-              <Users className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.overview?.totalApplications || 0}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {stats.overview?.pendingApplications || 0} pendentes
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Taxa de Aprovação</CardTitle>
-              <Target className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stats.overview?.approvalRate || 0}%</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {stats.overview?.approvedApplications || 0} aprovados
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Score Médio IA</CardTitle>
-              <Award className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {(stats.overview?.avgCompatibilityScore || 0).toFixed(1)}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Compatibilidade média
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Secondary KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-blue-600" />
-                Taxa de Conversão
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {stats.overview?.conversionRate || 0}%
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Candidatos aprovados + fortes
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Clock className="h-4 w-4 text-orange-600" />
-                Tempo Médio
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
-                {stats.overview?.avgApprovalTime || 0} dias
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Para aprovação
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Activity className="h-4 w-4 text-green-600" />
-                Candidatos Fortes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {stats.classification?.strong || 0}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Classificação alta pela IA
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Charts Row 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChart className="h-5 w-5 text-primary" />
-                Classificação de Candidatos
-              </CardTitle>
-              <CardDescription>Distribuição por análise de IA</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <Doughnut 
-                  data={classificationData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: 'bottom'
-                      },
-                      datalabels: {
-                        color: '#fff',
-                        font: {
-                          weight: 'bold',
-                          size: 14
-                        },
-                        formatter: (value: number) => value > 0 ? value : ''
-                      }
-                    }
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-primary" />
-                Status das Candidaturas
-              </CardTitle>
-              <CardDescription>Visão geral do processo seletivo</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <Pie 
-                  data={statusData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: 'bottom'
-                      },
-                      datalabels: {
-                        color: '#fff',
-                        font: {
-                          weight: 'bold',
-                          size: 14
-                        },
-                        formatter: (value: number) => value > 0 ? value : ''
-                      }
-                    }
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Charts Row 2 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-primary" />
-                Candidaturas por Estado
-              </CardTitle>
-              <CardDescription>Distribuição geográfica</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <Bar 
-                  data={stateData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        display: false
-                      },
-                      datalabels: {
-                        color: '#fff',
-                        font: {
-                          weight: 'bold',
-                          size: 12
-                        },
-                        formatter: (value: number) => value > 0 ? value : '',
-                        anchor: 'end',
-                        align: 'start'
-                      }
-                    },
-                    scales: {
-                      y: {
-                        beginAtZero: true
-                      }
-                    }
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5 text-primary" />
-                Vagas por Tipo de Contratação
-              </CardTitle>
-              <CardDescription>Distribuição por modalidade</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <Doughnut 
-                  data={typeData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: 'bottom'
-                      },
-                      datalabels: {
-                        color: '#fff',
-                        font: {
-                          weight: 'bold',
-                          size: 14
-                        },
-                        formatter: (value: number) => value > 0 ? value : ''
-                      }
-                    }
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Charts Row 3 */}
-        <Card className="border-0 shadow-lg mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              Candidaturas nos Últimos 30 Dias
-            </CardTitle>
-            <CardDescription>Tendência temporal de aplicações</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <Line 
-                data={dailyData}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      display: false
-                    },
-                    datalabels: {
-                      color: 'rgb(59, 130, 246)',
-                      font: {
-                        weight: 'bold',
-                        size: 11
-                      },
-                      formatter: (value: number) => value > 0 ? value : '',
-                      align: 'top',
-                      offset: 4
-                    }
-                  },
-                  scales: {
-                    y: {
-                      beginAtZero: true
-                    }
-                  }
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top Jobs */}
-        <Card className="border-0 shadow-lg mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-primary" />
-              Top 5 Vagas Mais Populares
-            </CardTitle>
-            <CardDescription>Vagas com maior número de candidaturas</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {(stats.topJobs || []).map((job, index) => (
-                <div key={job.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-600 text-white font-bold">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <p className="font-medium">{job.title}</p>
-                      <p className="text-sm text-muted-foreground">{job.applications} candidaturas</p>
-                    </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => router.push(`/dashboard/jobs/${job.id}`)}
-                  >
-                    Ver Detalhes
-                  </Button>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {classificationData.map((item, idx) => (
+                      <div key={idx} className="text-center p-2 rounded-lg bg-stone-50">
+                        <div className={cn("w-2 h-2 rounded-full mx-auto mb-1", item.color)} />
+                        <p className="text-xs text-stone-500">{item.label}</p>
+                        <p className="text-lg font-semibold text-stone-900">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8 text-stone-500">
+                  <Target className="w-10 h-10 mx-auto mb-2 text-stone-300" />
+                  <p className="text-sm">Nenhuma candidatura analisada ainda</p>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              )}
+              
+              {/* Metrics */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="p-3 rounded-lg bg-stone-50">
+                  <p className="text-xs text-stone-500">Taxa de Aprovação</p>
+                  <p className="text-xl font-semibold text-stone-900">
+                    {stats?.overview.approvalRate || 0}%
+                  </p>
+                </div>
+                <div className="p-3 rounded-lg bg-stone-50">
+                  <p className="text-xs text-stone-500">Score Médio</p>
+                  <p className="text-xl font-semibold text-stone-900">
+                    {Math.round(stats?.overview.avgCompatibilityScore || 0)}%
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Button
-            size="lg"
-            className="w-full bg-gradient-to-r from-primary to-purple-600 hover:opacity-90"
-            onClick={() => router.push("/dashboard/jobs/create")}
-          >
-            <Briefcase className="mr-2 h-5 w-5" />
-            Criar Nova Vaga
-          </Button>
-
-          <Button
-            size="lg"
-            variant="outline"
-            className="w-full"
-            onClick={() => router.push("/dashboard/jobs")}
-          >
-            <BarChart3 className="mr-2 h-5 w-5" />
-            Ver Todas as Vagas
-          </Button>
-
-          <Button
-            size="lg"
-            variant="outline"
-            className="w-full"
-            onClick={() => router.push("/dashboard/talents")}
-          >
-            <Users className="mr-2 h-5 w-5" />
-            Banco de Talentos
-          </Button>
+          {/* Top Jobs */}
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                  <Award className="w-5 h-5 text-amber-500" />
+                  Vagas em Destaque
+                </CardTitle>
+                <Link href="/dashboard/jobs">
+                  <Button variant="ghost" size="sm" className="text-stone-500 hover:text-stone-900">
+                    Ver todas
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {stats?.topJobs && stats.topJobs.length > 0 ? (
+                <div className="space-y-2">
+                  {stats.topJobs.map((job, idx) => (
+                    <Link key={job.id} href={`/dashboard/jobs/${job.id}`}>
+                      <div className="flex items-center justify-between p-3 rounded-lg hover:bg-stone-50 transition-colors cursor-pointer group">
+                        <div className="flex items-center gap-3">
+                          <span className="w-6 h-6 rounded-full bg-stone-100 text-stone-600 text-xs font-medium flex items-center justify-center">
+                            {idx + 1}
+                          </span>
+                          <span className="text-sm font-medium text-stone-800 group-hover:text-stone-900 truncate max-w-[180px] sm:max-w-none">
+                            {job.title}
+                          </span>
+                        </div>
+                        <span className="text-sm text-stone-500 bg-stone-100 px-2 py-1 rounded-full">
+                          {job.applications} cand.
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-stone-500">
+                  <Briefcase className="w-10 h-10 mx-auto mb-2 text-stone-300" />
+                  <p className="text-sm">Nenhuma vaga criada ainda</p>
+                  <Link href="/dashboard/jobs/create">
+                    <Button variant="outline" size="sm" className="mt-3">
+                      Criar primeira vaga
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      </div>
+
+        {/* Quick Actions */}
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <Link href="/dashboard/jobs">
+            <Card className="hover:shadow-md transition-all cursor-pointer group">
+              <CardContent className="p-4 text-center">
+                <Briefcase className="w-6 h-6 mx-auto mb-2 text-stone-400 group-hover:text-amber-500 transition-colors" />
+                <p className="text-sm font-medium text-stone-700">Gerenciar Vagas</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/dashboard/talents">
+            <Card className="hover:shadow-md transition-all cursor-pointer group">
+              <CardContent className="p-4 text-center">
+                <Users className="w-6 h-6 mx-auto mb-2 text-stone-400 group-hover:text-amber-500 transition-colors" />
+                <p className="text-sm font-medium text-stone-700">Banco de Talentos</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/dashboard/team">
+            <Card className="hover:shadow-md transition-all cursor-pointer group">
+              <CardContent className="p-4 text-center">
+                <Target className="w-6 h-6 mx-auto mb-2 text-stone-400 group-hover:text-amber-500 transition-colors" />
+                <p className="text-sm font-medium text-stone-700">Equipe</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/dashboard/profile">
+            <Card className="hover:shadow-md transition-all cursor-pointer group">
+              <CardContent className="p-4 text-center">
+                <Award className="w-6 h-6 mx-auto mb-2 text-stone-400 group-hover:text-amber-500 transition-colors" />
+                <p className="text-sm font-medium text-stone-700">Meu Plano</p>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      </main>
     </div>
   );
 }
