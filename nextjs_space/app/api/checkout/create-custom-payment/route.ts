@@ -76,11 +76,12 @@ export async function POST(request: Request) {
 
     const origin = request.headers.get('origin') || process.env.NEXTAUTH_URL || 'https://www.recruitai.com.br';
 
-    // Criar sessão de checkout para pagamento único (suporta PIX)
+    // Criar sessão de checkout para pagamento único
+    // Nota: PIX precisa ser habilitado no Stripe Dashboard antes de usar
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
-      mode: 'payment', // Pagamento único para suportar PIX
-      payment_method_types: ['card', 'boleto', 'pix'], // PIX habilitado
+      mode: 'payment', // Pagamento único
+      payment_method_types: ['card', 'boleto'], // Cartão e Boleto
       line_items: [
         {
           price_data: {
@@ -115,9 +116,6 @@ export async function POST(request: Request) {
       payment_method_options: {
         boleto: {
           expires_after_days: 3
-        },
-        pix: {
-          expires_after_seconds: 86400 // 24 horas
         }
       }
     });

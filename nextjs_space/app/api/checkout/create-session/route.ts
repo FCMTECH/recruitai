@@ -75,11 +75,12 @@ export async function POST(request: Request) {
     const origin = request.headers.get('origin') || process.env.NEXTAUTH_URL || 'https://www.recruitai.com.br';
 
     // Criar sessão de checkout do Stripe usando o stripePriceId
-    // PIX habilitado para pagamentos no Brasil
+    // Métodos de pagamento: Cartão e Boleto
+    // Nota: PIX precisa ser habilitado no Stripe Dashboard antes de usar
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
-      payment_method_types: ['card', 'boleto', 'pix'],
+      payment_method_types: ['card', 'boleto'],
       line_items: [
         {
           price: plan.stripePriceId,
@@ -104,9 +105,6 @@ export async function POST(request: Request) {
       payment_method_options: {
         boleto: {
           expires_after_days: 3
-        },
-        pix: {
-          expires_after_seconds: 86400 // 24 horas
         }
       }
     });

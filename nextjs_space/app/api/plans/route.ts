@@ -7,9 +7,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    // Buscar apenas planos públicos (não personalizados)
+    // Planos personalizados (isCustom: true) são específicos para empresas
     const plans = await db.plan.findMany({
       where: {
-        isActive: true
+        isActive: true,
+        isCustom: { not: true }
       },
       orderBy: {
         price: 'asc'
