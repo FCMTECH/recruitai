@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -12,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, Sparkles, Loader2, Zap, Brain, Crown, ArrowLeft, Mail, Phone, User } from 'lucide-react';
+import { Check, Sparkles, Loader2, Zap, Crown, ArrowLeft, Mail, Phone, User } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -250,15 +249,15 @@ export default function PricingPage() {
   const getPlanIcon = (planName: string) => {
     switch (planName) {
       case 'free':
-        return <Zap className="h-6 w-6 text-primary" />;
+        return <Zap className="h-5 w-5 text-stone-600" />;
       case 'bronze':
-        return <Sparkles className="h-6 w-6 text-amber-700" />;
+        return <Sparkles className="h-5 w-5 text-amber-700" />;
       case 'prata':
-        return <Brain className="h-6 w-6 text-slate-500" />;
+        return <Sparkles className="h-5 w-5 text-slate-500" />;
       case 'ouro':
-        return <Crown className="h-6 w-6 text-yellow-500" />;
+        return <Crown className="h-5 w-5 text-amber-500" />;
       case 'personalizado':
-        return <Sparkles className="h-6 w-6 text-purple-600" />;
+        return <Sparkles className="h-5 w-5 text-stone-600" />;
       default:
         return null;
     }
@@ -266,57 +265,51 @@ export default function PricingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-50">
-        <div className="flex items-center gap-2 animate-pulse">
-          <Brain className="h-8 w-8 text-primary" />
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-cream">
+        <div className="flex items-center gap-3 animate-pulse">
+          <svg className="h-8 w-8 text-stone-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+          <Loader2 className="h-6 w-6 animate-spin text-stone-700" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 py-12 px-4">
+    <div className="min-h-screen bg-cream">
       {/* Header */}
-      <header className="container mx-auto mb-12 max-w-7xl">
-        <div className="flex items-center justify-between mb-8">
+      <header className="border-b border-stone-200 bg-white/80 backdrop-blur-sm">
+        <div className="container mx-auto px-6 py-5 max-w-7xl flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => router.push(sessionStatus === 'authenticated' ? '/dashboard' : '/')}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative">
-                <Brain className="h-8 w-8 text-primary transition-transform group-hover:scale-110" />
-                <Sparkles className="h-4 w-4 text-accent absolute -top-1 -right-1" />
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                RecruitAI
-              </span>
+            <Link href="/" className="flex items-center gap-2">
+              <svg className="h-7 w-7 text-stone-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              </svg>
+              <span className="text-lg font-bold text-stone-900">RecruitAI</span>
             </Link>
           </div>
           {sessionStatus === 'authenticated' && (
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="border-stone-300">
               <Link href="/dashboard">Voltar ao Dashboard</Link>
             </Button>
           )}
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto">
+      <div className="container mx-auto px-6 py-16 max-w-7xl">
         {/* Hero Section */}
         <div className="text-center mb-16 animate-slide-up">
-          <div className="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 mb-6">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Preços Transparentes</span>
-          </div>
-          <h1 className="text-5xl font-bold text-slate-900 mb-6">
-            Escolha o Plano Ideal
-            <br />
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Para Sua Empresa
-            </span>
+          <p className="text-amber-700 text-sm tracking-widest uppercase mb-4 font-medium">
+            Preços Transparentes
+          </p>
+          <h1 className="font-serif text-4xl md:text-5xl text-stone-900 mb-6">
+            Escolha o Plano Ideal Para Sua Empresa
           </h1>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+          <p className="text-lg text-stone-600 max-w-2xl mx-auto">
             Simplifique seu processo de recrutamento com IA avançada. 
             Comece com 7 dias grátis e cancele quando quiser.
           </p>
@@ -325,19 +318,19 @@ export default function PricingPage() {
         {/* Current Plan Info */}
         {currentSubscription && (
           <div className="mb-12 max-w-2xl mx-auto">
-            <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 shadow-lg">
+            <Card className="bg-white border-stone-200 shadow-sm">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600 font-medium">Plano Atual</p>
-                    <p className="text-2xl font-bold text-slate-900">
+                    <p className="text-sm text-stone-500 font-medium">Plano Atual</p>
+                    <p className="text-xl font-serif text-stone-900">
                       {currentSubscription.plan.displayName}
                     </p>
                   </div>
                   <Badge className={
                     currentSubscription.status === 'active' 
-                      ? 'bg-gradient-to-r from-green-400 to-emerald-400' 
-                      : 'bg-gradient-to-r from-yellow-400 to-orange-400'
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
+                      : 'bg-amber-100 text-amber-800 border-amber-200'
                   }>
                     {currentSubscription.status === 'trial' && 'Período de Teste'}
                     {currentSubscription.status === 'active' && 'Ativo'}
@@ -351,90 +344,87 @@ export default function PricingPage() {
         )}
 
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 mb-12">
           {plans.filter((p: any) => p.isActive).map((plan: any) => (
             <Card
               key={plan.id}
-              className={`relative transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 border-2 ${
+              className={`relative bg-white border transition-all duration-300 hover:shadow-lg ${
                 plan.name === 'ouro' 
-                  ? 'border-yellow-400 shadow-xl shadow-yellow-100' 
-                  : 'border-slate-200 hover:border-primary/50'
-              } bg-white/80 backdrop-blur`}
+                  ? 'border-amber-400 shadow-md' 
+                  : 'border-stone-200 hover:border-stone-300'
+              }`}
             >
               {plan.name === 'ouro' && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-lg">
+                  <Badge className="bg-amber-600 text-white">
                     Mais Popular
                   </Badge>
                 </div>
               )}
               {plan.name === 'free' && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-gradient-to-r from-primary to-accent text-white shadow-lg">
+                  <Badge className="bg-stone-900 text-white">
                     Teste Grátis
                   </Badge>
                 </div>
               )}
 
-              <CardHeader className="space-y-4">
-                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-slate-50">
+              <CardHeader className="space-y-3 pb-3">
+                <div className="inline-flex p-2 rounded-lg bg-stone-100 w-fit">
                   {getPlanIcon(plan.name)}
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900">{plan.displayName}</CardTitle>
-                <CardDescription className="text-sm">
+                <CardTitle className="font-serif text-xl text-stone-900">{plan.displayName}</CardTitle>
+                <CardDescription className="text-xs text-stone-500">
                   {plan.name === 'free' && 'Teste por 7 dias'}
-                  {plan.name === 'bronze' && 'Ideal para pequenas empresas'}
-                  {plan.name === 'prata' && 'Para empresas em crescimento'}
-                  {plan.name === 'ouro' && 'Para grandes volumes'}
+                  {plan.name === 'bronze' && 'Pequenas empresas'}
+                  {plan.name === 'prata' && 'Empresas em crescimento'}
+                  {plan.name === 'ouro' && 'Grandes volumes'}
                   {plan.name === 'personalizado' && 'Solução sob medida'}
                 </CardDescription>
               </CardHeader>
 
-              <CardContent>
-                <div className="mb-6">
+              <CardContent className="pb-4">
+                <div className="mb-4">
                   {plan.price > 0 ? (
                     <div>
-                      <span className="text-4xl font-bold text-slate-900">
+                      <span className="font-serif text-3xl text-stone-900">
                         R$ {plan.price.toLocaleString('pt-BR')}
                       </span>
-                      <span className="text-slate-600 ml-2">/mês</span>
+                      <span className="text-stone-500 text-sm">/mês</span>
                     </div>
                   ) : plan.name === 'free' ? (
-                    <span className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Grátis</span>
+                    <span className="font-serif text-3xl text-amber-600">Grátis</span>
                   ) : (
-                    <span className="text-2xl font-bold text-slate-900">Sob consulta</span>
+                    <span className="font-serif text-xl text-stone-700">Sob consulta</span>
                   )}
                 </div>
 
-                <div className="space-y-3 mb-6">
-                  {plan.features.map((feature: string, index: number) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <div className="mt-0.5 p-1 rounded-full bg-green-50">
-                        <Check className="h-4 w-4 text-green-600" />
-                      </div>
-                      <span className="text-sm text-slate-700">{feature}</span>
+                <div className="space-y-2 mb-4">
+                  {plan.features.slice(0, 4).map((feature: string, index: number) => (
+                    <div key={index} className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <span className="text-xs text-stone-600">{feature}</span>
                     </div>
                   ))}
                 </div>
 
                 {plan.name !== 'free' && plan.name !== 'personalizado' && (
-                  <div className="pt-4 border-t border-slate-200">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <Sparkles className="h-4 w-4 text-accent" />
-                      <span className="font-medium">Até {plan.jobLimit} vagas/mês</span>
+                  <div className="pt-3 border-t border-stone-100">
+                    <div className="text-xs text-stone-500">
+                      Até <span className="font-semibold text-stone-700">{plan.jobLimit}</span> vagas/mês
                     </div>
                   </div>
                 )}
               </CardContent>
 
-              <CardFooter>
+              <CardFooter className="pt-0">
                 <Button
                   className={`w-full ${
                     plan.name === 'ouro' 
-                      ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-white shadow-lg' 
+                      ? 'bg-amber-600 hover:bg-amber-700 text-white' 
                       : plan.name === 'free'
-                      ? 'bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg'
-                      : ''
+                      ? 'bg-stone-900 hover:bg-stone-800 text-white'
+                      : 'border-stone-300 hover:bg-stone-50'
                   }`}
                   variant={plan.name === 'ouro' || plan.name === 'free' ? 'default' : 'outline'}
                   disabled={isCurrentPlan(plan.id) || checkoutLoading === plan.id}
@@ -450,10 +440,7 @@ export default function PricingPage() {
                   ) : plan.name === 'personalizado' ? (
                     'Entrar em Contato'
                   ) : plan.name === 'free' ? (
-                    <>
-                      <Zap className="mr-2 h-4 w-4" />
-                      Iniciar Teste Grátis
-                    </>
+                    'Iniciar Teste Grátis'
                   ) : (
                     'Assinar Agora'
                   )}
@@ -464,34 +451,29 @@ export default function PricingPage() {
         </div>
 
         {/* Guarantee Section */}
-        <div className="max-w-4xl mx-auto mt-20">
-          <Card className="border-0 shadow-2xl bg-gradient-to-br from-white to-slate-50 p-8 text-center">
-            <CardContent>
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-primary to-accent mb-6">
-                <Check className="h-8 w-8 text-white" />
+        <div className="max-w-3xl mx-auto mt-16">
+          <div className="bg-stone-950 rounded-xl p-10 text-center">
+            <h3 className="font-serif text-2xl text-white mb-4">
+              Garantia de Satisfação
+            </h3>
+            <p className="text-stone-400 mb-6">
+              Teste gratuitamente por 7 dias. Cancele a qualquer momento, sem taxas ou multas.
+            </p>
+            <div className="flex items-center justify-center gap-8 text-sm text-stone-300">
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-amber-500" />
+                <span>Cartão de Crédito</span>
               </div>
-              <h3 className="text-3xl font-bold text-slate-900 mb-4">
-                Garantia de Satisfação
-              </h3>
-              <p className="text-lg text-slate-600 mb-6">
-                Teste gratuitamente por 7 dias. Cancele a qualquer momento, sem taxas ou multas.
-              </p>
-              <div className="flex items-center justify-center gap-8 text-sm text-slate-600">
-                <div className="flex items-center gap-2">
-                  <Check className="h-5 w-5 text-green-600" />
-                  <span>Cartão de Crédito</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-5 w-5 text-green-600" />
-                  <span>PIX</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-5 w-5 text-green-600" />
-                  <span>Boleto</span>
-                </div>
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-amber-500" />
+                <span>PIX</span>
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-amber-500" />
+                <span>Boleto</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -499,71 +481,71 @@ export default function PricingPage() {
       <Dialog open={showContactDialog} onOpenChange={setShowContactDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <DialogTitle className="font-serif text-2xl text-stone-900">
               Solicitar Plano Personalizado
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-stone-500">
               Preencha seus dados e entraremos em contato para entender melhor suas necessidades.
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmitContactForm} className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="name">
+              <Label htmlFor="name" className="text-stone-700">
                 Nome Completo <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <User className="absolute left-3 top-3 h-4 w-4 text-stone-400" />
                 <Input
                   id="name"
                   type="text"
                   placeholder="Seu nome completo"
                   value={contactFormData.name}
                   onChange={(e) => setContactFormData({ ...contactFormData, name: e.target.value })}
-                  className="pl-10"
+                  className="pl-10 border-stone-200"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">
+              <Label htmlFor="email" className="text-stone-700">
                 E-mail <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-stone-400" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="seu@email.com"
                   value={contactFormData.email}
                   onChange={(e) => setContactFormData({ ...contactFormData, email: e.target.value })}
-                  className="pl-10"
+                  className="pl-10 border-stone-200"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">
+              <Label htmlFor="phone" className="text-stone-700">
                 Telefone <span className="text-red-500">*</span>
               </Label>
               <div className="relative">
-                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Phone className="absolute left-3 top-3 h-4 w-4 text-stone-400" />
                 <Input
                   id="phone"
                   type="tel"
                   placeholder="(00) 00000-0000"
                   value={contactFormData.phone}
                   onChange={(e) => setContactFormData({ ...contactFormData, phone: e.target.value })}
-                  className="pl-10"
+                  className="pl-10 border-stone-200"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="message">
+              <Label htmlFor="message" className="text-stone-700">
                 Mensagem (Opcional)
               </Label>
               <Textarea
@@ -572,6 +554,7 @@ export default function PricingPage() {
                 value={contactFormData.message}
                 onChange={(e) => setContactFormData({ ...contactFormData, message: e.target.value })}
                 rows={4}
+                className="border-stone-200"
               />
             </div>
 
@@ -580,14 +563,14 @@ export default function PricingPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setShowContactDialog(false)}
-                className="flex-1"
+                className="flex-1 border-stone-300"
                 disabled={isSubmittingContact}
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="flex-1 bg-stone-900 hover:bg-stone-800 text-white"
                 disabled={isSubmittingContact}
               >
                 {isSubmittingContact ? (
